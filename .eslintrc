@@ -7,8 +7,6 @@
 	],
 	"plugins": [
 		"react",
-		"react-native",
-    "jest"
 	],
   "parser": "babel-eslint",
 	"parserOptions": {
@@ -24,14 +22,8 @@
 		"jquery": true,
 		"mocha": true,
 		"node": true,
-		"jest": true,
 	},
 	"rules": {
-		"jest/no-disabled-tests": "warn",
-		"jest/no-focused-tests": "error",
-		"jest/no-identical-title": "error",
-		"jest/prefer-to-have-length": "warn",
-		"jest/valid-expect": "error",
 		"arrow-body-style": [1, "as-needed"],
 		"arrow-parens": [1, "as-needed"],
 		"class-methods-use-this": 0,
@@ -67,10 +59,6 @@
 		"object-curly-spacing": 1,
 		"one-var": 0,
 		"quotes": 0,
-		"react-native/no-color-literals": 0,
-		"react-native/no-inline-styles": 0,
-		"react-native/no-unused-styles": 2,
-		"react-native/split-platform-components": 2,
 		"react/display-name": [ 1, { "ignoreTranspilerName": false }],
 		"react/forbid-prop-types": [1, { "forbid": ["any"] }],
 		"react/jsx-boolean-value": 1,
