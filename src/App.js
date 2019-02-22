@@ -1,24 +1,54 @@
 import React, { Component, } from "react"
-import { Link, } from "react-router-dom"
-import { Navbar, } from "react-bootstrap"
+
+import {
+	BrowserRouter, Route, Switch, Redirect, Link,
+} from "react-router-dom"
+import PhotosComponent from './containers/PhotosComponent'
 import "./App.css"
-import Routes from "./Routes"
 
 class App extends Component {
+	constructor(props, context) {
+		super(props, context)
+
+		this.state = {
+			photoId: null,
+		}
+	}
+
 	render() {
+		const { photoId, } = this.state
+		if (!photoId) {
+			fetch('https://api.wisaw.com/photos/prev/2147483640', {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			})
+				.then(response => {
+					if (response.ok) {
+						return response.json()
+					}
+					throw new Error('Something went wrong ...')
+				})
+				.then(body => {
+					this.setState({ photoId: body.photo.id, })
+				})
+				.catch(error => alert(JSON.stringify(error)))
+
+
+			return <div>Loading</div>
+		}
+
 		return (
-			<div className="App container">
-				<Navbar fluid collapseOnSelect>
-					<Navbar.Header>
-						<Navbar.Brand>
-							<Link to="/Home">WiSaw</Link>
-							&nbsp;&nbsp;
-							<Link to="/">EchoWaves</Link>
-						</Navbar.Brand>
-						<Navbar.Toggle />
-					</Navbar.Header>
-				</Navbar>
-				<Routes />
+			<div>
+				<BrowserRouter>
+					<Route path="/photos/:photoId" component={PhotosComponent} />
+				</BrowserRouter>
+				<Redirect
+					to={{
+						pathname: `/photos/${photoId}`,
+					}}
+				/>
 			</div>
 		)
 	}
