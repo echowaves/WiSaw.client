@@ -1,36 +1,29 @@
 import React, { Component, } from "react"
-
-import {
-	BrowserRouter, Route, Redirect,
-} from "react-router-dom"
-
+import PropTypes from 'prop-types'
 
 class PhotosComponent extends Component {
+	static propTypes = {
+		match: PropTypes.object.isRequired,
+	}
+
 	constructor(props, context) {
 		super(props, context)
 
-		// this.state = {
-		// 	photoId: null,
-		// }
+		this.state = {
+			photo: null,
+			comments: [],
+			nextPhoto: null,
+			currentPhoto: null,
+		}
 	}
 
+
 	componentDidMount() {
-		// const { match, } = this.props
-		// const { params, } = match
-		// const { photoId, } = params
-		// // alert({ photoId, })
-		// this.state.photoId = photoId
+		const { match: { params: { photoId, }, }, } = this.props
 	}
 
 	render() {
-		const { match, } = this.props
-		const { params, } = match
-		const { photoId, } = params
-
-		// const { photoId, } = this.state
-		if (!photoId) {
-			return <div>...Loading...</div>
-		}
+		const { match: { params: { photoId, }, }, } = this.props
 
 		return (
 			<div>

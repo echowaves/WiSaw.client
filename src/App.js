@@ -39,8 +39,8 @@ class App extends Component {
 		return (
 			<BrowserRouter>
 				<div>
-					{photoId && (
-						alert(photoId)
+					{!photoId && (
+						<div>Loading</div>
 					)}
 					{photoId && (
 						<Redirect
@@ -55,14 +55,6 @@ class App extends Component {
 			</BrowserRouter>
 		)
 	}
-
-	// 	return (
-	// 		<Switch>
-	//
-	// 		<Route path="/photos/:photoId" component={PhotosComponent} />
-	// 		</Switch>
-	// 	)
-	// }
 }
 
 export default App
