@@ -173,6 +173,12 @@ class PhotosComponent extends Component {
 						</div>
 					)}
 				</div>
+				<div style={{
+					display: 'flex',
+					justifyContent: 'center',
+				}}>
+					<a href="https://echowaves.com">© echowaves</a>
+				</div>
 			</div>
 		)
 	}
