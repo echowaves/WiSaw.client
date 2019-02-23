@@ -1,6 +1,8 @@
 import React, { Component, } from "react"
-// import Viewer from 'react-viewer'
-// import 'react-viewer/dist/index.css'
+
+import {
+	Redirect, Link, withRouter,
+} from "react-router-dom"
 
 import PropTypes from 'prop-types'
 
@@ -89,7 +91,7 @@ class PhotosComponent extends Component {
 							alt=""
 							style={{
 								width: 'auto',
-								height: '50%',
+								height: '70%',
 								position: 'absolute',
 								top: 50,
 								left: 50,
@@ -99,12 +101,24 @@ class PhotosComponent extends Component {
 					)}
 				</div>
 				<div>
-					{nextPhoto && (`nextPhoto.id:${nextPhoto.id}. `)}
-					{prevPhoto && (`prevPhoto.id:${prevPhoto.id}. `)}
+					{nextPhoto
+						&& (
+							<div>
+								<Link to={`/photos/${nextPhoto.id}`} onClick={<Redirect from="/" to={`/photos/${nextPhoto.id}`} />}>next</Link>
+							</div>
+						)
+					}
+					{prevPhoto
+						&& (
+							<div>
+								<Link to={`/photos/${prevPhoto.id}`} onClick={<Redirect from="/" to={`/photos/${prevPhoto.id}`} />}>prev</Link>
+							</div>
+						)
+					}
 				</div>
 			</div>
 		)
 	}
 }
 
-export default PhotosComponent
+export default withRouter(PhotosComponent)

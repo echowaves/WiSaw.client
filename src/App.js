@@ -43,9 +43,7 @@ class App extends Component {
 			<Router>
 				<Switch>
 					<Route exact path="/photos/:photoId" component={PhotosComponent} />
-					{
-						photoId && (<Redirect from="/" to={`/photos/${photoId}`} />)
-					}
+					{photoId && (<Redirect from="/" to={`/photos/${photoId}`} />)}
 				</Switch>
 			</Router>
 		)
