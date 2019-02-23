@@ -1,4 +1,7 @@
 import React, { Component, } from "react"
+// import Viewer from 'react-viewer'
+// import 'react-viewer/dist/index.css'
+
 import PropTypes from 'prop-types'
 
 class PhotosComponent extends Component {
@@ -75,16 +78,30 @@ class PhotosComponent extends Component {
 	}
 
 	render() {
-		const { match: { params: { photoId, }, }, } = this.props
 		const { photo, prevPhoto, nextPhoto, } = this.state
 
 		return (
 			<div>
-				{`photoId:${photoId}. `}
-				{photo && (`photo.id:${photo.id}. `)}
-				{nextPhoto && (`nextPhoto.id:${nextPhoto.id}. `)}
-				{prevPhoto && (`prevPhoto.id:${prevPhoto.id}. `)}
+				<div>
+					{photo && (
+						<img
+							src={photo.getImgUrl}
+							alt=""
+							style={{
+								width: 'auto',
+								height: '50%',
+								position: 'absolute',
+								top: 50,
+								left: 50,
+							}}
 
+						/>
+					)}
+				</div>
+				<div>
+					{nextPhoto && (`nextPhoto.id:${nextPhoto.id}. `)}
+					{prevPhoto && (`prevPhoto.id:${prevPhoto.id}. `)}
+				</div>
 			</div>
 		)
 	}
