@@ -1,7 +1,7 @@
 import React, { Component, } from "react"
 
 import {
-	BrowserRouter, Route, Redirect,
+	BrowserRouter as Router, Route, Redirect, Switch,
 } from "react-router-dom"
 import PhotosComponent from './containers/PhotosComponent'
 import "./App.css"
@@ -16,43 +16,38 @@ class App extends Component {
 	}
 
 	componentDidMount() {
-		fetch('https://api.wisaw.com/photos/prev/2147483640', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then(response => {
-				if (response.ok) {
-					return response.json()
-				}
-				throw new Error('Something went wrong ...')
+		const { photoId, } = this.state
+		if (!photoId) {
+			fetch('https://api.wisaw.com/photos/prev/2147483640', {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
 			})
-			.then(body => {
-				this.setState({ photoId: body.photo.id, })
-			})
-			.catch(error => alert(JSON.stringify(error)))
+				.then(response => {
+					if (response.ok) {
+						return response.json()
+					}
+					throw new Error('Something went wrong ...')
+				})
+				.then(body => {
+					this.setState({ photoId: body.photo.id, })
+				})
+				.catch(error => alert(JSON.stringify(error)))
+		}
 	}
 
 	render() {
 		const { photoId, } = this.state
 		return (
-			<BrowserRouter>
-				<div>
-					{!photoId && (
-						<div>Loading</div>
-					)}
-					{photoId && (
-						<Redirect
-							to={{
-								pathname: `/photos/${photoId}`,
-							}}
-						/>
-					)
+			<Router>
+				<Switch>
+					<Route exact path="/photos/:photoId" component={PhotosComponent} />
+					{
+						photoId && (<Redirect from="/" to={`/photos/${photoId}`} />)
 					}
-					<Route path="/photos/:photoId" component={PhotosComponent} />
-				</div>
-			</BrowserRouter>
+				</Switch>
+			</Router>
 		)
 	}
 }
