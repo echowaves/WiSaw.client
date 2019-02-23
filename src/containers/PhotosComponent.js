@@ -1,4 +1,5 @@
 import React, { Component, } from "react"
+import ReactGA from 'react-ga'
 
 import {
 	Redirect, Link, withRouter,
@@ -24,6 +25,9 @@ class PhotosComponent extends Component {
 
 	componentDidMount() {
 		const { match: { params: { photoId, }, }, } = this.props
+
+		ReactGA.initialize('UA-3129031-19')
+		ReactGA.pageview(`/photos/${photoId}`)
 
 		fetch(`https://api.wisaw.com/photos/prev/${photoId}`, {
 			method: 'GET',
