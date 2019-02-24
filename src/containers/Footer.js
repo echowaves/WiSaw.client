@@ -22,7 +22,7 @@ class Footer extends Component {
 									width="177px"
 									height="56px"
 									alt="wisaw itunes store"
-									src="/appstore.webp"
+									src="/appstore.png"
 								/>
 							</div>
 						</a>
