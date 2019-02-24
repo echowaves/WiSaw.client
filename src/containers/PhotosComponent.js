@@ -209,7 +209,12 @@ class PhotosComponent extends Component {
 						<a
 							href="http://itunes.apple.com/us/app/wisaw/id1299949122">
 							<div>
-								<img alt="wisaw itunes store" src="https://static.wixstatic.com/media/fc7570_2ceee2afeafa4aa083bc3d48986bb811~mv2.png/v1/fill/w_243,h_77,al_c,lg_1,q_80/fc7570_2ceee2afeafa4aa083bc3d48986bb811~mv2.webp" />
+								<img
+									width="177px"
+									height="56px"
+									alt="wisaw itunes store"
+									src="/appstore.png"
+								/>
 							</div>
 						</a>
 					</div>
@@ -220,7 +225,12 @@ class PhotosComponent extends Component {
 						<a
 							href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw">
 							<div>
-								<img alt="wisaw google play store" src="https://static.wixstatic.com/media/fc7570_83a62c92abd54d60915647751731bc62~mv2.png/v1/fill/w_245,h_74,al_c,lg_1/fc7570_83a62c92abd54d60915647751731bc62~mv2.png" />
+								<img
+									width="176px"
+									height="53px"
+									alt="wisaw google play store"
+									src="/googleplay.png"
+								/>
 							</div>
 						</a>
 					</div>
