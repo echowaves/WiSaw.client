@@ -4,6 +4,7 @@ import {
 	BrowserRouter as Router, Route, Redirect, Switch, Link,
 } from "react-router-dom"
 import PhotosComponent from './containers/PhotosComponent'
+import Footer from './containers/Footer'
 import "./App.css"
 
 class App extends Component {
@@ -17,10 +18,13 @@ class App extends Component {
 	render() {
 		return (
 			<Router>
-				<Switch>
-					<Route exact path="/" component={PhotosComponent} />
-					<Route exact path="/photos/:photoId" component={PhotosComponent} />
-				</Switch>
+				<div>
+					<Switch>
+						<Route exact path="/" component={PhotosComponent} />
+						<Route exact path="/photos/:photoId" component={PhotosComponent} />
+					</Switch>
+					<Footer />
+				</div>
 			</Router>
 		)
 	}
