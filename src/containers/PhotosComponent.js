@@ -125,6 +125,7 @@ class PhotosComponent extends Component {
 		const {
 			photo, prevPhoto, nextPhoto, comments,
 		} = this.state
+		const { match: { params: { photoId, }, }, } = this.props
 
 		return (
 			<div>
@@ -135,8 +136,9 @@ class PhotosComponent extends Component {
 					{comments.length > 0 && (
 						<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
 					)}
-					<meta name="description" content="Some description." />
-					<meta property="og:image" content={photo ? photo.getImgUrl : ''} />
+					{photoId && (
+						<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
+					)}
 				</MetaTags>
 
 				<div
