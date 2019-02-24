@@ -133,12 +133,10 @@ class PhotosComponent extends Component {
 					{comments.length > 0 && (
 						<title>{comments[0].comment}</title>
 					)}
-					{comments.length > 0 && (
-						<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
-					)}
-					{photoId && (
-						<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
-					)}
+					<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+					<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
+					<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
 				</MetaTags>
 
 				<div
