@@ -2,7 +2,7 @@ import React, { Component, } from "react"
 import ReactGA from 'react-ga'
 
 import {
-	Redirect, Link, withRouter,
+	Link, withRouter,
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
@@ -23,12 +23,26 @@ class PhotosComponent extends Component {
 		}
 	}
 
-	componentDidMount() {
-		const { match: { params: { photoId, }, }, } = this.props
-
+	async componentDidMount() {
+		let { match: { params: { photoId, }, }, } = this.props
+		if (!photoId) {
+			const response = await	fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			})
+			if (response.status === 200) {
+				const responseJson = await response.json()
+				photoId = responseJson.photo.id
+			}
+		}
 		ReactGA.initialize('UA-3129031-19')
-		ReactGA.pageview(`/photos/${photoId}`)
+		this.update(photoId)
+	}
 
+	update(photoId) {
+		ReactGA.pageview(`/photos/${photoId}`)
 		fetch(`https://api.wisaw.com/photos/prev/${photoId}`, {
 			method: 'GET',
 			headers: {
@@ -115,14 +129,22 @@ class PhotosComponent extends Component {
 					{prevPhoto
 					&& (
 						<div style={{ margin: '10px', }}>
-							<Link to={`/photos/${prevPhoto.id}`} onClick={<Redirect from="/" to={`/photos/${prevPhoto.id}`} />}>prev</Link>
+							<Link
+								to={`/photos/${prevPhoto.id}`}
+								onClick={() => this.update(prevPhoto.id)}
+								replace>prev
+							</Link>
 						</div>
 					)
 					}
 					{nextPhoto
 						&& (
 							<div style={{ margin: '10px', }}>
-								<Link to={`/photos/${nextPhoto.id}`} onClick={<Redirect from="/" to={`/photos/${nextPhoto.id}`} />}>next</Link>
+								<Link
+									to={`/photos/${nextPhoto.id}`}
+									onClick={() => this.update(nextPhoto.id)}
+									replace>next
+								</Link>
 							</div>
 						)
 					}
