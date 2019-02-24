@@ -199,7 +199,7 @@ class PhotosComponent extends Component {
 					display: 'flex',
 					justifyContent: 'center',
 				}}>
-					<a href="https://echowaves.com">© echowaves</a>
+					<a href="https://www.echowaves.com">© echowaves</a>
 				</div>
 			</div>
 		)
