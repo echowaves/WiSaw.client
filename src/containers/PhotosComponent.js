@@ -26,15 +26,19 @@ class PhotosComponent extends Component {
 	async componentDidMount() {
 		let { match: { params: { photoId, }, }, } = this.props
 		if (!photoId) {
-			const response = await	fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			})
-			if (response.status === 200) {
-				const responseJson = await response.json()
-				photoId = responseJson.photo.id
+			try {
+				const response = await	fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
+				if (response.status === 200) {
+					const responseJson = await response.json()
+					photoId = responseJson.photo.id
+				}
+			} catch (error) {
+				// console.log(JSON.stringify(error))
 			}
 		}
 		ReactGA.initialize('UA-3129031-19')
@@ -195,8 +199,6 @@ class PhotosComponent extends Component {
 						</div>
 					)}
 				</div>
-
-
 			</div>
 		)
 	}

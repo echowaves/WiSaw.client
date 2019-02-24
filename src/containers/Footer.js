@@ -3,15 +3,17 @@ import React, { Component, } from "react"
 class Footer extends Component {
 	render() {
 		return (
-			<div>
-				<div style={{
-					display: 'flex',
-					justifyContent: 'center',
-					padding: '20px',
-				}}>
+			<div id="footer">
+				<div
+					id="stores"
+					style={{
+						display: 'flex',
+						justifyContent: 'center',
+						padding: '20px',
+					}}>
 					<div
 						style={{
-							padding: '20px',
+							margin: '20px',
 						}}>
 						<a
 							href="http://itunes.apple.com/us/app/wisaw/id1299949122">
@@ -27,7 +29,7 @@ class Footer extends Component {
 					</div>
 					<div
 						style={{
-							padding: '20px',
+							margin: '20px',
 						}}>
 						<a
 							href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw">
@@ -42,12 +44,14 @@ class Footer extends Component {
 						</a>
 					</div>
 				</div>
+
 				<div style={{
 					display: 'flex',
 					justifyContent: 'center',
 				}}>
 					<a href="https://www.echowaves.com">© echowaves</a>
 				</div>
+
 			</div>
 		)
 	}
