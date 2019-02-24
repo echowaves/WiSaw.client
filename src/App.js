@@ -1,7 +1,7 @@
 import React, { Component, } from "react"
 
 import {
-	BrowserRouter as Router, Route, Redirect, Switch, Link,
+	BrowserRouter as Router, Route, Switch,
 } from "react-router-dom"
 import PhotosComponent from './containers/PhotosComponent'
 import Footer from './containers/Footer'
