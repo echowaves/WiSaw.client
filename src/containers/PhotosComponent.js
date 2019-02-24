@@ -7,6 +7,8 @@ import {
 
 import PropTypes from 'prop-types'
 
+import MetaTags from 'react-meta-tags'
+
 class PhotosComponent extends Component {
 	static propTypes = {
 		match: PropTypes.object.isRequired,
@@ -126,10 +128,23 @@ class PhotosComponent extends Component {
 
 		return (
 			<div>
-				<div style={{
-					display: 'flex',
-					justifyContent: 'center',
-				}}>
+				<MetaTags>
+					{comments.length > 0 && (
+						<title>{comments[0].comment}</title>
+					)}
+					{comments.length > 0 && (
+						<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
+					)}
+					<meta name="description" content="Some description." />
+					<meta property="og:image" content={photo ? photo.getImgUrl : ''} />
+				</MetaTags>
+
+				<div
+					style={{
+						display: 'flex',
+						justifyContent: 'center',
+					}}>
+
 					{prevPhoto
 					&& (
 						<div style={{ margin: '10px', }}>
@@ -153,17 +168,20 @@ class PhotosComponent extends Component {
 						)
 					}
 				</div>
-				<div align="center">
+				<div
+					style={{
+						display: 'flex',
+						justifyContent: 'center',
+					}}>
 					{photo && (
 						<img
 							src={photo.getImgUrl}
-							alt=""
+							alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
 							style={{
 								height: '600px',
 								justifyContent: 'center',
 								alignItems: 'center',
 							}}
-
 						/>
 					)}
 				</div>
