@@ -14,15 +14,11 @@ class PhotosComponent extends Component {
 		match: PropTypes.object.isRequired,
 	}
 
-	constructor(props, context) {
-		super(props, context)
-
-		this.state = {
-			photo: null,
-			comments: [],
-			nextPhoto: null,
-			prevPhoto: null,
-		}
+	state = {
+		photo: null,
+		comments: [],
+		nextPhoto: null,
+		prevPhoto: null,
 	}
 
 	async componentDidMount() {
@@ -49,6 +45,13 @@ class PhotosComponent extends Component {
 
 	update(photoId) {
 		ReactGA.pageview(`/photos/${photoId}`)
+		this.setState({
+			photo: null,
+			comments: [],
+			nextPhoto: null,
+			prevPhoto: null,
+		})
+
 		fetch(`https://api.wisaw.com/photos/prev/${photoId}`, {
 			method: 'GET',
 			headers: {
@@ -146,26 +149,26 @@ class PhotosComponent extends Component {
 					}}>
 
 					{prevPhoto
-					&& (
-						<div style={{ margin: '10px', }}>
-							<Link
-								to={`/photos/${prevPhoto.id}`}
-								onClick={() => this.update(prevPhoto.id)}
-								replace>prev
-							</Link>
-						</div>
-					)
+				&& (
+					<div style={{ margin: '10px', }}>
+						<Link
+							to={`/photos/${prevPhoto.id}`}
+							onClick={() => this.update(prevPhoto.id)}
+							replace>prev
+						</Link>
+					</div>
+				)
 					}
 					{nextPhoto
-						&& (
-							<div style={{ margin: '10px', }}>
-								<Link
-									to={`/photos/${nextPhoto.id}`}
-									onClick={() => this.update(nextPhoto.id)}
-									replace>next
-								</Link>
-							</div>
-						)
+				&& (
+					<div style={{ margin: '10px', }}>
+						<Link
+							to={`/photos/${nextPhoto.id}`}
+							onClick={() => this.update(nextPhoto.id)}
+							replace>next
+						</Link>
+					</div>
+				)
 					}
 				</div>
 				<div

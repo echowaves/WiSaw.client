@@ -3,7 +3,15 @@ import React, { Component, } from "react"
 class Footer extends Component {
 	render() {
 		return (
-			<div id="footer">
+			<div
+				id="footer"
+				style={{
+					position: 'fixed',
+					left: 0,
+					bottom: 0,
+					width: '100%',
+					textAlign: 'center',
+				}}>
 				<div
 					id="stores"
 					style={{
