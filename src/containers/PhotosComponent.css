@@ -1,0 +1,64 @@
+.PhotosComponent .lander {
+  display: flex;
+  justify-content: center;
+}
+
+.PhotosComponent {
+  font-family: "Open Sans", sans-serif;
+  font-weight: 600;
+}
+
+.PhotosComponent {
+  color: #999;
+}
+
+.button {
+border: none;
+background: #404040;
+color: #ffffff !important;
+font-weight: 700;
+padding: 20px;
+letter-spacing: 3px;
+
+text-transform: uppercase;
+border-radius: 6px;
+display: inline-block;
+}
+
+.button:hover {
+color: #404040 !important;
+font-weight: 700 !important;
+padding: 20px;
+letter-spacing: 3px;
+
+background: none;
+-webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+-moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+transition: all 0.3s ease 0s;
+}
+
+
+
+img.mainImage {
+  height: 600px;
+  margin: 20px;
+  justify-content: center;
+  align-items: center;
+  -webkit-box-shadow:
+   0px 0px 0px 2px rgba(0,0,0,0.6),
+              0px 0px 0px 14px #fff,
+              0px 0px 0px 18px rgba(0,0,0,0.2),
+              6px 6px 8px 17px #555;
+
+   -moz-box-shadow:
+   0px 0px 0px 2px rgba(0,0,0,0.6),
+              0px 0px 0px 14px #fff,
+              0px 0px 0px 18px rgba(0,0,0,0.2),
+              6px 6px 8px 17px #555;
+
+        box-shadow:
+   0px 0px 0px 2px rgba(0,0,0,0.6),
+              0px 0px 0px 14px #fff,
+              0px 0px 0px 18px rgba(0,0,0,0.2),
+              6px 6px 8px 17px #555;
+}

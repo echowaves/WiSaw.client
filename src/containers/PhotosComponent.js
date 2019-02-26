@@ -1,5 +1,6 @@
 import React, { Component, } from "react"
 import ReactGA from 'react-ga'
+import "./PhotosComponent.css"
 
 import {
 	Link, withRouter,
@@ -131,7 +132,7 @@ class PhotosComponent extends Component {
 		const { match: { params: { photoId, }, }, } = this.props
 
 		return (
-			<div>
+			<div className="PhotosComponent">
 				<MetaTags>
 					{comments.length > 0 && (
 						<title>{comments[0].comment}</title>
@@ -142,30 +143,30 @@ class PhotosComponent extends Component {
 					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
 				</MetaTags>
 
-				<div
-					style={{
-						display: 'flex',
-						justifyContent: 'center',
-					}}>
+				<div className="lander">
+
+
+					{nextPhoto
+				&& (
+					<div style={{ margin: '10px', }}>
+						<Link
+							className="button"
+							to={`/photos/${nextPhoto.id}`}
+							onClick={() => this.update(nextPhoto.id)}
+							replace>&lt;&nbsp;next
+						</Link>
+					</div>
+				)
+					}
 
 					{prevPhoto
 				&& (
 					<div style={{ margin: '10px', }}>
 						<Link
+							className="button"
 							to={`/photos/${prevPhoto.id}`}
 							onClick={() => this.update(prevPhoto.id)}
-							replace>prev
-						</Link>
-					</div>
-				)
-					}
-					{nextPhoto
-				&& (
-					<div style={{ margin: '10px', }}>
-						<Link
-							to={`/photos/${nextPhoto.id}`}
-							onClick={() => this.update(nextPhoto.id)}
-							replace>next
+							replace>prev&nbsp;&gt;
 						</Link>
 					</div>
 				)
@@ -178,13 +179,9 @@ class PhotosComponent extends Component {
 					}}>
 					{photo && (
 						<img
+							className="mainImage"
 							src={photo.getImgUrl}
 							alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
-							style={{
-								height: '600px',
-								justifyContent: 'center',
-								alignItems: 'center',
-							}}
 						/>
 					)}
 				</div>
@@ -212,10 +209,10 @@ class PhotosComponent extends Component {
 						<div align="center" style={{ margin: '10px', }}>
 
 							{comments.map((comment, i) => (
-								<div
+								<p
 									key={comment.id}
 									style={{ margin: '10', }}>{comment.comment}
-								</div>
+								</p>
 							))}
 						</div>
 					)}
