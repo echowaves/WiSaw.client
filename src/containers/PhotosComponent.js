@@ -155,7 +155,8 @@ class PhotosComponent extends Component {
 						<Link
 							className="button"
 							to={`/photos/${nextPhoto.id}`}
-							onClick={() => this.update(nextPhoto.id)}>&lt;&nbsp;next
+							onClick={() => this.update(nextPhoto.id)}
+							replace>&lt;&nbsp;next
 						</Link>
 					</div>
 				)
@@ -167,7 +168,8 @@ class PhotosComponent extends Component {
 						<Link
 							className="button"
 							to={`/photos/${prevPhoto.id}`}
-							onClick={() => this.update(prevPhoto.id)}>prev&nbsp;&gt;
+							onClick={() => this.update(prevPhoto.id)}
+							replace>prev&nbsp;&gt;
 						</Link>
 					</div>
 				)
