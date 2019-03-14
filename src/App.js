@@ -8,20 +8,13 @@ import Footer from './containers/Footer'
 import "./App.css"
 
 class App extends Component {
-	constructor(props, context) {
-		super(props, context)
-	}
-
-	componentDidMount() {
-	}
-
 	render() {
 		return (
 			<Router>
 				<div>
 					<Switch>
-						<Route exact path="/" component={PhotosComponent} />
 						<Route exact path="/photos/:photoId" component={PhotosComponent} />
+						<Route exact path="/" component={PhotosComponent} />
 					</Switch>
 					<Footer />
 				</div>

@@ -7,7 +7,6 @@ import {
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
-
 import MetaTags from 'react-meta-tags'
 
 class PhotosComponent extends Component {
@@ -22,26 +21,31 @@ class PhotosComponent extends Component {
 		prevPhoto: null,
 	}
 
-	async componentDidMount() {
+	componentDidMount() {
 		let { match: { params: { photoId, }, }, } = this.props
 		if (!photoId) {
-			try {
-				const response = await	fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-					},
+			fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+			})
+				.then(response => {
+					if (response.ok) {
+						return response.json()
+					}
+					throw new Error('Something went wrong ...')
 				})
-				if (response.status === 200) {
-					const responseJson = await response.json()
-					photoId = responseJson.photo.id
-				}
-			} catch (error) {
-				// console.log(JSON.stringify(error))
-			}
+				.then(body => {
+					photoId = body.photo.id
+					ReactGA.initialize('UA-3129031-19')
+					this.update(photoId)
+				})
+				.catch(error =>	console.log(JSON.stringify(error)))
+		} else {
+			ReactGA.initialize('UA-3129031-19')
+			this.update(photoId)
 		}
-		ReactGA.initialize('UA-3129031-19')
-		this.update(photoId)
 	}
 
 	update(photoId) {
