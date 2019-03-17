@@ -148,6 +148,7 @@ class PhotosComponent extends Component {
 					<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
 					<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
 					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
+					{photoId && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photoId}`} />)}
 				</MetaTags>
 
 				<div className="lander">
