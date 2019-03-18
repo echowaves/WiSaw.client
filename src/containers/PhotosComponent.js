@@ -41,7 +41,7 @@ class PhotosComponent extends Component {
 					ReactGA.initialize('UA-3129031-19')
 					this.update(photoId)
 				})
-				.catch(error =>	console.log(JSON.stringify(error)))
+				.catch(error =>	console.log(JSON.stringify(error))) // eslint-disable-line no-console
 		} else {
 			ReactGA.initialize('UA-3129031-19')
 			this.update(photoId)
