@@ -58,6 +58,10 @@ class Footer extends Component {
 					justifyContent: 'center',
 				}}>
 					<a href="https://www.echowaves.com">© echowaves</a>
+					&nbsp;&nbsp;
+					<a href="https://www.echowaves.com/support">support</a>
+					&nbsp;&nbsp;
+					<a href="https://www.echowaves.com/blog">blog</a>
 				</div>
 
 			</div>
