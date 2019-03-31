@@ -8,6 +8,7 @@ import {
 
 import PropTypes from 'prop-types'
 import MetaTags from 'react-meta-tags'
+import NoMatch from "./NoMatch.js"
 
 class PhotosComponent extends Component {
 	static propTypes = {
@@ -19,6 +20,7 @@ class PhotosComponent extends Component {
 		comments: [],
 		nextPhoto: null,
 		prevPhoto: null,
+		noPhotoFound: false,
 	}
 
 	componentDidMount() {
@@ -108,7 +110,7 @@ class PhotosComponent extends Component {
 			.then(body => {
 				this.setState({ photo: body.photo, })
 			})
-			.catch(error => this.setState({ photo: null, }))
+			.catch(error => this.setState({ photo: null, noPhotoFound: true, }))
 
 
 		fetch(`https://api.wisaw.com/photos/${photoId}/comments`, {
@@ -131,10 +133,14 @@ class PhotosComponent extends Component {
 
 	render() {
 		const {
-			photo, prevPhoto, nextPhoto, comments,
+			photo, prevPhoto, nextPhoto, comments, noPhotoFound,
 		} = this.state
 		const { match: { params: { photoId, }, }, } = this.props
-
+		if (noPhotoFound) {
+			return (
+				<NoMatch />
+			)
+		}
 		return (
 			<div className="PhotosComponent">
 				<MetaTags>
