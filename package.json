@@ -7,9 +7,10 @@
     "react-bootstrap": "0.32.4",
     "react-dom": "16.8.2",
     "react-ga": "2.5.7",
+    "react-meta-tags": "0.7.4",
+    "react-nested-status": "0.2.1",
     "react-router-dom": "4.3.1",
-    "react-scripts": "2.1.5",
-		"react-meta-tags": "0.7.4"
+    "react-scripts": "2.1.5"
   },
   "devDependencies": {
     "eslint": "5.12.0",
