@@ -126,7 +126,7 @@ class PhotosComponent extends Component {
 				throw new Error('Something went wrong ...')
 			})
 			.then(body => {
-				this.setState({ comments: body.comments, })
+				this.setState({ comments: body.comments.reverse(), })
 			})
 			.catch(error => this.setState({ photo: null, }))
 	}
@@ -223,11 +223,16 @@ class PhotosComponent extends Component {
 
 							{comments.map((comment, i) => (
 								<div key={comment.id}>
-									<h1>
+									{i === 0 && (
+										<h1
+											style={{ margin: '10', }}>{comment.comment}
+										</h1>
+									)}
+									{i > 0 && (
 										<p
 											style={{ margin: '10', }}>{comment.comment}
 										</p>
-									</h1>
+									)}
 								</div>
 							))}
 						</div>
