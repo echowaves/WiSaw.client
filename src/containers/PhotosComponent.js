@@ -154,6 +154,7 @@ class PhotosComponent extends Component {
 					<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
 					<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
 					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
+					<meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
 					{photoId && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photoId}`} />)}
 				</MetaTags>
 
@@ -221,10 +222,13 @@ class PhotosComponent extends Component {
 						<div align="center" style={{ margin: '10px', }}>
 
 							{comments.map((comment, i) => (
-								<p
-									key={comment.id}
-									style={{ margin: '10', }}>{comment.comment}
-								</p>
+								<div key={comment.id}>
+									<h1>
+										<p
+											style={{ margin: '10', }}>{comment.comment}
+										</p>
+									</h1>
+								</div>
 							))}
 						</div>
 					)}
