@@ -219,7 +219,7 @@ class PhotosComponent extends Component {
 					justifyContent: 'center',
 				}}>
 					{comments && (
-						<div align="center" style={{ margin: '10px', }}>
+						<div align="center" style={{ margin: '10px', paddingBottom: '200px', }}>
 
 							{comments.map((comment, i) => (
 								<div key={comment.id}>
