@@ -1,4 +1,17 @@
 import React, { Component, } from "react"
+import { bounce, } from 'react-animations'
+import Radium, { StyleRoot, } from 'radium'
+
+
+const styles = {
+	bounce: {
+		animation: 'x 2s',
+		animationName: Radium.keyframes(bounce, 'bounce'),
+		color: 'red',
+		fontWeight: 'bold',
+	},
+}
+
 
 class Footer extends Component {
 	render() {
@@ -12,6 +25,15 @@ class Footer extends Component {
 					width: '100%',
 					textAlign: 'center',
 				}}>
+				<StyleRoot>
+					<div
+						style={styles.bounce}>
+						<div>To post photos & comments anonumously</div>
+						<div>
+						get the app
+						</div>
+					</div>
+				</StyleRoot>
 				<div
 					id="stores"
 					style={{
