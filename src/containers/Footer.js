@@ -28,7 +28,7 @@ class Footer extends Component {
 				<StyleRoot>
 					<div
 						style={styles.bounce}>
-						<div>To post photos & comments anonumously</div>
+						<div>To post photos & comments anonymously</div>
 						<div>
 						get the app
 						</div>
