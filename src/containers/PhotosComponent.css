@@ -5,7 +5,9 @@
 
 .PhotosComponent {
   font-family: "Open Sans", sans-serif;
-  font-weight: 600;
+  font-weight: 200;
+	font-size: 20px;
+
 }
 
 .PhotosComponent .h1 {
