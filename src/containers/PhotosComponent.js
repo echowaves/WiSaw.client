@@ -10,6 +10,9 @@ import PropTypes from 'prop-types'
 import MetaTags from 'react-meta-tags'
 import NoMatch from "./NoMatch.js"
 
+const stringifyObject = require('stringify-object')
+
+
 class PhotosComponent extends Component {
 	static propTypes = {
 		match: PropTypes.object.isRequired,
@@ -129,11 +132,29 @@ class PhotosComponent extends Component {
 				this.setState({ comments: body.comments.reverse(), })
 			})
 			.catch(error => this.setState({ photo: null, }))
+
+
+		fetch(`https://api.wisaw.com/photos/${photoId}/recognitions`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then(response => {
+				if (response.ok) {
+					return response.json()
+				}
+				throw new Error('Something went wrong ...')
+			})
+			.then(body => {
+				this.setState({ recognition: body.recognition, })
+			})
+			.catch(error => this.setState({ recognition: null, }))
 	}
 
 	render() {
 		const {
-			photo, prevPhoto, nextPhoto, comments, noPhotoFound,
+			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition,
 		} = this.state
 		const { match: { params: { photoId, }, }, } = this.props
 		if (noPhotoFound) {
@@ -236,6 +257,15 @@ class PhotosComponent extends Component {
 								</div>
 							))}
 						</div>
+					)}
+
+					{recognition && (
+						<pre style={{ margin: '10px', paddingBottom: '200px', }}>
+							{stringifyObject(recognition, {
+								indent: '  ',
+								singleQuotes: false,
+							})}
+						</pre>
 					)}
 				</div>
 			</div>
