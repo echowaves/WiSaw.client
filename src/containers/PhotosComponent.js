@@ -163,25 +163,34 @@ class PhotosComponent extends Component {
 
 		return (
 			<div>
-				<div align="center" style={{ fontWeight: "bold", }}>
-					AI recognized tags:
-				</div>
-				<span align="center">
-					{labels.map(label => (
-						<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
-					))
-					}
-				</span>
 
-				<div align="center" style={{ fontWeight: "bold", }}>
+				{labels.length > 0 && (
+					<div>
+						<div align="center" style={{ fontWeight: "bold", }}>
+					AI recognized tags:
+						</div>
+						<span align="center">
+							{labels.map(label => (
+								<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
+							))
+							}
+						</span>
+					</div>
+				)}
+
+				{textDetections.length > 0 && (
+					<div>
+						<div align="center" style={{ fontWeight: "bold", }}>
 					AI recognized text:
-				</div>
-				<span align="center">
-					{textDetections.map(text => (
-						<div key={text.Id} style={{ fontSize: `${text.Confidence}%`, }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div>
-					))
-					}
-				</span>
+						</div>
+						<span align="center">
+							{textDetections.map(text => (
+								<div key={text.Id} style={{ fontSize: `${text.Confidence}%`, }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div>
+							))
+							}
+						</span>
+					</div>
+				)}
 			</div>
 		)
 	}
