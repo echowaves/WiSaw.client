@@ -158,6 +158,8 @@ class PhotosComponent extends Component {
 
 	renderRecognitions(recognition) {
 		const labels = jmespath.search(recognition, "metaData.Labels[]")
+		const textDetections = jmespath.search(recognition, "metaData.TextDetections[?Type=='LINE']")
+		const moderationLabels = jmespath.search(recognition, "metaData.ModerationLabels[]")
 
 		return (
 			<div>
@@ -167,6 +169,16 @@ class PhotosComponent extends Component {
 				<span align="center">
 					{labels.map(label => (
 						<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
+					))
+					}
+				</span>
+
+				<div align="center" style={{ fontWeight: "bold", }}>
+					AI recognized text:
+				</div>
+				<span align="center">
+					{textDetections.map(text => (
+						<div key={text.Id} style={{ fontSize: `${text.Confidence}%`, }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div>
 					))
 					}
 				</span>
@@ -281,14 +293,8 @@ class PhotosComponent extends Component {
 					)}
 
 					{recognition && this.renderRecognitions(recognition)}
-					{recognition && (
-						<pre style={{ margin: '10px', paddingBottom: '200px', }}>
-							{stringifyObject(recognition, {
-								indent: '  ',
-								singleQuotes: false,
-							})}
-						</pre>
-					)}
+
+					<div align="center" style={{ margin: '10px', paddingBottom: '200px', }} />
 				</div>
 			</div>
 		)
