@@ -11,7 +11,7 @@ import MetaTags from 'react-meta-tags'
 import NoMatch from "./NoMatch.js"
 
 const stringifyObject = require('stringify-object')
-
+const jmespath = require('jmespath')
 
 class PhotosComponent extends Component {
 	static propTypes = {
@@ -152,6 +152,28 @@ class PhotosComponent extends Component {
 			.catch(error => this.setState({ recognition: null, }))
 	}
 
+	renderLabel(label) {
+
+	}
+
+	renderRecognitions(recognition) {
+		const labels = jmespath.search(recognition, "metaData.Labels[]")
+
+		return (
+			<div>
+				<div align="center" style={{ fontWeight: "bold", }}>
+					AI recognized tags:
+				</div>
+				<span align="center">
+					{labels.map(label => (
+						<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
+					))
+					}
+				</span>
+			</div>
+		)
+	}
+
 	render() {
 		const {
 			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition,
@@ -241,7 +263,6 @@ class PhotosComponent extends Component {
 				}}>
 					{comments && (
 						<div align="center" style={{ margin: '10px', paddingBottom: '200px', }}>
-
 							{comments.map((comment, i) => (
 								<div key={comment.id}>
 									{i === 0 && (
@@ -259,6 +280,7 @@ class PhotosComponent extends Component {
 						</div>
 					)}
 
+					{recognition && this.renderRecognitions(recognition)}
 					{recognition && (
 						<pre style={{ margin: '10px', paddingBottom: '200px', }}>
 							{stringifyObject(recognition, {
