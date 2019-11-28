@@ -165,7 +165,7 @@ class PhotosComponent extends Component {
 			<div>
 
 				{labels.length > 0 && (
-					<div>
+					<div style={{ margin: '10px', paddingBottom: '20px', }}>
 						<div align="center" style={{ fontWeight: "bold", }}>
 					AI recognized tags:
 						</div>
@@ -179,13 +179,28 @@ class PhotosComponent extends Component {
 				)}
 
 				{textDetections.length > 0 && (
-					<div>
+					<div style={{ margin: '10px', paddingBottom: '20px', }}>
 						<div align="center" style={{ fontWeight: "bold", }}>
 					AI recognized text:
 						</div>
 						<span align="center">
 							{textDetections.map(text => (
 								<div key={text.Id} style={{ fontSize: `${text.Confidence}%`, }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div>
+							))
+							}
+						</span>
+					</div>
+				)}
+
+
+				{moderationLabels.length > 0 && (
+					<div style={{ margin: '10px', paddingBottom: '20px', }}>
+						<div align="center" style={{ fontWeight: "bold", }}>
+					AI moderation tags:
+						</div>
+						<span align="center">
+							{moderationLabels.map(label => (
+								<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
 							))
 							}
 						</span>
