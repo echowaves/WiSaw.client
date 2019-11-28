@@ -191,12 +191,12 @@ class PhotosComponent extends Component {
 
 				{moderationLabels.length > 0 && (
 					<div style={{ margin: '10px', paddingBottom: '20px', }}>
-						<div align="center" style={{ fontWeight: "bold", }}>
+						<div align="center" style={{ fontWeight: "bold", color: 'red', }}>
 					AI moderation tags:
 						</div>
 						<span align="center">
 							{moderationLabels.map(label => (
-								<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
+								<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, color: 'red', }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
 							))
 							}
 						</span>
