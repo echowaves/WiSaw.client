@@ -152,10 +152,6 @@ class PhotosComponent extends Component {
 			.catch(error => this.setState({ recognition: null, }))
 	}
 
-	renderLabel(label) {
-
-	}
-
 	renderRecognitions(recognition) {
 		const labels = jmespath.search(recognition, "metaData.Labels[]")
 		const textDetections = jmespath.search(recognition, "metaData.TextDetections[?Type=='LINE']")
