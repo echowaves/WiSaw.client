@@ -211,6 +211,8 @@ class PhotosComponent extends Component {
 			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition,
 		} = this.state
 		const { match: { params: { photoId, }, }, } = this.props
+		const embedded = new URLSearchParams(this.props.location.search).get("embedded")
+
 		if (noPhotoFound) {
 			return (
 				<NoMatch />
@@ -241,7 +243,7 @@ class PhotosComponent extends Component {
 					<div style={{ margin: '10px', }}>
 						<Link
 							className="button"
-							to={`/photos/${nextPhoto.id}`}
+							to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
 							onClick={() => this.update(nextPhoto.id)}>&lt;&nbsp;next
 						</Link>
 					</div>
@@ -253,7 +255,7 @@ class PhotosComponent extends Component {
 					<div style={{ margin: '10px', }}>
 						<Link
 							className="button"
-							to={`/photos/${prevPhoto.id}`}
+							to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
 							onClick={() => this.update(prevPhoto.id)}>prev&nbsp;&gt;
 						</Link>
 					</div>

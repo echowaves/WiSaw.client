@@ -1,6 +1,7 @@
 import React, { Component, } from "react"
 import { bounce, } from 'react-animations'
 import Radium, { StyleRoot, } from 'radium'
+import { withRouter, } from 'react-router-dom'
 
 
 const styles = {
@@ -15,6 +16,10 @@ const styles = {
 
 class Footer extends Component {
 	render() {
+		const embedded = new URLSearchParams(this.props.location.search).get("embedded")
+		if (embedded) {
+			return (<div />)
+		}
 		return (
 			<div
 				id="footer"
@@ -90,5 +95,6 @@ class Footer extends Component {
 		)
 	}
 }
+export default withRouter(Footer)
 
-export default Footer
+// export default Footer
