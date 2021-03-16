@@ -1,5 +1,7 @@
 import React, { Component, } from "react"
 import ReactGA from 'react-ga'
+import { Helmet, } from "react-helmet"
+
 import "./PhotosComponent.css"
 
 import {
@@ -7,7 +9,6 @@ import {
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
-import MetaTags from 'react-meta-tags'
 import NoMatch from "./NoMatch.js"
 
 const stringifyObject = require('stringify-object')
@@ -216,20 +217,21 @@ class PhotosComponent extends Component {
 		}
 		return (
 			<div className="PhotosComponent">
-				<MetaTags>
+				<Helmet>
 					{comments.length > 0 && (
 						<title>{`WiSaw: ${comments[0].comment}`}</title>
 					)}
 					{comments.length === 0 && (
 						<title>{`What I Saw Today photo ${photo ? photo.id : ''}`}</title>
 					)}
-					<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
-					<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
-					<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
-					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
 					<meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+
+					<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+					<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+					<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
+					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
 					{photoId && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photoId}`} />)}
-				</MetaTags>
+				</Helmet>
 
 				<div className="lander">
 
