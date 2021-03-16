@@ -3,7 +3,6 @@ import { bounce, } from 'react-animations'
 import Radium, { StyleRoot, } from 'radium'
 import { withRouter, } from 'react-router-dom'
 
-
 const styles = {
 	bounce: {
 		animation: 'x 2s',
@@ -13,10 +12,10 @@ const styles = {
 	},
 }
 
-
 class Footer extends Component {
 	render() {
-		const embedded = new URLSearchParams(this.props.location.search).get("embedded")
+		const { location, } = this.props
+		const embedded = new URLSearchParams(location.search).get("embedded")
 		if (embedded) {
 			return (<div />)
 		}
@@ -29,13 +28,15 @@ class Footer extends Component {
 					bottom: 0,
 					width: '100%',
 					textAlign: 'center',
-				}}>
+				}}
+			>
 				<StyleRoot>
 					<div
-						style={styles.bounce}>
+						style={styles.bounce}
+					>
 						<div>To post photos & comments anonymously</div>
 						<div>
-						get the app
+							get the app
 						</div>
 					</div>
 				</StyleRoot>
@@ -45,13 +46,16 @@ class Footer extends Component {
 						display: 'flex',
 						justifyContent: 'center',
 						padding: '20px',
-					}}>
+					}}
+				>
 					<div
 						style={{
 							margin: '20px',
-						}}>
+						}}
+					>
 						<a
-							href="http://itunes.apple.com/us/app/wisaw/id1299949122">
+							href="http://itunes.apple.com/us/app/wisaw/id1299949122"
+						>
 							<div>
 								<img
 									width="177px"
@@ -65,9 +69,11 @@ class Footer extends Component {
 					<div
 						style={{
 							margin: '20px',
-						}}>
+						}}
+					>
 						<a
-							href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw">
+							href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw"
+						>
 							<div>
 								<img
 									width="176px"
@@ -83,7 +89,8 @@ class Footer extends Component {
 				<div style={{
 					display: 'flex',
 					justifyContent: 'center',
-				}}>
+				}}
+				>
 					<a href="https://www.echowaves.com">© echowaves</a>
 					&nbsp;&nbsp;
 					<a href="https://www.echowaves.com/support">support</a>

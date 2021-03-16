@@ -13,17 +13,21 @@ import NoMatch from "./NoMatch.js"
 const stringifyObject = require('stringify-object')
 const jmespath = require('jmespath')
 
-class PhotosComponent extends Component {
-	static propTypes = {
-		match: PropTypes.object.isRequired,
-	}
+const propTypes = {
+	match: PropTypes.object.isRequired,
+}
 
-	state = {
-		photo: null,
-		comments: [],
-		nextPhoto: null,
-		prevPhoto: null,
-		noPhotoFound: false,
+class PhotosComponent extends Component {
+	constructor(props) {
+		// Required step: always call the parent class' constructor
+		super(props)
+		this.state = {
+			photo: null,
+			comments: [],
+			nextPhoto: null,
+			prevPhoto: null,
+			noPhotoFound: false,
+		}
 	}
 
 	componentDidMount() {
@@ -79,7 +83,6 @@ class PhotosComponent extends Component {
 			})
 			.catch(error => this.setState({ prevPhoto: null, }))
 
-
 		fetch(`https://api.wisaw.com/photos/next/${photoId}`, {
 			method: 'GET',
 			headers: {
@@ -96,7 +99,6 @@ class PhotosComponent extends Component {
 				this.setState({ nextPhoto: body.photo, })
 			})
 			.catch(error => this.setState({ nextPhoto: null, }))
-
 
 		fetch(`https://api.wisaw.com/photos/${photoId}`, {
 			method: 'GET',
@@ -115,7 +117,6 @@ class PhotosComponent extends Component {
 			})
 			.catch(error => this.setState({ photo: null, noPhotoFound: true, }))
 
-
 		fetch(`https://api.wisaw.com/photos/${photoId}/comments`, {
 			method: 'GET',
 			headers: {
@@ -132,7 +133,6 @@ class PhotosComponent extends Component {
 				this.setState({ comments: body.comments.reverse(), })
 			})
 			.catch(error => this.setState({ photo: null, }))
-
 
 		fetch(`https://api.wisaw.com/photos/${photoId}/recognitions`, {
 			method: 'GET',
@@ -163,13 +163,12 @@ class PhotosComponent extends Component {
 				{labels.length > 0 && (
 					<div style={{ margin: '10px', paddingBottom: '20px', }}>
 						<div align="center" style={{ fontWeight: "bold", }}>
-					AI recognized tags:
+							AI recognized tags:
 						</div>
 						<span align="center">
 							{labels.map(label => (
 								<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
-							))
-							}
+							))}
 						</span>
 					</div>
 				)}
@@ -177,28 +176,25 @@ class PhotosComponent extends Component {
 				{textDetections.length > 0 && (
 					<div style={{ margin: '10px', paddingBottom: '20px', }}>
 						<div align="center" style={{ fontWeight: "bold", }}>
-					AI recognized text:
+							AI recognized text:
 						</div>
 						<span align="center">
 							{textDetections.map(text => (
 								<div key={text.Id} style={{ fontSize: `${text.Confidence}%`, }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div>
-							))
-							}
+							))}
 						</span>
 					</div>
 				)}
 
-
 				{moderationLabels.length > 0 && (
 					<div style={{ margin: '10px', paddingBottom: '20px', }}>
 						<div align="center" style={{ fontWeight: "bold", color: 'red', }}>
-					AI moderation tags:
+							AI moderation tags:
 						</div>
 						<span align="center">
 							{moderationLabels.map(label => (
 								<div key={label.Name} style={{ fontSize: `${label.Confidence}%`, color: 'red', }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
-							))
-							}
+							))}
 						</span>
 					</div>
 				)}
@@ -210,8 +206,8 @@ class PhotosComponent extends Component {
 		const {
 			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition,
 		} = this.state
-		const { match: { params: { photoId, }, }, } = this.props
-		const embedded = new URLSearchParams(this.props.location.search).get("embedded")
+		const { match: { params: { photoId, }, }, location, } = this.props
+		const embedded = new URLSearchParams(location.search).get("embedded")
 
 		if (noPhotoFound) {
 			return (
@@ -237,18 +233,17 @@ class PhotosComponent extends Component {
 
 				<div className="lander">
 
-
 					{nextPhoto
 				&& (
 					<div style={{ margin: '10px', }}>
 						<Link
 							className="button"
 							to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-							onClick={() => this.update(nextPhoto.id)}>&lt;&nbsp;next
+							onClick={() => this.update(nextPhoto.id)}
+						>&lt;&nbsp;next
 						</Link>
 					</div>
-				)
-					}
+				)}
 
 					{prevPhoto
 				&& (
@@ -256,17 +251,18 @@ class PhotosComponent extends Component {
 						<Link
 							className="button"
 							to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-							onClick={() => this.update(prevPhoto.id)}>prev&nbsp;&gt;
+							onClick={() => this.update(prevPhoto.id)}
+						>prev&nbsp;&gt;
 						</Link>
 					</div>
-				)
-					}
+				)}
 				</div>
 				<div
 					style={{
 						display: 'flex',
 						justifyContent: 'center',
-					}}>
+					}}
+				>
 					{photo && (
 						<img
 							className="mainImage"
@@ -278,7 +274,8 @@ class PhotosComponent extends Component {
 				<div style={{
 					display: 'flex',
 					justifyContent: 'center',
-				}}>
+				}}
+				>
 					<div align="center" style={{ margin: '10px', }}>
 						{comments && comments.length > 0 && (
 							<div>Comments:{comments.length}</div>
@@ -294,19 +291,22 @@ class PhotosComponent extends Component {
 					display: 'flex',
 					flexDirection: 'column',
 					justifyContent: 'center',
-				}}>
+				}}
+				>
 					{comments && (
 						<div align="center" style={{ margin: '10px', paddingBottom: '200px', }}>
 							{comments.map((comment, i) => (
 								<div key={comment.id}>
 									{i === 0 && (
 										<h1
-											style={{ margin: '10', }}>{comment.comment}
+											style={{ margin: '10', }}
+										>{comment.comment}
 										</h1>
 									)}
 									{i > 0 && (
 										<p
-											style={{ margin: '10', }}>{comment.comment}
+											style={{ margin: '10', }}
+										>{comment.comment}
 										</p>
 									)}
 								</div>
