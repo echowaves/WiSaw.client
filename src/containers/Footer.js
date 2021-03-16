@@ -34,27 +34,17 @@ class Footer extends Component {
 					backgroundColor: 'rgba(250, 250, 250, 0.9)',
 				}}
 				>
-					<StyleRoot>
-						<div
-							style={styles.bounce}
-						>
-							<div>To post photos & comments anonymously</div>
-							<div>
-								get the app
-							</div>
-						</div>
-					</StyleRoot>
 					<div
 						id="stores"
 						style={{
 							display: 'flex',
 							justifyContent: 'center',
-							padding: '10px',
+							padding: '5px',
 						}}
 					>
 						<div
 							style={{
-								margin: '10px',
+								margin: '5px',
 							}}
 						>
 							<a
@@ -72,7 +62,7 @@ class Footer extends Component {
 						</div>
 						<div
 							style={{
-								margin: '10px',
+								margin: '5px',
 							}}
 						>
 							<a
@@ -89,7 +79,16 @@ class Footer extends Component {
 							</a>
 						</div>
 					</div>
-
+					<StyleRoot>
+						<div
+							style={styles.bounce}
+						>
+							<div>To post photos & comments anonymously</div>
+							<div>
+								get the app
+							</div>
+						</div>
+					</StyleRoot>
 					<div style={{
 						display: 'flex',
 						justifyContent: 'center',

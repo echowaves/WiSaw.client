@@ -158,12 +158,12 @@ class PhotosComponent extends Component {
 		const moderationLabels = jmespath.search(recognition, "metaData.ModerationLabels[]")
 
 		return (
-			<div>
+			<div style={{ fontFamily: 'Arial', }}>
 
 				{labels.length > 0 && (
-					<div style={{ margin: '10px', paddingBottom: '20px', }}>
-						<div align="center" style={{ fontWeight: "bold", }}>
-							AI recognized tags:
+					<div style={{ margin: '5px', paddingBottom: '5px', }}>
+						<div align="center" >
+							<h3 style={{ fontWeight: "bold", }}>AI recognized tags:</h3>
 						</div>
 						<span align="center">
 							{labels.map(label => (
@@ -174,9 +174,9 @@ class PhotosComponent extends Component {
 				)}
 
 				{textDetections.length > 0 && (
-					<div style={{ margin: '10px', paddingBottom: '20px', }}>
-						<div align="center" style={{ fontWeight: "bold", }}>
-							AI recognized text:
+					<div style={{ margin: '5px', paddingBottom: '5px', }}>
+						<div align="center" >
+							<h3 style={{ fontWeight: "bold", }}>AI recognized text:</h3>
 						</div>
 						<span align="center">
 							{textDetections.map(text => (
@@ -187,7 +187,7 @@ class PhotosComponent extends Component {
 				)}
 
 				{moderationLabels.length > 0 && (
-					<div style={{ margin: '10px', paddingBottom: '20px', }}>
+					<div style={{ margin: '5px', paddingBottom: '5px', }}>
 						<div align="center" style={{ fontWeight: "bold", color: 'red', }}>
 							AI moderation tags:
 						</div>
@@ -235,7 +235,7 @@ class PhotosComponent extends Component {
 
 					{nextPhoto
 				&& (
-					<div style={{ margin: '10px', }}>
+					<div style={{ margin: '5px', }}>
 						<Link
 							className="button"
 							to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
@@ -247,7 +247,7 @@ class PhotosComponent extends Component {
 
 					{prevPhoto
 				&& (
-					<div style={{ margin: '10px', }}>
+					<div style={{ margin: '5px', }}>
 						<Link
 							className="button"
 							to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
@@ -276,12 +276,12 @@ class PhotosComponent extends Component {
 					justifyContent: 'center',
 				}}
 				>
-					<div align="center" style={{ margin: '10px', }}>
+					<div align="center" style={{ margin: '5px', }}>
 						{comments && comments.length > 0 && (
 							<div>Comments:{comments.length}</div>
 						)}
 					</div>
-					<div align="center" style={{ margin: '10px', }}>
+					<div align="center" style={{ margin: '5px', }}>
 						{photo && photo.likes > 0 && (
 							<div>Likes:{photo.likes}</div>
 						)}
@@ -294,12 +294,12 @@ class PhotosComponent extends Component {
 				}}
 				>
 					{comments && (
-						<div align="center" style={{ margin: '10px', paddingBottom: '200px', }}>
+						<div align="center" style={{ margin: '10px', paddingBottom: '20px', fontFamily: 'Courier New', }}>
 							{comments.map((comment, i) => (
 								<div key={comment.id}>
 									{i === 0 && (
 										<h1
-											style={{ margin: '10', }}
+											style={{ margin: '10', fontFamily: 'Courier New', }}
 										>{comment.comment}
 										</h1>
 									)}
@@ -316,7 +316,7 @@ class PhotosComponent extends Component {
 
 					{recognition && this.renderRecognitions(recognition)}
 
-					<div align="center" style={{ margin: '10px', paddingBottom: '200px', }} />
+					<div align="center" style={{ margin: '10px', paddingBottom: '150px', }} />
 				</div>
 			</div>
 		)
