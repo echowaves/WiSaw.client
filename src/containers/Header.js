@@ -4,10 +4,10 @@ import { withRouter, } from 'react-router-dom'
 class Footer extends Component {
 	render() {
 		const { location, } = this.props
-		const embedded = new URLSearchParams(location.search).get("embedded")
-		if (embedded) {
-			return (<div />)
-		}
+		// const embedded = new URLSearchParams(location.search).get("embedded")
+		// if (embedded) {
+		// 	return (<div />)
+		// }
 		return (
 			<header
 				id="header"
