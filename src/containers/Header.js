@@ -20,7 +20,7 @@ class Footer extends Component {
 					style={{
 						fontFamily: 'verdana',
 					}}
-				>#wisaw -- What I Saw
+				><a href="https://www.wisaw.com">#wisaw</a> -- What I Saw
 				</h1>
 			</header>
 		)
