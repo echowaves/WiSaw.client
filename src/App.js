@@ -6,6 +6,7 @@ import {
 import PhotosComponent from './containers/PhotosComponent'
 import NoMatch from './containers/NoMatch'
 import Footer from './containers/Footer'
+import Header from './containers/Header'
 import "./App.css"
 
 class App extends Component {
@@ -13,6 +14,7 @@ class App extends Component {
 		return (
 			<Router>
 				<div>
+					<Header />
 					<Switch>
 						<Route exact path="/photos/:photoId" component={PhotosComponent} />
 						<Route exact path="/" component={PhotosComponent} />
