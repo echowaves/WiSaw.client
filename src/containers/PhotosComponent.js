@@ -58,31 +58,28 @@ class PhotosComponent extends Component {
 		}
 	}
 
-	update(photoId) {
+	async update(photoId) {
 		ReactGA.pageview(`/photos/${photoId}`)
-		this.setState({
-			photo: null,
-			comments: [],
-			nextPhoto: null,
-			prevPhoto: null,
-		})
-
-		fetch(`https://api.wisaw.com/photos/${photoId}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then(response => {
-				if (response.ok) {
-					return response.json()
-				}
-				throw new Error('Something went wrong ...')
+		// this.setState({
+		// 	photo: null,
+		// 	comments: [],
+		// 	nextPhoto: null,
+		// 	prevPhoto: null,
+		// })
+		try {
+			const response = await fetch(`https://api.wisaw.com/photos/${photoId}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+				},
 			})
-			.then(body => {
+			const body = await response.json()
+			if (body) {
 				this.setState({ photo: body.photo, noPhotoFound: false, })
-			})
-			.catch(error => this.setState({ photo: null, noPhotoFound: true, }))
+			}
+		} catch (error)	{
+			this.setState({ photo: null, noPhotoFound: true, })
+		}
 
 		fetch(`https://api.wisaw.com/photos/prev/${photoId}`, {
 			method: 'GET',
