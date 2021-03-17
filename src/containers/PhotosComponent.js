@@ -60,12 +60,12 @@ class PhotosComponent extends Component {
 
 	async update(photoId) {
 		ReactGA.pageview(`/photos/${photoId}`)
-		// this.setState({
-		// 	photo: null,
+		this.setState({
+			photo: null,
 		// 	comments: [],
 		// 	nextPhoto: null,
 		// 	prevPhoto: null,
-		// })
+		})
 		try {
 			const response = await fetch(`https://api.wisaw.com/photos/${photoId}`, {
 				method: 'GET',
