@@ -67,6 +67,23 @@ class PhotosComponent extends Component {
 			prevPhoto: null,
 		})
 
+		fetch(`https://api.wisaw.com/photos/${photoId}`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then(response => {
+				if (response.ok) {
+					return response.json()
+				}
+				throw new Error('Something went wrong ...')
+			})
+			.then(body => {
+				this.setState({ photo: body.photo, noPhotoFound: false, })
+			})
+			.catch(error => this.setState({ photo: null, noPhotoFound: true, }))
+
 		fetch(`https://api.wisaw.com/photos/prev/${photoId}`, {
 			method: 'GET',
 			headers: {
@@ -100,23 +117,6 @@ class PhotosComponent extends Component {
 				this.setState({ nextPhoto: body.photo, })
 			})
 			.catch(error => this.setState({ nextPhoto: null, }))
-
-		fetch(`https://api.wisaw.com/photos/${photoId}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then(response => {
-				if (response.ok) {
-					return response.json()
-				}
-				throw new Error('Something went wrong ...')
-			})
-			.then(body => {
-				this.setState({ photo: body.photo, noPhotoFound: false, })
-			})
-			.catch(error => this.setState({ photo: null, noPhotoFound: true, }))
 
 		fetch(`https://api.wisaw.com/photos/${photoId}/comments`, {
 			method: 'GET',
