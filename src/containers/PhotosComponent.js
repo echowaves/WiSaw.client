@@ -114,7 +114,7 @@ class PhotosComponent extends Component {
 				throw new Error('Something went wrong ...')
 			})
 			.then(body => {
-				this.setState({ photo: body.photo, })
+				this.setState({ photo: body.photo, noPhotoFound: false, })
 			})
 			.catch(error => this.setState({ photo: null, noPhotoFound: true, }))
 
@@ -207,7 +207,7 @@ class PhotosComponent extends Component {
 		const {
 			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition,
 		} = this.state
-		const { match: { params: { photoId, }, }, location, } = this.props
+		const { location, } = this.props
 		const embedded = new URLSearchParams(location.search).get("embedded")
 
 		if (noPhotoFound) {
@@ -217,21 +217,23 @@ class PhotosComponent extends Component {
 		}
 		return (
 			<div className="PhotosComponent">
-				<Helmet>
-					{comments.length > 0 && (
-						<title>{`WiSaw: ${comments[0].comment}`}</title>
-					)}
-					{comments.length === 0 && (
-						<title>{`What I Saw Today photo ${photo ? photo.id : ''}`}</title>
-					)}
-					<meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+				{photo && (
+					<Helmet>
+						{comments.length > 0 && (
+							<title>{`WiSaw: ${comments[0].comment}`}</title>
+						)}
+						{comments.length === 0 && (
+							<title>{`What I Saw Today photo ${photo ? photo.id : ''}`}</title>
+						)}
+						<meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
 
-					<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
-					<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
-					<meta property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photoId}`} />
-					<meta property="og:url" content={`https://www.wisaw.com/photos/${photoId}`} />
-					{photoId && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photoId}`} />)}
-				</Helmet>
+						<meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+						<meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+						<meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
+						<meta property="og:url" content={`https://www.wisaw.com/photos/${photo.id}`} />
+						{photo && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />)}
+					</Helmet>
+				)}
 
 				<div className="lander">
 
