@@ -260,6 +260,7 @@ class PhotosComponent extends Component {
 				</div>
 				<div
 					style={{
+						height: "40vh",
 						display: 'flex',
 						justifyContent: 'center',
 						alignItems: 'center',
