@@ -262,14 +262,32 @@ class PhotosComponent extends Component {
 					style={{
 						display: 'flex',
 						justifyContent: 'center',
+						alignItems: 'center',
+						margin: '10px',
 					}}
 				>
 					{photo && (
-						<img
-							className="mainImage"
-							src={photo.getImgUrl}
-							alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
-						/>
+						<picture
+							style={{
+								display: 'flex',
+								justifyContent: 'center',
+								alignItems: 'center',
+								margin: '10px',
+							}}
+						>
+							<source
+								media="(max-width: 799px)"
+								srcSet={`${photo.getThumbUrl}`}
+							/>
+							<source
+								media="(min-width: 800px)"
+								srcSet={`${photo.getImgUrl}`}
+							/>
+							<img
+								className="mainImage" src={`${photo.getImgUrl}`}
+								alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
+							/>
+						</picture>
 					)}
 				</div>
 				<div style={{

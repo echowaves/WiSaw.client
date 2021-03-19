@@ -1,9 +1,12 @@
 .PhotosComponent .lander {
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .PhotosComponent {
+  justify-content: center;
+  align-items: center;
   font-family: "Open Sans", sans-serif;
   font-weight: 200;
 	font-size: 20px;
@@ -47,8 +50,10 @@ transition: all 0.3s ease 0s;
 
 
 img.mainImage {
-  height: 600px;
-  margin: 20px;
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin: 10px;
   justify-content: center;
   align-items: center;
   -webkit-box-shadow:

@@ -19,6 +19,7 @@ class Footer extends Component {
 				<h1
 					style={{
 						fontFamily: 'verdana',
+						fontSize: '3vmax',
 					}}
 				><a href="https://www.wisaw.com">#wisaw</a> -- What I Saw
 				</h1>
