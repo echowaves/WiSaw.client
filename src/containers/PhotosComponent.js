@@ -268,6 +268,7 @@ class PhotosComponent extends Component {
 				>
 					{photo && (
 						<picture
+							className="crop"
 							style={{
 								display: 'flex',
 								justifyContent: 'center',
