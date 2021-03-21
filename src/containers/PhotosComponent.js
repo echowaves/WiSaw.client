@@ -28,6 +28,7 @@ class PhotosComponent extends Component {
 			nextPhoto: null,
 			prevPhoto: null,
 			noPhotoFound: false,
+			fullSize: false,
 		}
 	}
 
@@ -202,7 +203,7 @@ class PhotosComponent extends Component {
 
 	render() {
 		const {
-			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition,
+			photo, prevPhoto, nextPhoto, comments, noPhotoFound, recognition, fullSize,
 		} = this.state
 		const { location, } = this.props
 		const embedded = new URLSearchParams(location.search).get("embedded")
@@ -263,37 +264,32 @@ class PhotosComponent extends Component {
 					}
 				</div>
 				<div
+					className="crop"
 					style={{
-						height: "40vh",
 						display: 'flex',
 						justifyContent: 'center',
 						alignItems: 'center',
 						margin: '10px',
+						height: fullSize ? '600px' : '300px',
 					}}
 				>
 					{photo && (
-						<picture
-							className="crop"
-							style={{
-								display: 'flex',
-								justifyContent: 'center',
-								alignItems: 'center',
-								margin: '10px',
+						// eslint-disable-next-line
+						<img
+							className="mainImage" src={fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`}
+							alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
+							onClick={() => {
+								this.setState(
+									{ fullSize: !fullSize, }
+								)
 							}}
-						>
-							<source
-								media="(max-width: 799px)"
-								srcSet={`${photo.getThumbUrl}`}
-							/>
-							<source
-								media="(min-width: 800px)"
-								srcSet={`${photo.getImgUrl}`}
-							/>
-							<img
-								className="mainImage" src={`${photo.getImgUrl}`}
-								alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
-							/>
-						</picture>
+							style={{
+								maxHeight: fullSize ? '600px' : '300px',
+								maxWidth: fullSize ? '600px' : '300px',
+								width: 'auto',
+								height: 'auto',
+							}}
+						/>
 					)}
 				</div>
 				<div style={{

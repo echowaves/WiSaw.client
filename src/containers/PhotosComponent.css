@@ -50,8 +50,13 @@ transition: all 0.3s ease 0s;
 
 
 .crop {
-  height: 40vh;
+  /* height: 40vh; */
+  /* object-fit: contain; */
+}
+
+.crop img {
   overflow: hidden;
+  object-fit: contain;
   margin: 10px;
   justify-content: center;
   align-items: center;
@@ -72,9 +77,4 @@ transition: all 0.3s ease 0s;
               0px 0px 0px 7px #fff,
               0px 0px 0px 9px rgba(0,0,0,0.2),
               6px 6px 8px 8px #555;
-}
-
-.crop img {
-  height: 100%;
-  width: auto;
 }
