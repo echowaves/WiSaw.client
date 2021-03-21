@@ -234,29 +234,33 @@ class PhotosComponent extends Component {
 
 				<div className="lander">
 
-					{nextPhoto
-				&& (
-					<div style={{ margin: '5px', }}>
-						<Link
-							className="button"
-							to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-							onClick={() => this.update(nextPhoto.id)}
-						>&lt;&nbsp;next
-						</Link>
-					</div>
-				)}
+					{
+						nextPhoto
+							? (
+								<div style={{ margin: '5px', }} className="button">
+									<Link
+										to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
+										onClick={() => this.update(nextPhoto.id)}
+									>&lt;&nbsp;next
+									</Link>
+								</div>
+							)
+							: <div style={{ margin: '5px', }} className="button" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+					}
 
-					{prevPhoto
-				&& (
-					<div style={{ margin: '5px', }}>
-						<Link
-							className="button"
-							to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-							onClick={() => this.update(prevPhoto.id)}
-						>prev&nbsp;&gt;
-						</Link>
-					</div>
-				)}
+					{
+						prevPhoto
+							? (
+								<div style={{ margin: '5px', }} className="button">
+									<Link
+										to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
+										onClick={() => this.update(prevPhoto.id)}
+									>prev&nbsp;&gt;
+									</Link>
+								</div>
+							)
+							: <div style={{ margin: '5px', }} className="button" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+					}
 				</div>
 				<div
 					style={{
