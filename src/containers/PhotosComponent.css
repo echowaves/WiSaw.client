@@ -52,12 +52,12 @@ transition: all 0.3s ease 0s;
 .crop {
   /* height: 40vh; */
   /* object-fit: contain; */
+  margin: 10px;
 }
 
 .crop img {
   overflow: hidden;
   object-fit: contain;
-  margin: 10px;
   justify-content: center;
   align-items: center;
   -webkit-box-shadow:

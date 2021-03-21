@@ -269,7 +269,6 @@ class PhotosComponent extends Component {
 						display: 'flex',
 						justifyContent: 'center',
 						alignItems: 'center',
-						margin: '10px',
 						height: fullSize ? '600px' : '300px',
 					}}
 				>
