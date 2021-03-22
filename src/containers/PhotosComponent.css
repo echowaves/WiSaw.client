@@ -56,7 +56,7 @@ transition: all 0.3s ease 0s;
 }
 
 .crop img {
-  overflow: hidden;
+  /* overflow: hidden; */
   object-fit: contain;
   justify-content: center;
   align-items: center;
