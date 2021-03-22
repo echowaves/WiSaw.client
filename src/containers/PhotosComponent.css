@@ -60,21 +60,6 @@ transition: all 0.3s ease 0s;
   object-fit: contain;
   justify-content: center;
   align-items: center;
-  -webkit-box-shadow:
-   0px 0px 0px 2px rgba(0,0,0,0.6),
-              0px 0px 0px 7px #fff,
-              0px 0px 0px 9px rgba(0,0,0,0.2),
-              6px 6px 8px 8px #555;
-
-   -moz-box-shadow:
-   0px 0px 0px 2px rgba(0,0,0,0.6),
-              0px 0px 0px 7px #fff,
-              0px 0px 0px 9px rgba(0,0,0,0.2),
-              6px 6px 8px 8px #555;
-
-        box-shadow:
-   0px 0px 0px 2px rgba(0,0,0,0.6),
-              0px 0px 0px 7px #fff,
-              0px 0px 0px 9px rgba(0,0,0,0.2),
-              6px 6px 8px 8px #555;
+  -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+  -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
 }

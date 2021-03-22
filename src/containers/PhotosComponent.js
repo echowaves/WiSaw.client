@@ -238,13 +238,15 @@ class PhotosComponent extends Component {
 					{
 						nextPhoto
 							? (
-								<div style={{ margin: '5px', }} className="button">
-									<Link
-										to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-										onClick={() => this.update(nextPhoto.id)}
-									>&lt;&nbsp;next
-									</Link>
-								</div>
+
+								<Link
+									to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
+									onClick={() => this.update(nextPhoto.id)}
+								>
+									<div style={{ margin: '5px', }} className="button">
+										&lt;&nbsp;next
+									</div>
+								</Link>
 							)
 							: <div style={{ margin: '5px', }} className="button" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
 					}
@@ -252,13 +254,14 @@ class PhotosComponent extends Component {
 					{
 						prevPhoto
 							? (
-								<div style={{ margin: '5px', }} className="button">
-									<Link
-										to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-										onClick={() => this.update(prevPhoto.id)}
-									>prev&nbsp;&gt;
-									</Link>
-								</div>
+								<Link
+									to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
+									onClick={() => this.update(prevPhoto.id)}
+								>
+									<div style={{ margin: '5px', }} className="button">
+										prev&nbsp;&gt;
+									</div>
+								</Link>
 							)
 							: <div style={{ margin: '5px', }} className="button" >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
 					}
@@ -291,6 +294,7 @@ class PhotosComponent extends Component {
 						/>
 					)}
 				</div>
+
 				<div style={{
 					display: 'flex',
 					justifyContent: 'center',
