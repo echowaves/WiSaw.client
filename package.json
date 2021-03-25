@@ -28,7 +28,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "curl https://www.wisaw.com/sitemap.xml --output ./public/sitemap.xml && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
