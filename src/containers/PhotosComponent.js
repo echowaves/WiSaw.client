@@ -278,8 +278,8 @@ class PhotosComponent extends Component {
 					{photo && (
 						// eslint-disable-next-line
 						<img
-							width="300"
-							height="300"
+							width="1"
+							height="1"
 							className="mainImage" src={fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`}
 							alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
 							onClick={() => {
