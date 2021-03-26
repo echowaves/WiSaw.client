@@ -20,129 +20,121 @@ const propTypes = {
 }
 
 const PhotosComponent = props => {
-  const [photo, setPhoto] = useState(null)
-  const [comments, setComments] = useState([])
-  const [recognition, setRecognition] = useState(null)
-  const [nextPhoto, setNextPhoto] = useState(null)
-  const [prevPhoto, setPrevPhoto] = useState(null)
-  const [noPhotoFound, setNoPhotoFound] = useState(false)
+  const [internalState, setInternalState] = useState({
+    photo: null,
+    nextPhoto: null,
+    prevPhoto: null,
+    comments: [],
+    recognition: null,
+    noPhotoFound: false,
+  })
+
   const [fullSize, setFullSize] = useState(false)
 
   useEffect(() => {
-    let { match: { params: { photoId } } } = props
-    if (!photoId) {
-      fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => {
-          if (response.ok) {
-            return response.json()
-          }
-          throw new Error('Something went wrong ...')
-        })
-        .then(body => {
-          photoId = body.photo.id
-          ReactGA.initialize('UA-3129031-19')
-          update(photoId)
-        })
-        .catch(error =>	console.log(JSON.stringify(error))) // eslint-disable-line no-console
-    } else {
-      ReactGA.initialize('UA-3129031-19')
-      update(photoId)
-    }
+    const { match: { params: { photoId } } } = props
+    ReactGA.initialize('UA-3129031-19')
+    update({ photoId })
   }, [])// eslint-disable-line
 
-  const update = async photoId => {
-    ReactGA.pageview(`/photos/${photoId}`)
-    setPhoto(null)
+  const fetchPhoto = async ({ id }) => {
+    const response = await fetch(`https://api.wisaw.com/photos/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const body = await response.json()
+    return (body.photo)
+  }
 
-    try {
-      const response = await fetch(`https://api.wisaw.com/photos/${photoId}`, {
+  const fetchPrevPhoto = async ({ id }) => {
+    const response = await fetch(`https://api.wisaw.com/photos/prev/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const body = await response.json()
+    return (body.photo)
+  }
+
+  const fetchNextPhoto = async ({ id }) => {
+    const response = await fetch(`https://api.wisaw.com/photos/next/${id}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const body = await response.json()
+    return (body.photo)
+  }
+
+  const fetchComments = async ({ id }) => {
+    const response = await fetch(`https://api.wisaw.com/photos/${id}/comments`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const body = await response.json()
+    return body.comments.reverse()
+  }
+
+  const fetchRecognition = async ({ id }) => {
+    const response = await fetch(`https://api.wisaw.com/photos/${id}/recognitions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    const body = await response.json()
+    return body.recognition
+  }
+  const update = async ({ photoId }) => {
+    setInternalState(
+      {
+        ...internalState,
+        photo: null,
+      }
+    )
+
+    let id = photoId
+    if (!id) {
+      const response = await fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       })
+
       const body = await response.json()
-      if (body) {
-        setPhoto(body.photo)
-        setNoPhotoFound(false)
-      }
-    } catch (error)	{
-      setPhoto(null)
-      setNoPhotoFound(true)
+      id = body.photo.id
     }
 
-    fetch(`https://api.wisaw.com/photos/prev/${photoId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json()
-        }
-        throw new Error('Something went wrong ...')
-      })
-      .then(body => {
-        setPrevPhoto(body.photo)
-      })
-      .catch(error => setPrevPhoto(null))
+    ReactGA.pageview(`/photos/${id}`)
 
-    fetch(`https://api.wisaw.com/photos/next/${photoId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json()
-        }
-        throw new Error('Something went wrong ...')
-      })
-      .then(body => {
-        setNextPhoto(body.photo)
-      })
-      .catch(error => setNextPhoto(null))
+    const photo = fetchPhoto({ id })
+    const nextPhoto = fetchNextPhoto({ id })
+    const prevPhoto = fetchPrevPhoto({ id })
+    const comments = fetchComments({ id })
+    const recognition = fetchRecognition({ id })
+    const results = await Promise.all([
+      photo,
+      nextPhoto,
+      prevPhoto,
+      comments,
+      recognition,
+    ])
 
-    fetch(`https://api.wisaw.com/photos/${photoId}/comments`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    setInternalState({
+      photo: results[0],
+      nextPhoto: results[1],
+      prevPhoto: results[2],
+      comments: results[3],
+      recognition: results[4],
+      noPhotoFound: !results[0],
     })
-      .then(response => {
-        if (response.ok) {
-          return response.json()
-        }
-        throw new Error('Something went wrong ...')
-      })
-      .then(body => {
-        setComments(body.comments.reverse())
-      })
-      .catch(error => setPhoto(null))
-
-    fetch(`https://api.wisaw.com/photos/${photoId}/recognitions`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => {
-        if (response.ok) {
-          return response.json()
-        }
-        throw new Error('Something went wrong ...')
-      })
-      .then(body => {
-        setRecognition(body.recognition)
-      })
-      .catch(error => setRecognition(null))
   }
 
   const renderRecognitions = recognition => {
@@ -197,6 +189,14 @@ const PhotosComponent = props => {
 
   const { history, location, match } = useReactRouter()
 
+  const {
+    photo,
+    nextPhoto,
+    prevPhoto,
+    comments,
+    recognition,
+    noPhotoFound,
+  } = internalState
   const embedded = new URLSearchParams(location.search).get("embedded")
   if (noPhotoFound) {
     return (
@@ -231,7 +231,7 @@ const PhotosComponent = props => {
 
               <Link
                 to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                onClick={() => update(nextPhoto.id)}>
+                onClick={() => update({ photoId: nextPhoto.id })}>
                 <div style={{ margin: '5px' }} className="button">
                   &lt;&nbsp;next
                 </div>
@@ -244,7 +244,7 @@ const PhotosComponent = props => {
             ? (
               <Link
                 to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                onClick={() => update(prevPhoto.id)}>
+                onClick={() => update({ photoId: prevPhoto.id })}>
                 <div style={{ margin: '5px' }} className="button">
                   prev&nbsp;&gt;
                 </div>
