@@ -158,21 +158,20 @@ this methid will fetch image into cache -- will work super fast on next call to 
       recognition: results[4],
       noPhotoFound: !results[0],
     })
-    const curr = results[0]
+    // const curr = results[0]
     const next = results[1]
     const prev = results[2]
 
-    if (curr) {
-      fetchDimensions({ url: curr.getThumbUrl })
-      fetchDimensions({ url: curr.getImgUrl })
-    }
+    // if (curr) {
+    //   fetchDimensions({ url: curr.getThumbUrl })
+    //   fetchDimensions({ url: curr.getImgUrl })
+    // }
+
     if (next) {
-      fetchDimensions({ url: next.getThumbUrl })
-      fetchDimensions({ url: next.getImgUrl })
+      fetchDimensions({ url: fullSize ? next.getImgUrl : next.getThumbUrl })
     }
     if (prev) {
-      fetchDimensions({ url: prev.getThumbUrl })
-      fetchDimensions({ url: prev.getImgUrl })
+      fetchDimensions({ url: fullSize ? prev.getImgUrl : prev.getThumbUrl })
     }
   }
 
