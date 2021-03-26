@@ -28,8 +28,15 @@ const Footer = () => {
         textAlign: 'center',
       }}>
       <div style={{
-        backgroundColor: 'rgba(250, 250, 250, 0.9)',
+        backgroundColor: 'rgba(220, 220, 220, 0.8)',
       }}>
+        <StyleRoot>
+          <div
+            style={styles.bounce}>
+            <div>To post photos & comments anonymously get the app
+            </div>
+          </div>
+        </StyleRoot>
         <div
           id="stores"
           style={{
@@ -70,15 +77,6 @@ const Footer = () => {
             </a>
           </div>
         </div>
-        <StyleRoot>
-          <div
-            style={styles.bounce}>
-            <div>To post photos & comments anonymously</div>
-            <div>
-              get the app
-            </div>
-          </div>
-        </StyleRoot>
         <div style={{
           display: 'flex',
           justifyContent: 'center',
