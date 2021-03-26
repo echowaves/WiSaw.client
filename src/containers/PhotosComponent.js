@@ -37,6 +37,20 @@ const PhotosComponent = props => {
     update({ photoId })
   }, [])// eslint-disable-line
 
+  /**
+this methid will fetch image into cache -- will work super fast on next call to the same url
+*/
+  const fetchDimensions = async ({ url }) => {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+
+    return {
+      width: img.naturalWidth,
+      height: img.naturalHeight,
+    }
+  }
+
   const fetchPhoto = async ({ id }) => {
     const response = await fetch(`https://api.wisaw.com/photos/${id}`, {
       method: 'GET',
@@ -45,7 +59,15 @@ const PhotosComponent = props => {
       },
     })
     const body = await response.json()
-    return (body.photo)
+
+    const { photo } = body
+
+    const url = fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`
+    const dimensions = await fetchDimensions({ url })
+    return {
+      ...photo,
+      ...dimensions,
+    }
   }
 
   const fetchPrevPhoto = async ({ id }) => {
@@ -135,6 +157,16 @@ const PhotosComponent = props => {
       recognition: results[4],
       noPhotoFound: !results[0],
     })
+    const next = results[1]
+    const prev = results[2]
+    if (next) {
+      fetchDimensions({ url: next.getImgUrl })
+      fetchDimensions({ url: next.getThumbUrl })
+    }
+    if (prev) {
+      fetchDimensions({ url: prev.getImgUrl })
+      fetchDimensions({ url: prev.getThumbUrl })
+    }
   }
 
   const renderRecognitions = recognition => {
@@ -204,9 +236,9 @@ const PhotosComponent = props => {
     )
   }
 
-  return (
-    <div className="PhotosComponent">
-      {photo && (
+  if (photo) {
+    return (
+      <div className="PhotosComponent">
         <Helmet>
           {comments.length > 0 && (
             <title>{`WiSaw: ${comments[0].comment}`}</title>
@@ -222,111 +254,109 @@ const PhotosComponent = props => {
           <meta property="og:url" content={`https://www.wisaw.com/photos/${photo.id}`} />
           {photo && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />)}
         </Helmet>
-      )}
 
-      <div className="lander">
-        {
-          nextPhoto
-            ? (
+        <div className="lander">
+          {
+            nextPhoto
+              ? (
 
-              <Link
-                to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                onClick={() => update({ photoId: nextPhoto.id })}>
-                <div style={{ margin: '5px' }} className="button">
-                  &lt;&nbsp;next
-                </div>
-              </Link>
-            )
-            : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-        }
-        {
-          prevPhoto
-            ? (
-              <Link
-                to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                onClick={() => update({ photoId: prevPhoto.id })}>
-                <div style={{ margin: '5px' }} className="button">
-                  prev&nbsp;&gt;
-                </div>
-              </Link>
-            )
-            : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-        }
-      </div>
-      <div
-        className="crop"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: fullSize ? '600px' : '300px',
-        }}>
-        {photo && (
-        // eslint-disable-next-line
-						<img
-            width="1"
-            height="1"
-            className="mainImage" src={fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`}
+                <Link
+                  to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
+                  onClick={() => update({ photoId: nextPhoto.id })}>
+                  <div style={{ margin: '5px' }} className="button">
+                    &lt;&nbsp;next
+                  </div>
+                </Link>
+              )
+              : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          }
+          {
+            prevPhoto
+              ? (
+                <Link
+                  to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
+                  onClick={() => update({ photoId: prevPhoto.id })}>
+                  <div style={{ margin: '5px' }} className="button">
+                    prev&nbsp;&gt;
+                  </div>
+                </Link>
+              )
+              : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          }
+        </div>
+        <div // eslint-disable-line
+          className="crop"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: `${photo.height}`,
+          }}
+          onClick={() => {
+            setFullSize(!fullSize)
+          }}>
+          <img
+            width={`${photo.width}`}
+            height={`${photo.height}`}
+            className="mainImage"
+            src={fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`}
             alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
-            onClick={() => {
-              setFullSize(!fullSize)
-            }}
             style={{
               maxHeight: fullSize ? '600px' : '300px',
               maxWidth: fullSize ? '600px' : '300px',
               width: 'auto',
               height: 'auto',
             }}
-            // eslint-disable-next-line
           />
-        )}
-      </div>
+        </div>
 
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-      }}>
-        <div align="center" style={{ margin: '5px' }}>
-          {comments && comments.length > 0 && (
-            <div>Comments:{comments.length}</div>
-          )}
-        </div>
-        <div align="center" style={{ margin: '5px' }}>
-          {photo && photo.likes > 0 && (
-            <div>Likes:{photo.likes}</div>
-          )}
-        </div>
-      </div>
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-      }}>
-        {comments && (
-          <div align="center" style={{ margin: '10px', paddingBottom: '20px', fontFamily: 'Courier New' }}>
-            {comments.map((comment, i) => (
-              <div key={comment.id}>
-                {i === 0 && (
-                  <h1
-                    style={{ margin: '10', fontFamily: 'Courier New' }}>{comment.comment}
-                  </h1>
-                )}
-                {i > 0 && (
-                  <p
-                    style={{ margin: '10' }}>{comment.comment}
-                  </p>
-                )}
-              </div>
-            ))}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
+          <div align="center" style={{ margin: '5px' }}>
+            {comments && comments.length > 0 && (
+              <div>Comments:{comments.length}</div>
+            )}
           </div>
-        )}
+          <div align="center" style={{ margin: '5px' }}>
+            {photo && photo.likes > 0 && (
+              <div>Likes:{photo.likes}</div>
+            )}
+          </div>
+        </div>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}>
+          {comments && (
+            <div align="center" style={{ margin: '10px', paddingBottom: '20px', fontFamily: 'Courier New' }}>
+              {comments.map((comment, i) => (
+                <div key={comment.id}>
+                  {i === 0 && (
+                    <h1
+                      style={{ margin: '10', fontFamily: 'Courier New' }}>{comment.comment}
+                    </h1>
+                  )}
+                  {i > 0 && (
+                    <p
+                      style={{ margin: '10' }}>{comment.comment}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-        {recognition && renderRecognitions(recognition)}
+          {recognition && renderRecognitions(recognition)}
 
-        <div align="center" style={{ margin: '10px', paddingBottom: '150px' }} />
+          <div align="center" style={{ margin: '10px', paddingBottom: '150px' }} />
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+  return <div />
 }
 
 export default PhotosComponent
