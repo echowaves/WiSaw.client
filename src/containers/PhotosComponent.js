@@ -114,16 +114,16 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return body.recognition
   }
   const update = async ({ photoId }) => {
-    setInternalState(
-      {
-        ...internalState,
-        photo: null,
-      }
-    )
+    // setInternalState(
+    //   {
+    //     ...internalState,
+    //     photo: null,
+    //   }
+    // )
 
     let id = photoId
     if (!id) {
-      const response = await fetch(`https://api.wisaw.com/photos/prev/${2147483640}`, {
+      const response = await fetch(`https://api.wisaw.com/photos/prev/2147483640`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -141,6 +141,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     const prevPhoto = fetchPrevPhoto({ id })
     const comments = fetchComments({ id })
     const recognition = fetchRecognition({ id })
+
     const results = await Promise.all([
       photo,
       nextPhoto,
@@ -157,15 +158,21 @@ this methid will fetch image into cache -- will work super fast on next call to 
       recognition: results[4],
       noPhotoFound: !results[0],
     })
+    const curr = results[0]
     const next = results[1]
     const prev = results[2]
+
+    if (curr) {
+      fetchDimensions({ url: curr.getThumbUrl })
+      fetchDimensions({ url: curr.getImgUrl })
+    }
     if (next) {
-      fetchDimensions({ url: next.getImgUrl })
       fetchDimensions({ url: next.getThumbUrl })
+      fetchDimensions({ url: next.getImgUrl })
     }
     if (prev) {
-      fetchDimensions({ url: prev.getImgUrl })
       fetchDimensions({ url: prev.getThumbUrl })
+      fetchDimensions({ url: prev.getImgUrl })
     }
   }
 
