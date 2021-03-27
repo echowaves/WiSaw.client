@@ -303,6 +303,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           }}
           onClick={() => {
             setFullSize(!fullSize)
+            update({ photoId: photo.id })
           }}>
           <img
             width={`${photo.width}`}
