@@ -44,7 +44,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
     const img = new Image()
     img.src = url
     await img.decode()
-
     return {
       width: img.naturalWidth,
       height: img.naturalHeight,
@@ -259,6 +258,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
           <meta property="og:url" content={`https://www.wisaw.com/photos/${photo.id}`} />
           {photo && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />)}
+
+          <meta name="twitter:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+          <meta name="twitter:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+          <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
         </Helmet>
 
         <div className="lander">
