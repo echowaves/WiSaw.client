@@ -112,6 +112,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     const body = await response.json()
     return body.recognition
   }
+
   const update = async ({ photoId }) => {
     // setInternalState(
     //   {
@@ -135,52 +136,49 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.pageview(`/photos/${id}`)
 
-    //
-    // const photo = fetchPhoto({ id })
-    // const nextPhoto = fetchNextPhoto({ id })
-    // const prevPhoto = fetchPrevPhoto({ id })
-    // const comments = fetchComments({ id })
-    // const recognition = fetchRecognition({ id })
-    //
-    // const results = await Promise.all([
-    //   photo,
-    //   nextPhoto,
-    //   prevPhoto,
-    //   comments,
-    //   recognition,
-    // ])
-    //
-    // setInternalState({
-    //   photo: results[0],
-    //   nextPhoto: results[1],
-    //   prevPhoto: results[2],
-    //   comments: results[3],
-    //   recognition: results[4],
-    //   noPhotoFound: !results[0],
-    // })
-    // // const curr = results[0]
-    // const next = results[1]
-    // const prev = results[2]
-    //
-    //
+    const photo = fetchPhoto({ id })
+    const nextPhoto = fetchNextPhoto({ id })
+    const prevPhoto = fetchPrevPhoto({ id })
+    const comments = fetchComments({ id })
+    const recognition = fetchRecognition({ id })
 
-    const photo = await fetchPhoto({ id })
-    const nextPhoto = await fetchNextPhoto({ id })
-    const prevPhoto = await fetchPrevPhoto({ id })
-    const comments = await fetchComments({ id })
-    const recognition = await fetchRecognition({ id })
-
-    setInternalState({
+    const results = await Promise.all([
       photo,
       nextPhoto,
       prevPhoto,
       comments,
       recognition,
-      noPhotoFound: !photo,
+    ])
+
+    setInternalState({
+      photo: results[0],
+      nextPhoto: results[1],
+      prevPhoto: results[2],
+      comments: results[3],
+      recognition: results[4],
+      noPhotoFound: !results[0],
     })
     // const curr = results[0]
-    const next = nextPhoto
-    const prev = prevPhoto
+    const next = results[1]
+    const prev = results[2]
+
+    // const photo = await fetchPhoto({ id })
+    // const nextPhoto = await fetchNextPhoto({ id })
+    // const prevPhoto = await fetchPrevPhoto({ id })
+    // const comments = await fetchComments({ id })
+    // const recognition = await fetchRecognition({ id })
+    //
+    // setInternalState({
+    //   photo,
+    //   nextPhoto,
+    //   prevPhoto,
+    //   comments,
+    //   recognition,
+    //   noPhotoFound: !photo,
+    // })
+    // // const curr = results[0]
+    // const next = nextPhoto
+    // const prev = prevPhoto
 
     // if (curr) {
     //   fetchDimensions({ url: curr.getThumbUrl })
