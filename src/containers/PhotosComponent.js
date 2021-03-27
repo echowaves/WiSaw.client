@@ -135,31 +135,52 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.pageview(`/photos/${id}`)
 
-    const photo = fetchPhoto({ id })
-    const nextPhoto = fetchNextPhoto({ id })
-    const prevPhoto = fetchPrevPhoto({ id })
-    const comments = fetchComments({ id })
-    const recognition = fetchRecognition({ id })
+    //
+    // const photo = fetchPhoto({ id })
+    // const nextPhoto = fetchNextPhoto({ id })
+    // const prevPhoto = fetchPrevPhoto({ id })
+    // const comments = fetchComments({ id })
+    // const recognition = fetchRecognition({ id })
+    //
+    // const results = await Promise.all([
+    //   photo,
+    //   nextPhoto,
+    //   prevPhoto,
+    //   comments,
+    //   recognition,
+    // ])
+    //
+    // setInternalState({
+    //   photo: results[0],
+    //   nextPhoto: results[1],
+    //   prevPhoto: results[2],
+    //   comments: results[3],
+    //   recognition: results[4],
+    //   noPhotoFound: !results[0],
+    // })
+    // // const curr = results[0]
+    // const next = results[1]
+    // const prev = results[2]
+    //
+    //
 
-    const results = await Promise.all([
+    const photo = await fetchPhoto({ id })
+    const nextPhoto = await fetchNextPhoto({ id })
+    const prevPhoto = await fetchPrevPhoto({ id })
+    const comments = await fetchComments({ id })
+    const recognition = await fetchRecognition({ id })
+
+    setInternalState({
       photo,
       nextPhoto,
       prevPhoto,
       comments,
       recognition,
-    ])
-
-    setInternalState({
-      photo: results[0],
-      nextPhoto: results[1],
-      prevPhoto: results[2],
-      comments: results[3],
-      recognition: results[4],
-      noPhotoFound: !results[0],
+      noPhotoFound: !photo,
     })
     // const curr = results[0]
-    const next = results[1]
-    const prev = results[2]
+    const next = nextPhoto
+    const prev = prevPhoto
 
     // if (curr) {
     //   fetchDimensions({ url: curr.getThumbUrl })
@@ -249,18 +270,18 @@ this methid will fetch image into cache -- will work super fast on next call to 
             <title>{`WiSaw: ${comments[0].comment}`}</title>
           )}
           {comments.length === 0 && (
-            <title>{`What I Saw Today photo ${photo ? photo.id : ''}`}</title>
+            <title>{`What I Saw Today photo ${photo.id}`}</title>
           )}
-          <meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+          <meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
 
-          <meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
-          <meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+          <meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
+          <meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
           <meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
           <meta property="og:url" content={`https://www.wisaw.com/photos/${photo.id}`} />
-          {photo && (<link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />)}
+          <link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />
 
-          <meta name="twitter:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
-          <meta name="twitter:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo ? photo.id : ''}`} />
+          <meta name="twitter:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
+          <meta name="twitter:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
           <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
         </Helmet>
 
@@ -299,11 +320,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: `${photo.height}`,
           }}
-          onClick={() => {
-            setFullSize(!fullSize)
-            update({ photoId: photo.id })
+          onClick={async () => {
+            await setFullSize(!fullSize)
+            await update({ photoId: photo.id })
           }}>
           <img
             width={`${photo.width}`}
