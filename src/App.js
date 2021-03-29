@@ -1,25 +1,30 @@
-import React from "react"
+import React, { lazy, Suspense } from "react"
 
 import {
   BrowserRouter as Router, Route, Switch,
 } from "react-router-dom"
-import PhotosComponent from './containers/PhotosComponent'
-import NoMatch from './containers/NoMatch'
-import Footer from './containers/Footer'
-import Header from './containers/Header'
+
 import "./App.css"
 
+const PhotosComponent = lazy(() => import('./containers/PhotosComponent'))
+const NoMatch = lazy(() => import('./containers/NoMatch'))
+const Footer = lazy(() => import('./containers/Footer'))
+const Header = lazy(() => import('./containers/Header'))
+
 const App = () => (
-  <Router>
-    <div>
-      <Header />
-      <Switch>
-        <Route exact path="/photos/:photoId" component={PhotosComponent} />
-        <Route exact path="/" component={PhotosComponent} />
-        <Route component={NoMatch} />
-      </Switch>
-      <Footer />
-    </div>
-  </Router>
+  <Suspense fallback={() => (<div />)}>
+    <Router>
+      <div>
+        <Header />
+        <Switch>
+          <Route exact path="/photos/:photoId" component={PhotosComponent} />
+          <Route exact path="/" component={PhotosComponent} />
+          <Route component={NoMatch} />
+        </Switch>
+        <Footer />
+      </div>
+    </Router>
+  </Suspense>
+
 )
 export default App
