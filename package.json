@@ -5,12 +5,12 @@
   "dependencies": {
     "jmespath": "0.15.0",
     "radium": "0.26.1",
-    "react": "17.0.1",
+    "react": "17.0.2",
     "react-animations": "1.0.0",
     "react-bootstrap": "1.5.2",
-    "react-dom": "17.0.1",
+    "react-dom": "17.0.2",
     "react-ga": "3.3.0",
-    "react-helmet": "^6.1.0",
+    "react-helmet": "6.1.0",
     "react-nested-status": "0.2.1",
     "react-router-dom": "5.2.0",
     "react-scripts": "4.0.3",
@@ -18,13 +18,14 @@
     "use-react-router": "^1.0.7"
   },
   "devDependencies": {
-    "eslint": "7.22.0",
+    "babel-eslint": "10.1.0",
+    "eslint": "7.23.0",
     "eslint-config-airbnb": "18.2.1",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "2.22.1",
-    "eslint-plugin-jest": "24.3.1",
+    "eslint-plugin-jest": "24.3.2",
     "eslint-plugin-jsx-a11y": "6.4.1",
-    "eslint-plugin-react": "7.22.0",
+    "eslint-plugin-react": "7.23.1",
     "eslint-plugin-react-native": "3.10.0"
   },
   "scripts": {
