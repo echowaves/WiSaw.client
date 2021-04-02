@@ -279,6 +279,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />
 
           <meta name="twitter:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
+          <meta
+            name="twitter:card" content={`Check out what I saw today:
+            ${comments.slice(0, 3).map(comment => comment.comment).join('\n')}`}
+          />
           <meta name="twitter:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
           <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
         </Helmet>
