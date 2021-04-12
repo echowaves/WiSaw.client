@@ -19,7 +19,7 @@ const Header = () => {
         style={{
           fontFamily: 'verdana',
           fontSize: '3vmax',
-        }}><a href="https://www.wisaw.com">#wisaw</a> What I Saw <a href="https://www.wisaw.com"><img width="50" height="50" src="/android-chrome-192x192.png" alt="wisaw logo" /></a>
+        }}><a href="https://www.wisaw.com"><img width="50" height="50" src="/android-chrome-192x192.png" alt="wisaw logo" /></a> What I Saw <a href="https://www.wisaw.com">#wisaw</a>
       </h1>
     </header>
   )
