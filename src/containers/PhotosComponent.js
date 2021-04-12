@@ -346,14 +346,31 @@ this methid will fetch image into cache -- will work super fast on next call to 
           display: 'flex',
           justifyContent: 'center',
         }}>
-          <div align="center" style={{ margin: '5px' }}>
+          <div align="center" style={{ margin: '10px' }}>
             {comments && comments.length > 0 && (
-              <div>Comments:{comments.length}</div>
+              <div style={{
+                paddingTop: 14,
+                height: 40,
+                width: 40,
+                fontSize: 12,
+                backgroundImage: `url("/comment.png")`,
+                color: 'white',
+              }}>{comments.length}
+              </div>
             )}
           </div>
-          <div align="center" style={{ margin: '5px' }}>
+          <div align="center" style={{ margin: '10px' }}>
             {photo && photo.likes > 0 && (
-              <div>Likes:{photo.likes}</div>
+              <div style={{
+                paddingTop: 14,
+                paddingLeft: 10,
+                height: 40,
+                width: 40,
+                fontSize: 12,
+                backgroundImage: `url("/thumbs-up.png")`,
+                color: 'white',
+              }}>{photo.likes}
+              </div>
             )}
           </div>
         </div>
