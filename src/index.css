@@ -10,6 +10,10 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: "PT Serif", serif;
+  color: #333;
+}
+div {
+  color: #444;
 }
 
 select.form-control,

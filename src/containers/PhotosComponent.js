@@ -204,11 +204,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {labels.length > 0 && (
           <div style={{ margin: '5px', paddingBottom: '5px' }}>
             <div align="center">
-              <h3 style={{ fontWeight: "bold" }}>AI recognized tags:</h3>
+              <h2>AI recognized tags:</h2>
             </div>
             <span align="center">
               {labels.map(label => (
-                <div key={label.Name} style={{ fontSize: `${label.Confidence}%` }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
+                <h3><div key={label.Name} style={{ fontSize: `${label.Confidence}%` }}>{stringifyObject(label.Name).replace(/'/g, '')}</div></h3>
               ))}
             </span>
           </div>
@@ -217,11 +217,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {textDetections.length > 0 && (
           <div style={{ margin: '5px', paddingBottom: '5px' }}>
             <div align="center">
-              <h3 style={{ fontWeight: "bold" }}>AI recognized text:</h3>
+              <h2>AI recognized text:</h2>
             </div>
             <span align="center">
               {textDetections.map(text => (
-                <div key={text.Id} style={{ fontSize: `${text.Confidence}%` }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div>
+                <h3><div key={text.Id} style={{ fontSize: `${text.Confidence}%` }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div></h3>
               ))}
             </span>
           </div>
@@ -229,12 +229,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
         {moderationLabels.length > 0 && (
           <div style={{ margin: '5px', paddingBottom: '5px' }}>
-            <div align="center" style={{ fontWeight: "bold", color: 'red' }}>
-              AI moderation tags:
-            </div>
+            <h2>
+              <div align="center" style={{ color: 'red' }}>
+                AI moderation tags:
+              </div>
+            </h2>
             <span align="center">
               {moderationLabels.map(label => (
-                <div key={label.Name} style={{ fontSize: `${label.Confidence}%`, color: 'red' }}>{stringifyObject(label.Name).replace(/'/g, '')}</div>
+                <h3><div key={label.Name} style={{ fontSize: `${label.Confidence}%`, color: 'red' }}>{stringifyObject(label.Name).replace(/'/g, '')}</div></h3>
               ))}
             </span>
           </div>
