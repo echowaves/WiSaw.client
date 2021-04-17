@@ -202,7 +202,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div style={{ fontFamily: 'Arial' }}>
 
         {labels.length > 0 && (
-          <div style={{ margin: '5px', paddingBottom: '5px' }}>
+          <div style={{ margin: '5px' }}>
             <div align="center">
               <h2>AI recognized tags:</h2>
             </div>
@@ -215,7 +215,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
 
         {textDetections.length > 0 && (
-          <div style={{ margin: '5px', paddingBottom: '5px' }}>
+          <div style={{ margin: '5px' }}>
             <div align="center">
               <h2>AI recognized text:</h2>
             </div>
@@ -382,7 +382,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           justifyContent: 'center',
         }}>
           {comments && (
-            <div align="center" style={{ margin: '10px', paddingBottom: '20px', fontFamily: 'Courier New' }}>
+            <div align="center" style={{ margin: '10px', paddingBottom: '10px', fontFamily: 'Courier New' }}>
               {comments.map((comment, i) => (
                 <div key={comment.id}>
                   {i === 0 && (
@@ -392,7 +392,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   )}
                   {i > 0 && (
                     <p
-                      style={{ margin: '10' }}>{comment.comment}
+                      style={{ margin: '10', fontSize: 24 }}>{comment.comment}
                     </p>
                   )}
                 </div>
