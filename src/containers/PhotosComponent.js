@@ -199,8 +199,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     const moderationLabels = jmespath.search(recognition, "metaData.ModerationLabels[]")
 
     return (
-      <div style={{ fontFamily: 'Arial' }}>
-
+      <div>
         {labels.length > 0 && (
           <div style={{ margin: '5px' }}>
             <div align="center">
@@ -382,12 +381,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
           justifyContent: 'center',
         }}>
           {comments && (
-            <div align="center" style={{ margin: '10px', paddingBottom: '10px', fontFamily: 'Courier New' }}>
+            <div align="center" style={{ margin: '10px', paddingBottom: '10px' }}>
               {comments.map((comment, i) => (
                 <div key={comment.id}>
                   {i === 0 && (
                     <h1
-                      style={{ margin: '10', fontFamily: 'Courier New' }}>{comment.comment}
+                      style={{ margin: '10', fontFamily: 'Arial' }}>{comment.comment}
                     </h1>
                   )}
                   {i > 0 && (
