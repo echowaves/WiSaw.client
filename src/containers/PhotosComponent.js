@@ -26,7 +26,7 @@ const PhotosComponent = props => {
     prevPhoto: null,
     comments: [],
     recognition: null,
-    noPhotoFound: false,
+    requestComplete: false,
   })
 
   const [fullSize, setFullSize] = useState(false)
@@ -51,66 +51,94 @@ this methid will fetch image into cache -- will work super fast on next call to 
   }
 
   const fetchPhoto = async ({ id }) => {
-    const response = await fetch(`https://api.wisaw.com/photos/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    const body = await response.json()
+    try {
+      const response = await fetch(`https://api.wisaw.com/photos/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const body = await response.json()
 
-    const { photo } = body
+      const { photo } = body
 
-    const url = fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`
-    const dimensions = await fetchDimensions({ url })
-    return {
-      ...photo,
-      ...dimensions,
+      if (!(photo == null)) {
+        const url = fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`
+        const dimensions = await fetchDimensions({ url })
+        return {
+          ...photo,
+          ...dimensions,
+        }
+      }
+    } catch (error) {
+      console.log({ error })
+      return null
     }
+    return null
   }
 
   const fetchPrevPhoto = async ({ id }) => {
-    const response = await fetch(`https://api.wisaw.com/photos/prev/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    const body = await response.json()
-    return (body.photo)
+    try {
+      const response = await fetch(`https://api.wisaw.com/photos/prev/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const body = await response.json()
+      return (body.photo)
+    } catch (error) {
+      console.log({ error })
+    }
+    return null
   }
 
   const fetchNextPhoto = async ({ id }) => {
-    const response = await fetch(`https://api.wisaw.com/photos/next/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    const body = await response.json()
-    return (body.photo)
+    try {
+      const response = await fetch(`https://api.wisaw.com/photos/next/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const body = await response.json()
+      return (body.photo)
+    } catch (error) {
+      console.log({ error })
+    }
+    return null
   }
 
   const fetchComments = async ({ id }) => {
-    const response = await fetch(`https://api.wisaw.com/photos/${id}/comments`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    const body = await response.json()
-    return body.comments.reverse()
+    try {
+      const response = await fetch(`https://api.wisaw.com/photos/${id}/comments`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const body = await response.json()
+      return body.comments.reverse()
+    } catch (error) {
+      console.log({ error })
+    }
+    return null
   }
 
   const fetchRecognition = async ({ id }) => {
-    const response = await fetch(`https://api.wisaw.com/photos/${id}/recognitions`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    const body = await response.json()
-    return body.recognition
+    try {
+      const response = await fetch(`https://api.wisaw.com/photos/${id}/recognitions`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const body = await response.json()
+      return body.recognition
+    } catch (error) {
+      console.log({ error })
+    }
+    return null
   }
 
   const update = async ({ photoId }) => {
@@ -156,34 +184,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
       prevPhoto: results[2],
       comments: results[3],
       recognition: results[4],
-      noPhotoFound: !results[0],
+      requestComplete: true,
     })
     // const curr = results[0]
     const next = results[1]
     const prev = results[2]
-
-    // const photo = await fetchPhoto({ id })
-    // const nextPhoto = await fetchNextPhoto({ id })
-    // const prevPhoto = await fetchPrevPhoto({ id })
-    // const comments = await fetchComments({ id })
-    // const recognition = await fetchRecognition({ id })
-    //
-    // setInternalState({
-    //   photo,
-    //   nextPhoto,
-    //   prevPhoto,
-    //   comments,
-    //   recognition,
-    //   noPhotoFound: !photo,
-    // })
-    // // const curr = results[0]
-    // const next = nextPhoto
-    // const prev = prevPhoto
-
-    // if (curr) {
-    //   fetchDimensions({ url: curr.getThumbUrl })
-    //   fetchDimensions({ url: curr.getImgUrl })
-    // }
 
     if (next) {
       fetchDimensions({ url: fullSize ? next.getImgUrl : next.getThumbUrl })
@@ -244,22 +249,55 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
+  const renderNavigationButtons = () => {
+    const {
+      nextPhoto,
+      prevPhoto,
+    } = internalState
+    return (
+      <div className="lander">
+        {
+          nextPhoto
+            ? (
+
+              <Link
+                to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
+                onClick={() => update({ photoId: nextPhoto.id })}>
+                <div style={{ margin: '5px' }} className="button">
+                  &lt;&nbsp;next
+                </div>
+              </Link>
+            )
+            : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+        }
+        {
+          prevPhoto
+            ? (
+              <Link
+                to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
+                onClick={() => update({ photoId: prevPhoto.id })}>
+                <div style={{ margin: '5px' }} className="button">
+                  prev&nbsp;&gt;
+                </div>
+              </Link>
+            )
+            : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+        }
+      </div>
+    )
+  }
+
   const { history, location, match } = useReactRouter()
+
+  const { match: { params: { photoId } } } = props
 
   const {
     photo,
-    nextPhoto,
-    prevPhoto,
     comments,
     recognition,
-    noPhotoFound,
+    requestComplete,
   } = internalState
   const embedded = new URLSearchParams(location.search).get("embedded")
-  if (noPhotoFound) {
-    return (
-      <NoMatch />
-    )
-  }
 
   if (photo) {
     return (
@@ -288,35 +326,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
         </Helmet>
 
-        <div className="lander">
-          {
-            nextPhoto
-              ? (
+        {renderNavigationButtons()}
 
-                <Link
-                  to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                  onClick={() => update({ photoId: nextPhoto.id })}>
-                  <div style={{ margin: '5px' }} className="button">
-                    &lt;&nbsp;next
-                  </div>
-                </Link>
-              )
-              : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-          }
-          {
-            prevPhoto
-              ? (
-                <Link
-                  to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                  onClick={() => update({ photoId: prevPhoto.id })}>
-                  <div style={{ margin: '5px' }} className="button">
-                    prev&nbsp;&gt;
-                  </div>
-                </Link>
-              )
-              : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-          }
-        </div>
         <div // eslint-disable-line
           className="crop"
           style={{
@@ -406,6 +417,16 @@ this methid will fetch image into cache -- will work super fast on next call to 
       </div>
     )
   }
+
+  if (requestComplete && photo === null) {
+    return (
+      <div className="PhotosComponent">
+        {renderNavigationButtons()}
+        <NoMatch />
+      </div>
+    )
+  }
+
   return <div />
 }
 

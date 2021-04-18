@@ -7,8 +7,8 @@ const NoMatch = () => {
   const { history, location, match } = useReactRouter()
   return (
     <NestedStatus code={404}>
-      <div>
-        <h2>No match found for <code>{location.pathname}</code></h2>
+      <div align="center">
+        <h2>No photo found <code>{location.pathname}</code></h2>
       </div>
     </NestedStatus>
   )
