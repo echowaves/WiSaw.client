@@ -33,7 +33,7 @@ const Footer = () => {
         <StyleRoot>
           <div
             style={styles.bounce}>
-            To share photos and comments incognito get the app
+            To incognito-share photos and comments get the app
 
           </div>
         </StyleRoot>
