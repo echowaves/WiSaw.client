@@ -397,12 +397,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 <div key={comment.id}>
                   {i === 0 && (
                     <h1
-                      style={{ margin: '10', fontFamily: 'Arial' }}>{comment.comment}
+                      style={{ margin: '10', fontFamily: 'Comic Sans MS,Comic Sans,sans-serif' }}>{comment.comment}
                     </h1>
                   )}
                   {i > 0 && (
                     <p
-                      style={{ margin: '10', fontSize: 24 }}>{comment.comment}
+                      style={{ margin: '10', fontSize: 24, fontFamily: 'Comic Sans MS,Comic Sans,sans-serif' }}>{comment.comment}
                     </p>
                   )}
                 </div>
