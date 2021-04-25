@@ -268,7 +268,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 </div>
               </Link>
             )
-            : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            : (
+              <div style={{ margin: '5px', color: '#777' }} className="button">
+                &lt;&nbsp;next
+              </div>
+            )
         }
         {
           prevPhoto
@@ -281,7 +285,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 </div>
               </Link>
             )
-            : <div style={{ margin: '5px' }} className="button">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            : (
+              <div style={{ margin: '5px', color: '#777' }} className="button">
+                prev&nbsp;&gt;
+              </div>
+            )
         }
       </div>
     )
