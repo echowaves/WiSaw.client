@@ -37,7 +37,7 @@ display: inline-block;
 }
 
 .button:hover {
-color: #404040 !important;
+color: #404040;
 font-weight: 700 !important;
 padding: 20px;
 letter-spacing: 3px;
