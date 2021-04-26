@@ -208,7 +208,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {labels.length > 0 && (
           <div style={{ margin: '5px' }}>
             <div align="center">
-              <h2>AI recognized tags:</h2>
+              <h2><b>AI recognized tags:</b></h2>
             </div>
             <span align="center">
               {labels.map(label => (
@@ -221,7 +221,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {textDetections.length > 0 && (
           <div style={{ margin: '5px' }}>
             <div align="center">
-              <h2>AI recognized text:</h2>
+              <h2><b>AI recognized text:</b></h2>
             </div>
             <span align="center">
               {textDetections.map(text => (
@@ -235,7 +235,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <div style={{ margin: '5px', paddingBottom: '5px' }}>
             <h2>
               <div align="center" style={{ color: 'red' }}>
-                AI moderation tags:
+                <b>AI moderation tags:</b>
               </div>
             </h2>
             <span align="center">
