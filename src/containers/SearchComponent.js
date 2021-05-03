@@ -101,7 +101,11 @@ const SearchComponent = props => {
             }}>
             {photos.map(tile => (
               <GridListTile key={tile.id}>
-                <img src={tile.getThumbUrl} alt={tile.getThumbUrl} />
+                <Link
+                  to={`/photos/${tile.id}`}>
+                  <img src={tile.getThumbUrl} alt={tile.getThumbUrl} />
+                </Link>
+
               </GridListTile>
             ))}
           </GridList>
