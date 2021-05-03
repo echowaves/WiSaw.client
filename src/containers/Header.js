@@ -1,8 +1,10 @@
-import React from "react"
-import useReactRouter from 'use-react-router'
+import React, { useEffect } from 'react'
+import ReactGA from 'react-ga'
 
 const Header = () => {
-  const { history, location, match } = useReactRouter()
+  useEffect(() => {
+    ReactGA.initialize('UA-3129031-19')
+  }, [])// eslint-disable-line
 
   // const embedded = new URLSearchParams(location.search).get("embedded")
   // if (embedded) {
