@@ -210,7 +210,17 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span align="center">
               {labels.map(label => (
-                <h3><div key={label.Name} style={{ fontSize: `${label.Confidence}%` }}>{stringifyObject(label.Name).replace(/'/g, '')}</div></h3>
+                <h3>
+                  <div key={label.Name} style={{ fontSize: `${label.Confidence}%` }}>
+                    <Link
+                      to={`/search/${label.Name}`}>
+                      {
+                        stringifyObject(label.Name).replace(/'/g, '')
+                      }
+                    </Link>
+
+                  </div>
+                </h3>
               ))}
             </span>
           </div>
