@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'
-import ReactGA from 'react-ga'
+import React, { useState, useEffect } from 'react'
 import { Helmet } from "react-helmet"
 import useReactRouter from 'use-react-router'
+import ReactGA from 'react-ga'
 
 import "./PhotosComponent.css"
 
@@ -30,13 +30,11 @@ const PhotosComponent = props => {
   })
 
   const [fullSize, setFullSize] = useState(false)
-
   useEffect(() => {
     const { match: { params: { photoId } } } = props
-    ReactGA.initialize('UA-3129031-19')
-    update({ photoId })
-  }, [])// eslint-disable-line
 
+    update({ photoId })
+  }, [])// eslint-di
   /**
 this methid will fetch image into cache -- will work super fast on next call to the same url
 */
