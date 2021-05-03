@@ -1,4 +1,4 @@
-import React, { Component } from "react"
+import React from "react"
 import { bounce } from 'react-animations'
 import Radium, { StyleRoot } from 'radium'
 import useReactRouter from 'use-react-router'
