@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import ReactGA from 'react-ga'
 import { Helmet } from "react-helmet"
-import useReactRouter from 'use-react-router'
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
+import Loader from "react-loader-spinner"
+
+import { GridList, GridListTile } from '@material-ui/core'
 
 import {
   Link,
@@ -23,36 +25,42 @@ const SearchComponent = props => {
 
   useEffect(() => {
     const { match: { params: { searchString } } } = props
-    ReactGA.initialize('UA-3129031-19')
     update({ searchString })
   }, [])// eslint-disable-line
 
   const update = async ({ searchString }) => {
-    if (searchString) {
-      const response = await fetch(`https://api.wisaw.com/photos/prev/2147483640`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+    try {
+      if (searchString) {
+        const response = await fetch(`https://api.wisaw.com/photos/feedForTextSearch`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uuid: 'web_search_UUID',
+            searchTerm: searchString,
+            pageNumber: 0,
+            batch: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER), // batch id random
+          }),
+        })
 
-      const body = await response.json()
+        const responseJson = await response.json()
+
+        setInternalState({
+          photos: responseJson.photos,
+          requestComplete: true,
+        })
+      }
+    } catch (error) {
+      console.log({ error })
     }
-
-    setInternalState({
-      photos: [],
-      requestComplete: true,
-    })
+    console.log('done')
   }
-
-  const { history, location, match } = useReactRouter()
 
   const { match: { params: { searchString } } } = props
 
   const {
-    photo,
-    comments,
-    recognition,
+    photos,
     requestComplete,
   } = internalState
 
@@ -79,20 +87,54 @@ const SearchComponent = props => {
           <meta name="twitter:description" content={`WiSaw: searching for ${searchString}`} />
           <meta name="twitter:image" content="" />
         </Helmet>
-
         <div // eslint-disable-line
           className="crop"
           style={{
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             alignItems: 'center',
           }}>
+          <GridList
+            className="classes.gridList" cellHeight="auto" cols="auto"
+            style={{
+              justifyContent: 'center',
+            }}>
+            {photos.map(tile => (
+              <GridListTile key={tile.id}>
+                <img src={tile.getThumbUrl} alt={tile.getThumbUrl} />
+              </GridListTile>
+            ))}
+          </GridList>
         </div>
+        <div>&nbsp;</div>
+        <div>&nbsp;</div>
+        <div>&nbsp;</div>
+        <div>&nbsp;</div>
+        <div>&nbsp;</div>
+        <div>&nbsp;</div>
       </div>
     )
   }
 
-  return <div />
+  return (
+    <div className="PhotosComponent">
+      <div // eslint-disable-line
+        className="crop"
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <Loader
+          type="Grid"
+          color="#00BFFF"
+          height={100}
+          width={100}
+          timeout={60000}
+        />
+      </div>
+    </div>
+  )
 }
 
 export default SearchComponent

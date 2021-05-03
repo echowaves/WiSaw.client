@@ -19,9 +19,9 @@ const App = () => (
       <div>
         <Header />
         <Switch>
-          <Route exact path="/search/:searchString" component={SearchComponent} />
           <Route exact path="/photos/:photoId" component={PhotosComponent} />
           <Route exact path="/" component={PhotosComponent} />
+          <Route exact path="/search/:searchString" component={SearchComponent} />
           <Route component={NoMatch} />
         </Switch>
         <Footer />
