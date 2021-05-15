@@ -320,7 +320,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className="PhotosComponent">
         <Helmet>
           {comments.length > 0 && (
-            <title>{`WiSaw: ${comments[0].comment}`}</title>
+            <title>{`WiSaw: ${comments[0].comment} -- What I Saw`}</title>
           )}
           {comments.length === 0 && (
             <title>{`What I Saw Today photo ${photo.id}`}</title>
