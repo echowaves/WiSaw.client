@@ -381,7 +381,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 height: 40,
                 width: 40,
                 fontSize: 12,
-                backgroundImage: `url("/comment.png")`,
+                backgroundImage: `url("/comment.webp")`,
                 color: 'white',
               }}>{comments.length}
               </div>
@@ -395,7 +395,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 height: 40,
                 width: 40,
                 fontSize: 12,
-                backgroundImage: `url("/thumbs-up.png")`,
+                backgroundImage: `url("/thumbs-up.webp")`,
                 color: 'white',
               }}>{photo.likes}
               </div>

@@ -26,7 +26,7 @@ const Header = () => {
         }}>
         <a href="https://www.wisaw.com">
           <img
-            width="55" height="55" src="/android-chrome-192x192.png" alt="wisaw logo"
+            width="55" height="55" src="/android-chrome-192x192.webp" alt="wisaw logo"
           />
         </a> What I Saw <a href="https://www.wisaw.com">#wisaw</a>
       </h1>

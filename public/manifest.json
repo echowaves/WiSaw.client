@@ -3,14 +3,14 @@
   "name": "What I Saw Today",
   "icons": [
     {
-      "src": "android-chrome-192x192.png",
+      "src": "android-chrome-192x192.webp",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/webp"
     },
     {
-      "src": "android-chrome-256x256.png",
+      "src": "android-chrome-256x256.webp",
       "sizes": "256x256",
-      "type": "image/png"
+      "type": "image/webp"
     }
   ],
   "start_url": "./index.html",
