@@ -55,7 +55,7 @@ const Footer = () => {
                   width="177px"
                   height="56px"
                   alt="wisaw itunes store"
-                  src="/appstore.png"
+                  src="/appstore.webp"
                 />
               </div>
             </a>
@@ -71,7 +71,7 @@ const Footer = () => {
                   width="176px"
                   height="53px"
                   alt="wisaw google play store"
-                  src="/googleplay.png"
+                  src="/googleplay.webp"
                 />
               </div>
             </a>
