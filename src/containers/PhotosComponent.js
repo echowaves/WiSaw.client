@@ -10,7 +10,10 @@ import {
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
+import { gql } from "@apollo/client"
 import NoMatch from "./NoMatch.js"
+
+import * as CONST from '../consts'
 
 const stringifyObject = require('stringify-object')
 const jmespath = require('jmespath')
@@ -21,11 +24,9 @@ const propTypes = {
 
 const PhotosComponent = props => {
   const [internalState, setInternalState] = useState({
-    photo: null,
+    currPhoto: null,
     nextPhoto: null,
     prevPhoto: null,
-    comments: [],
-    recognition: null,
     requestComplete: false,
   })
 
@@ -48,29 +49,45 @@ this methid will fetch image into cache -- will work super fast on next call to 
     }
   }
 
-  const fetchPhoto = async ({ id }) => {
+  const fetchCurrPhoto = async ({ id }) => {
     try {
-      const response = await fetch(`https://api.wisaw.com/photos/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const body = await response.json()
+      const response = (await CONST.gqlClient
+        .query({
+          query: gql`
+                      query getPhotoAllCurr($photoId: ID!) {
+                        getPhotoAllCurr(photoId: $photoId) {
+                          photo {
+                            imgUrl
+                            id
+                            thumbUrl
+                            likes
+                          }
+                          comments {
+                            comment
+                          }
+                          recognitions {
+                            metaData
+                          }
+                        }
+                      }
+                    `,
+          variables: {
+            photoId: id,
+          },
+        })).data.getPhotoAllCurr
 
-      const { photo } = body
+      const { photo } = response
 
-      if (!(photo == null)) {
-        const url = fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`
+      if (photo) {
+        const url = fullSize ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
-          ...photo,
+          ...response,
           ...dimensions,
         }
       }
-    } catch (error) {
-      console.log({ error })
-      return null
+    } catch (err) {
+      console.log({ err })// eslint-disable-line
     }
     return null
   }
@@ -107,46 +124,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchComments = async ({ id }) => {
-    try {
-      const response = await fetch(`https://api.wisaw.com/photos/${id}/comments`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const body = await response.json()
-      return body.comments.reverse()
-    } catch (error) {
-      console.log({ error })
-    }
-    return null
-  }
-
-  const fetchRecognition = async ({ id }) => {
-    try {
-      const response = await fetch(`https://api.wisaw.com/photos/${id}/recognitions`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const body = await response.json()
-      return body.recognition
-    } catch (error) {
-      console.log({ error })
-    }
-    return null
-  }
-
   const update = async ({ photoId }) => {
-    // setInternalState(
-    //   {
-    //     ...internalState,
-    //     photo: null,
-    //   }
-    // )
-
     let id = photoId
     if (!id) {
       const response = await fetch(`https://api.wisaw.com/photos/prev/2147483640`, {
@@ -162,26 +140,20 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.pageview(`/photos/${id}`)
 
-    const photo = fetchPhoto({ id })
+    const currPhoto = fetchCurrPhoto({ id })
     const nextPhoto = fetchNextPhoto({ id })
     const prevPhoto = fetchPrevPhoto({ id })
-    const comments = fetchComments({ id })
-    const recognition = fetchRecognition({ id })
 
     const results = await Promise.all([
-      photo,
+      currPhoto,
       nextPhoto,
       prevPhoto,
-      comments,
-      recognition,
     ])
 
     setInternalState({
-      photo: results[0],
+      currPhoto: results[0],
       nextPhoto: results[1],
       prevPhoto: results[2],
-      comments: results[3],
-      recognition: results[4],
       requestComplete: true,
     })
     // const curr = results[0]
@@ -308,38 +280,36 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const { match: { params: { photoId } } } = props
 
   const {
-    photo,
-    comments,
-    recognition,
+    currPhoto,
     requestComplete,
   } = internalState
   const embedded = new URLSearchParams(location.search).get("embedded")
 
-  if (photo) {
+  if (currPhoto?.photo) {
     return (
       <div className="PhotosComponent">
         <Helmet>
-          {comments.length > 0 && (
-            <title>{`WiSaw: ${comments[0].comment} -- What I Saw`}</title>
+          {currPhoto.comments.length > 0 && (
+            <title>{`WiSaw: ${currPhoto.comments[0].comment} -- What I Saw`}</title>
           )}
-          {comments.length === 0 && (
-            <title>{`What I Saw Today photo ${photo.id}`}</title>
+          {currPhoto.comments.length === 0 && (
+            <title>{`What I Saw Today photo ${currPhoto.photo.id}`}</title>
           )}
-          <meta name="description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
+          <meta name="description" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
 
-          <meta property="og:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
-          <meta property="og:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
-          <meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
-          <meta property="og:url" content={`https://www.wisaw.com/photos/${photo.id}`} />
-          <link rel="canonical" href={`https://www.wisaw.com/photos/${photo.id}`} />
+          <meta property="og:title" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
+          <meta property="og:description" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
+          <meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}`} />
+          <meta property="og:url" content={`https://www.wisaw.com/photos/${currPhoto.photo.id}`} />
+          <link rel="canonical" href={`https://www.wisaw.com/photos/${currPhoto.photo.id}`} />
 
-          <meta name="twitter:title" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
+          <meta name="twitter:title" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
           <meta
             name="twitter:card" content={`Check out what I saw today:
-            ${comments.slice(0, 3).map(comment => comment.comment).join('\n')}`}
+            ${currPhoto.comments.slice(0, 3).map(comment => comment.comment).join('\n')}`}
           />
-          <meta name="twitter:description" content={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`} />
-          <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${photo.id}`} />
+          <meta name="twitter:description" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
+          <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}`} />
         </Helmet>
 
         {renderNavigationButtons()}
@@ -353,14 +323,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
           }}
           onClick={async () => {
             await setFullSize(!fullSize)
-            await update({ photoId: photo.id })
+            await update({ photoId: currPhoto.photo.id })
           }}>
           <img
-            width={`${photo.width}`}
-            height={`${photo.height}`}
+            width={`${currPhoto.width}`}
+            height={`${currPhoto.height}`}
             className="mainImage"
-            src={fullSize ? `${photo.getImgUrl}` : `${photo.getThumbUrl}`}
-            alt={comments.length > 0 ? comments[0].comment : `wisaw photo ${photo.id}`}
+            src={fullSize ? `${currPhoto.photo.imgUrl}` : `${currPhoto.photo.thumbUrl}`}
+            alt={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`}
             style={{
               maxHeight: fullSize ? '600px' : '300px',
               maxWidth: fullSize ? '600px' : '300px',
@@ -375,7 +345,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           justifyContent: 'center',
         }}>
           <div align="center" style={{ margin: '10px' }}>
-            {comments && comments.length > 0 && (
+            {currPhoto.comments && currPhoto.comments.length > 0 && (
               <div style={{
                 paddingTop: 14,
                 height: 40,
@@ -383,12 +353,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 fontSize: 12,
                 backgroundImage: `url("/comment.webp")`,
                 color: 'white',
-              }}>{comments.length}
+              }}>{currPhoto.comments.length}
               </div>
             )}
           </div>
           <div align="center" style={{ margin: '10px' }}>
-            {photo && photo.likes > 0 && (
+            {currPhoto.photo && currPhoto.photo.likes > 0 && (
               <div style={{
                 paddingTop: 14,
                 paddingLeft: 10,
@@ -397,7 +367,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 fontSize: 12,
                 backgroundImage: `url("/thumbs-up.webp")`,
                 color: 'white',
-              }}>{photo.likes}
+              }}>{currPhoto.photo.likes}
               </div>
             )}
           </div>
@@ -407,9 +377,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           flexDirection: 'column',
           justifyContent: 'center',
         }}>
-          {comments && (
+          {currPhoto.comments && (
             <div align="center" style={{ margin: '10px', paddingBottom: '10px' }}>
-              {comments.map((comment, i) => (
+              {currPhoto.comments.map((comment, i) => (
                 <div key={comment.id}>
                   {i === 0 && (
                     <h1
@@ -426,7 +396,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
           )}
 
-          {recognition && renderRecognitions(recognition)}
+          {currPhoto.recognition && renderRecognitions(currPhoto.recognition)}
 
           <div align="center" style={{ margin: '10px', paddingBottom: '150px' }} />
         </div>
@@ -434,7 +404,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  if (requestComplete && photo === null) {
+  if (requestComplete && currPhoto.photo === null) {
     return (
       <div className="PhotosComponent">
         {renderNavigationButtons()}
