@@ -182,15 +182,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const update = async ({ photoId }) => {
     let id = photoId
     if (!id) {
-      const response = await fetch(`https://api.wisaw.com/photos/prev/2147483640`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      const pht = await fetchPrevPhoto({ id: 2147483640 })
 
-      const body = await response.json()
-      id = body.photo.id
+      id = pht.photo.id
     }
 
     ReactGA.pageview(`/photos/${id}`)
