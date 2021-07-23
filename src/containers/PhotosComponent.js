@@ -16,7 +16,6 @@ import NoMatch from "./NoMatch.js"
 import * as CONST from '../consts'
 
 const stringifyObject = require('stringify-object')
-const jmespath = require('jmespath')
 
 const propTypes = {
   match: PropTypes.object.isRequired,
@@ -94,33 +93,89 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
   const fetchPrevPhoto = async ({ id }) => {
     try {
-      const response = await fetch(`https://api.wisaw.com/photos/prev/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const body = await response.json()
-      return (body.photo)
-    } catch (error) {
-      console.log({ error })
+      const response = (await CONST.gqlClient
+        .query({
+          query: gql`
+                      query getPhotoAllPrev($photoId: ID!) {
+                        getPhotoAllPrev(photoId: $photoId) {
+                          photo {
+                            imgUrl
+                            id
+                            thumbUrl
+                            likes
+                          }
+                          comments {
+                            comment
+                          }
+                          recognitions {
+                            metaData
+                          }
+                        }
+                      }
+                    `,
+          variables: {
+            photoId: id,
+          },
+        })).data.getPhotoAllPrev
+
+      const { photo } = response
+
+      if (photo) {
+        const url = fullSize ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const dimensions = await fetchDimensions({ url })
+        return {
+          ...response,
+          ...dimensions,
+        }
+      }
+    } catch (err) {
+      console.log({ err })// eslint-disable-line
     }
+
     return null
   }
 
   const fetchNextPhoto = async ({ id }) => {
     try {
-      const response = await fetch(`https://api.wisaw.com/photos/next/${id}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const body = await response.json()
-      return (body.photo)
-    } catch (error) {
-      console.log({ error })
+      const response = (await CONST.gqlClient
+        .query({
+          query: gql`
+                      query getPhotoAllNext($photoId: ID!) {
+                        getPhotoAllNext(photoId: $photoId) {
+                          photo {
+                            imgUrl
+                            id
+                            thumbUrl
+                            likes
+                          }
+                          comments {
+                            comment
+                          }
+                          recognitions {
+                            metaData
+                          }
+                        }
+                      }
+                    `,
+          variables: {
+            photoId: id,
+          },
+        })).data.getPhotoAllNext
+
+      const { photo } = response
+
+      if (photo) {
+        const url = fullSize ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const dimensions = await fetchDimensions({ url })
+        return {
+          ...response,
+          ...dimensions,
+        }
+      }
+    } catch (err) {
+      console.log({ err })// eslint-disable-line
     }
+
     return null
   }
 
@@ -140,14 +195,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.pageview(`/photos/${id}`)
 
-    const currPhoto = fetchCurrPhoto({ id })
-    const nextPhoto = fetchNextPhoto({ id })
-    const prevPhoto = fetchPrevPhoto({ id })
+    const currPhotoFn = fetchCurrPhoto({ id })
+    const nextPhotoFn = fetchNextPhoto({ id })
+    const prevPhotoFn = fetchPrevPhoto({ id })
 
     const results = await Promise.all([
-      currPhoto,
-      nextPhoto,
-      prevPhoto,
+      currPhotoFn,
+      nextPhotoFn,
+      prevPhotoFn,
     ])
 
     setInternalState({
@@ -156,22 +211,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
       prevPhoto: results[2],
       requestComplete: true,
     })
-    // const curr = results[0]
-    const next = results[1]
-    const prev = results[2]
-
-    if (next) {
-      fetchDimensions({ url: fullSize ? next.getImgUrl : next.getThumbUrl })
-    }
-    if (prev) {
-      fetchDimensions({ url: fullSize ? prev.getImgUrl : prev.getThumbUrl })
-    }
   }
 
   const renderRecognitions = recognition => {
-    const labels = jmespath.search(recognition, "metaData.Labels[]")
-    const textDetections = jmespath.search(recognition, "metaData.TextDetections[?Type=='LINE']")
-    const moderationLabels = jmespath.search(recognition, "metaData.ModerationLabels[]")
+    const labels = JSON.parse(recognition.metaData).Labels
+    const textDetections = JSON.parse(recognition.metaData).TextDetections
+      .filter(text => text.Type === 'LINE')
+    const moderationLabels = JSON.parse(recognition.metaData).ModerationLabels
 
     return (
       <div>
@@ -237,12 +283,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return (
       <div className="lander">
         {
-          nextPhoto
+          nextPhoto && nextPhoto.photo
             ? (
 
               <Link
-                to={`/photos/${nextPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                onClick={() => update({ photoId: nextPhoto.id })}>
+                to={`/photos/${nextPhoto.photo.id}${embedded ? '?embedded=true' : ''}`}
+                onClick={() => update({ photoId: nextPhoto.photo.id })}>
                 <div style={{ margin: '5px' }} className="button">
                   &lt;&nbsp;next
                 </div>
@@ -255,11 +301,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
             )
         }
         {
-          prevPhoto
+          prevPhoto && prevPhoto.photo
             ? (
               <Link
-                to={`/photos/${prevPhoto.id}${embedded ? '?embedded=true' : ''}`}
-                onClick={() => update({ photoId: prevPhoto.id })}>
+                to={`/photos/${prevPhoto.photo.id}${embedded ? '?embedded=true' : ''}`}
+                onClick={() => update({ photoId: prevPhoto.photo.id })}>
                 <div style={{ margin: '5px' }} className="button">
                   prev&nbsp;&gt;
                 </div>
@@ -285,7 +331,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
   } = internalState
   const embedded = new URLSearchParams(location.search).get("embedded")
 
-  if (currPhoto?.photo) {
+  if (currPhoto && currPhoto?.photo) {
     return (
       <div className="PhotosComponent">
         <Helmet>
@@ -358,7 +404,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             )}
           </div>
           <div align="center" style={{ margin: '10px' }}>
-            {currPhoto.photo && currPhoto.photo.likes > 0 && (
+            {currPhoto && currPhoto.photo && currPhoto.photo.likes > 0 && (
               <div style={{
                 paddingTop: 14,
                 paddingLeft: 10,
@@ -395,8 +441,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
               ))}
             </div>
           )}
-
-          {currPhoto.recognition && renderRecognitions(currPhoto.recognition)}
+          {currPhoto.recognitions && renderRecognitions(currPhoto.recognitions[0])}
 
           <div align="center" style={{ margin: '10px', paddingBottom: '150px' }} />
         </div>
@@ -404,7 +449,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  if (requestComplete && currPhoto.photo === null) {
+  if (requestComplete && (currPhoto === null || currPhoto.photo === null)) {
     return (
       <div className="PhotosComponent">
         {renderNavigationButtons()}
