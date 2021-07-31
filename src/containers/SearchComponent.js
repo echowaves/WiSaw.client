@@ -10,6 +10,8 @@ import {
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
+import { gql } from "@apollo/client"
+import * as CONST from '../consts'
 
 const stringifyObject = require('stringify-object')
 
@@ -28,41 +30,49 @@ const SearchComponent = props => {
     update({ searchString })
   }, [])// eslint-disable-line
 
-  const update = async ({ searchString }) => {
-    try {
-      if (searchString) {
-        const response = await fetch(`https://api.wisaw.com/photos/feedForTextSearch`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            uuid: 'web_search_UUID',
-            searchTerm: searchString,
-            pageNumber: 0,
-            batch: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER), // batch id random
-          }),
-        })
-
-        const responseJson = await response.json()
-
-        setInternalState({
-          photos: responseJson.photos,
-          requestComplete: true,
-        })
-      }
-    } catch (error) {
-      console.log({ error })
-    }
-    console.log('done')
-  }
-
   const { match: { params: { searchString } } } = props
 
   const {
     photos,
     requestComplete,
   } = internalState
+
+  const update = async ({ searchString }) => {
+    if (searchString) {
+      try {
+        const response = (await CONST.gqlClient
+          .query({
+            query: gql`
+            query feedForTextSearch($searchTerm: String!, $pageNumber: Int!, $batch: Long!) {
+              feedForTextSearch(searchTerm: $searchTerm, pageNumber: $pageNumber, batch: $batch){
+                photos {
+                        id
+                        imgUrl
+                        thumbUrl
+                        commentsCount
+                        likes
+                      }
+                batch,
+                noMoreData
+              }
+            }`,
+            variables: {
+              searchTerm: searchString,
+              batch: 123123,
+              pageNumber: 0,
+            },
+          }))
+        console.log({ response })
+        setInternalState({
+          photos: response.data.feedForTextSearch.photos,
+          requestComplete: true,
+        })
+      } catch (err) {
+          console.log({ err })// eslint-disable-line
+      }
+      console.log('done')
+    }
+  }
 
   if (requestComplete) {
     return (
@@ -103,7 +113,7 @@ const SearchComponent = props => {
               <GridListTile key={tile.id}>
                 <Link
                   to={`/photos/${tile.id}`}>
-                  <img src={tile.getThumbUrl} alt={tile.getThumbUrl} />
+                  <img src={tile.thumbUrl} alt={tile.thumbUrl} />
                 </Link>
 
               </GridListTile>
