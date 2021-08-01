@@ -50,7 +50,7 @@ const SearchComponent = props => {
                         imgUrl
                         thumbUrl
                         commentsCount
-                        likes
+                        watchersCount
                       }
                 batch,
                 noMoreData
