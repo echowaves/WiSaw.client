@@ -59,7 +59,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                             imgUrl
                             id
                             thumbUrl
-                            likes
+                            watchersCount
                           }
                           comments {
                             comment
@@ -102,7 +102,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                             imgUrl
                             id
                             thumbUrl
-                            likes
+                            watchersCount
                           }
                           comments {
                             comment
@@ -146,7 +146,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                             imgUrl
                             id
                             thumbUrl
-                            likes
+                            watchersCount
                           }
                           comments {
                             comment
@@ -398,7 +398,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             )}
           </div>
           <div align="center" style={{ margin: '10px' }}>
-            {currPhoto && currPhoto.photo && currPhoto.photo.likes > 0 && (
+            {currPhoto && currPhoto.photo && currPhoto.photo.watchersCount > 0 && (
               <div style={{
                 paddingTop: 14,
                 paddingLeft: 10,
@@ -407,7 +407,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 fontSize: 12,
                 backgroundImage: `url("/thumbs-up.webp")`,
                 color: 'white',
-              }}>{currPhoto.photo.likes}
+              }}>{currPhoto.photo.watchersCount}
               </div>
             )}
           </div>
