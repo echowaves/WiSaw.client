@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet"
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from "react-loader-spinner"
 
-import { GridList, GridListTile } from '@material-ui/core'
+import { ImageList, ImageListItem } from '@material-ui/core'
 
 import {
   Link,
@@ -11,9 +11,8 @@ import {
 
 import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
+import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
-
-const stringifyObject = require('stringify-object')
 
 const propTypes = {
   match: PropTypes.object.isRequired,
@@ -101,24 +100,31 @@ const SearchComponent = props => {
           className="crop"
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             alignItems: 'center',
           }}>
-          <GridList
-            className="classes.gridList" cellHeight="auto" cols="auto"
-            style={{
-              justifyContent: 'center',
-            }}>
+          <ImageList
+            cols={1}
+            gap={10}>
             {photos.map(tile => (
-              <GridListTile key={tile.id}>
+              <ImageListItem
+                key={tile.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
                 <Link
                   to={`/photos/${tile.id}`}>
-                  <img src={tile.thumbUrl} alt={tile.thumbUrl} />
+                  <img
+                    src={tile.thumbUrl} alt={tile.thumbUrl}
+                    width={`${tile.width}`}
+                    height={`${tile.height}`}
+                  />
                 </Link>
-
-              </GridListTile>
+              </ImageListItem>
             ))}
-          </GridList>
+          </ImageList>
         </div>
         <div>&nbsp;</div>
         <div>&nbsp;</div>
