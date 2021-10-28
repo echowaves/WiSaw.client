@@ -11,11 +11,10 @@ import {
 
 import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
+import stringifyObject from 'stringify-object'
 import NoMatch from "./NoMatch.js"
 
 import * as CONST from '../consts'
-
-const stringifyObject = require('stringify-object')
 
 const propTypes = {
   match: PropTypes.object.isRequired,
