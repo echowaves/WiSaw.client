@@ -16,10 +16,6 @@ import NoMatch from "./NoMatch.js"
 
 import * as CONST from '../consts'
 
-const propTypes = {
-  match: PropTypes.object.isRequired,
-}
-
 const PhotosComponent = props => {
   const [internalState, setInternalState] = useState({
     currPhoto: null,
@@ -31,9 +27,9 @@ const PhotosComponent = props => {
   const [fullSize, setFullSize] = useState(false)
   useEffect(() => {
     const { match: { params: { photoId } } } = props
-
     update({ photoId })
-  }, [])// eslint-di
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   /**
 this methid will fetch image into cache -- will work super fast on next call to the same url
 */
@@ -221,8 +217,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span align="center">
               {labels.map(label => (
-                <h3>
-                  <div key={label.Name} style={{ fontSize: `${label.Confidence}%` }}>
+                <h3 key={label.Name}>
+                  <div style={{ fontSize: `${label.Confidence}%` }}>
                     <Link
                       to={`/search/${label.Name}`}>
                       {
@@ -244,7 +240,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span align="center">
               {textDetections.map(text => (
-                <h3><div key={text.Id} style={{ fontSize: `${text.Confidence}%` }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div></h3>
+                <h3 key={text.Id}><div style={{ fontSize: `${text.Confidence}%` }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div></h3>
               ))}
             </span>
           </div>
@@ -259,7 +255,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </h2>
             <span align="center">
               {moderationLabels.map(label => (
-                <h3><div key={label.Name} style={{ fontSize: `${label.Confidence}%`, color: 'red' }}>{stringifyObject(label.Name).replace(/'/g, '')}</div></h3>
+                <h3 key={label.Name}><div style={{ fontSize: `${label.Confidence}%`, color: 'red' }}>{stringifyObject(label.Name).replace(/'/g, '')}</div></h3>
               ))}
             </span>
           </div>
@@ -314,9 +310,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  const { history, location, match } = useReactRouter()
-
-  const { match: { params: { photoId } } } = props
+  const { location } = useReactRouter()
 
   const {
     currPhoto,
@@ -452,6 +446,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
   }
 
   return <div />
+}
+
+PhotosComponent.propTypes = {
+  match: PropTypes.object.isRequired,
 }
 
 export default PhotosComponent
