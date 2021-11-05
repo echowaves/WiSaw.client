@@ -4,7 +4,7 @@ import useReactRouter from 'use-react-router'
 import NestedStatus from 'react-nested-status'
 
 const NoMatch = () => {
-  const { history, location, match } = useReactRouter()
+  const { location } = useReactRouter()
   return (
     <NestedStatus code={404}>
       <div align="center">

@@ -12,7 +12,7 @@ const styles = {
   },
 }
 const Footer = () => {
-  const { history, location, match } = useReactRouter()
+  const { location } = useReactRouter()
   const embedded = new URLSearchParams(location.search).get("embedded")
   if (embedded) {
     return (<div />)
