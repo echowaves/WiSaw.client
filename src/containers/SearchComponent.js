@@ -11,12 +11,8 @@ import {
 
 import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
-import stringifyObject from 'stringify-object'
+// import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
-
-const propTypes = {
-  match: PropTypes.object.isRequired,
-}
 
 const SearchComponent = props => {
   const [internalState, setInternalState] = useState({
@@ -61,7 +57,7 @@ const SearchComponent = props => {
               pageNumber: 0,
             },
           }))
-        console.log({ response })
+        // console.log({ response })
         setInternalState({
           photos: response.data.feedForTextSearch.photos,
           requestComplete: true,
@@ -69,7 +65,7 @@ const SearchComponent = props => {
       } catch (err) {
           console.log({ err })// eslint-disable-line
       }
-      console.log('done')
+      // console.log('done')
     }
   }
 
@@ -155,6 +151,10 @@ const SearchComponent = props => {
       </div>
     </div>
   )
+}
+
+SearchComponent.propTypes = {
+  match: PropTypes.object.isRequired,
 }
 
 export default SearchComponent

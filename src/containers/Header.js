@@ -21,8 +21,9 @@ const Header = () => {
       <h1
         className="align-baseline"
         style={{
+          paddingTop: 10,
           fontFamily: 'verdana',
-          fontSize: '3vmax',
+          fontSize: '2vmax',
         }}>
         <a href="https://www.wisaw.com">
           <img
