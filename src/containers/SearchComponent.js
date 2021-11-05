@@ -118,8 +118,8 @@ const SearchComponent = props => {
                   to={`/photos/${tile.id}`}>
                   <img
                     src={tile.thumbUrl} alt={tile.thumbUrl}
-                    width={`${tile.width}`}
-                    height={`${tile.height}`}
+                    width="99%"
+                    // height={`${tile.height}`}
                   />
                 </Link>
               </ImageListItem>
