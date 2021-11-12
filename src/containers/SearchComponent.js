@@ -46,6 +46,7 @@ const SearchComponent = props => {
                         thumbUrl
                         commentsCount
                         watchersCount
+                        lastComment
                       }
                 batch,
                 noMoreData
@@ -93,11 +94,11 @@ const SearchComponent = props => {
           <meta name="twitter:image" content="" />
         </Helmet>
         <div // eslint-disable-line
-          className="crop"
+          // className="crop"
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            // display: 'flex',
+            // justifyContent: 'center',
+            // alignItems: 'center',
           }}>
           <ImageList
             cols={1}
@@ -106,18 +107,26 @@ const SearchComponent = props => {
               <ImageListItem
                 key={tile.id}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'center',
                   alignItems: 'center',
                 }}>
                 <Link
                   to={`/photos/${tile.id}`}>
                   <img
-                    src={tile.thumbUrl} alt={tile.thumbUrl}
+                    src={tile.thumbUrl}
                     width="99%"
-                    // height={`${tile.height}`}
+                    alt={tile.lastComment}
                   />
                 </Link>
+                <div
+                  style={{
+                    padding: 10,
+                    marginBottom: 10,
+                    lineHeight: "1.2em",
+                    height: "auto",
+                    textAlign: 'center',
+                  }}>
+                  {tile.lastComment}
+                </div>
               </ImageListItem>
             ))}
           </ImageList>
