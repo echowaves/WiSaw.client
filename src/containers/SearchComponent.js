@@ -38,7 +38,7 @@ const SearchComponent = props => {
         const response = (await CONST.gqlClient
           .query({
             query: gql`
-            query feedForTextSearch($searchTerm: String!, $pageNumber: Int!, $batch: Long!) {
+            query feedForTextSearch($searchTerm: String!, $pageNumber: Int!, $batch: String!) {
               feedForTextSearch(searchTerm: $searchTerm, pageNumber: $pageNumber, batch: $batch){
                 photos {
                         id
