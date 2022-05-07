@@ -3,6 +3,8 @@ import { Helmet } from "react-helmet"
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from "react-loader-spinner"
 
+import "./PhotosComponent.css"
+
 import { ImageList, ImageListItem } from '@material-ui/core'
 
 import {
@@ -98,38 +100,64 @@ const SearchComponent = props => {
           style={{
             // display: 'flex',
             // justifyContent: 'center',
-            // alignItems: 'center',
+            alignItems: 'center',
           }}>
           <ImageList
             cols={1}
             gap={10}>
             {photos.map(tile => (
-              <ImageListItem
+              <div
                 key={tile.id}
+                className="crop"
                 style={{
+                  display: 'flex',
+                  justifyContent: 'center',
                   alignItems: 'center',
                 }}>
-                <Link
-                  to={`/photos/${tile.id}`}>
-                  <img
-                    src={tile.thumbUrl}
-                    width="99%"
-                    alt={tile.lastComment}
-                  />
-                </Link>
-                <div
+                <ImageListItem
+                // className="crop"
                   style={{
-                    padding: 10,
-                    marginBottom: 10,
-                    lineHeight: "1.2em",
-                    height: "auto",
-                    textAlign: 'center',
-                  }}>
-                  {tile.lastComment}
-                </div>
-              </ImageListItem>
+                  // display: 'flex',
+                  // justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  key={tile.id}>
+                  <Link
+                    to={`/photos/${tile.id}`}
+                    // className="crop"
+                    style={{
+                    // display: 'flex',
+                    // justifyContent: 'center',
+                      alignItems: 'center',
+                    }}>
+                    <img
+                      style={{
+                        alignItems: 'center',
+                        maxHeight: '300px',
+                        maxWidth: '300px',
+                        width: 'auto',
+                        height: 'auto',
+                      }}
+                      src={tile.thumbUrl}
+                      width="99%"
+                      alt={tile.lastComment}
+                    />
+                  </Link>
+                  <div
+                    style={{
+                      padding: 10,
+                      marginBottom: 10,
+                      lineHeight: "1.2em",
+                      height: "auto",
+                      textAlign: 'center',
+                    }}>
+                    {tile.lastComment}
+                  </div>
+                </ImageListItem>
+              </div>
             ))}
           </ImageList>
+
         </div>
         <div>&nbsp;</div>
         <div>&nbsp;</div>
