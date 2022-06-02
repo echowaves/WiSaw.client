@@ -14,8 +14,9 @@ const Footer = lazy(() => import('./containers/Footer'))
 const Header = lazy(() => import('./containers/Header'))
 
 const App = () => (
-  <Suspense fallback={() => (<div />)}>
-    <Router>
+
+  <Router>
+    <Suspense fallback={() => (<div>Loading...</div>)}>
       <div>
         <Header />
         <Switch>
@@ -26,8 +27,8 @@ const App = () => (
         </Switch>
         <Footer />
       </div>
-    </Router>
-  </Suspense>
+    </Suspense>
+  </Router>
 
 )
 export default App
