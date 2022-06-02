@@ -14,19 +14,17 @@ const Footer = lazy(() => import('./containers/Footer'))
 const Header = lazy(() => import('./containers/Header'))
 
 const App = () => (
-  <Suspense fallback={() => (<div>Loading...</div>)}>
-    <Router>
-      <div>
-        <Header />
-        <Switch>
-          <Route exact path="/photos/:photoId" component={PhotosComponent} />
-          <Route exact path="/" component={PhotosComponent} />
-          <Route exact path="/search/:searchString" component={SearchComponent} />
-          <Route component={NoMatch} />
-        </Switch>
-        <Footer />
-      </div>
-    </Router>
-  </Suspense>
+  <Router>
+    <Suspense fallback={() => (<div>Loading...</div>)}>
+      <Header />
+      <Switch>
+        <Route exact path="/photos/:photoId" component={PhotosComponent} />
+        <Route exact path="/" component={PhotosComponent} />
+        <Route exact path="/search/:searchString" component={SearchComponent} />
+        <Route component={NoMatch} />
+      </Switch>
+      <Footer />
+    </Suspense>
+  </Router>
 )
 export default App
