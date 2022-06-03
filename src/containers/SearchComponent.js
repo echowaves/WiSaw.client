@@ -9,6 +9,7 @@ import { ImageList, ImageListItem } from '@material-ui/core'
 
 import {
   Link,
+  useParams,
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
@@ -16,18 +17,17 @@ import { gql } from "@apollo/client"
 // import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
 
-const SearchComponent = props => {
+const SearchComponent = () => {
+  const { searchString } = useParams()
+
   const [internalState, setInternalState] = useState({
     photos: [],
     requestComplete: false,
   })
 
   useEffect(() => {
-    const { match: { params: { searchString } } } = props
-    update({ searchString })
+    if (searchString) { update({ searchString }) }
   }, [])// eslint-disable-line
-
-  const { match: { params: { searchString } } } = props
 
   const {
     photos,
@@ -188,10 +188,6 @@ const SearchComponent = props => {
       </div>
     </div>
   )
-}
-
-SearchComponent.propTypes = {
-  match: PropTypes.object.isRequired,
 }
 
 export default SearchComponent

@@ -1,10 +1,10 @@
 import React from "react"
-import useReactRouter from 'use-react-router'
+import { useLocation } from "react-router-dom"
 
 import NestedStatus from 'react-nested-status'
 
 const NoMatch = () => {
-  const { location } = useReactRouter()
+  const location = useLocation()
   return (
     <NestedStatus code={404}>
       <div align="center">

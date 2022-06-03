@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Helmet } from "react-helmet"
-import useReactRouter from 'use-react-router'
+
 import ReactGA from 'react-ga'
 
 import "./PhotosComponent.css"
 
 import {
   Link,
+  useLocation,
+  useParams,
 } from "react-router-dom"
 
 import PropTypes from 'prop-types'
@@ -16,7 +18,7 @@ import NoMatch from "./NoMatch.js"
 
 import * as CONST from '../consts'
 
-const PhotosComponent = props => {
+const PhotosComponent = () => {
   const [internalState, setInternalState] = useState({
     currPhoto: null,
     nextPhoto: null,
@@ -25,9 +27,12 @@ const PhotosComponent = props => {
   })
 
   const [fullSize, setFullSize] = useState(false)
+  const { photoId } = useParams()
+
   useEffect(() => {
-    const { match: { params: { photoId } } } = props
+    // if (photoId) {
     update({ photoId })
+    // }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   /**
@@ -310,7 +315,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  const { location } = useReactRouter()
+  const location = useLocation()
 
   const {
     currPhoto,
@@ -446,10 +451,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
   }
 
   return <div />
-}
-
-PhotosComponent.propTypes = {
-  match: PropTypes.object.isRequired,
 }
 
 export default PhotosComponent
