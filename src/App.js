@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react"
 
 import {
-  BrowserRouter as Router, Route, Switch,
+  BrowserRouter, Route, Routes,
 } from "react-router-dom"
 
 import "./App.css"
@@ -14,17 +14,17 @@ const Footer = lazy(() => import('./containers/Footer'))
 const Header = lazy(() => import('./containers/Header'))
 
 const App = () => (
-  <Router>
+  <BrowserRouter>
     <Suspense fallback={() => (<div>Loading...</div>)}>
       <Header />
-      <Switch>
-        <Route exact path="/photos/:photoId" component={PhotosComponent} />
-        <Route exact path="/" component={PhotosComponent} />
-        <Route exact path="/search/:searchString" component={SearchComponent} />
-        <Route component={NoMatch} />
-      </Switch>
+      <Routes>
+        <Route exact path="/photos/:photoId" element={<PhotosComponent />} />
+        <Route exact path="/" element={<PhotosComponent />} />
+        <Route exact path="/search/:searchString" element={<SearchComponent />} />
+        <Route element={<NoMatch />} />
+      </Routes>
       <Footer />
     </Suspense>
-  </Router>
+  </BrowserRouter>
 )
 export default App

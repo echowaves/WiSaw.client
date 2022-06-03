@@ -1,7 +1,8 @@
 import React from "react"
+import { useLocation } from "react-router-dom"
+
 import { bounce } from 'react-animations'
 import Radium, { StyleRoot } from 'radium'
-import useReactRouter from 'use-react-router'
 
 const styles = {
   bounce: {
@@ -12,7 +13,7 @@ const styles = {
   },
 }
 const Footer = () => {
-  const { location } = useReactRouter()
+  const location = useLocation()
   const embedded = new URLSearchParams(location.search).get("embedded")
   if (embedded) {
     return (<div />)
