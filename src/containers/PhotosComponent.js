@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Helmet } from "react-helmet"
+import { Helmet } from "react-helmet-async"
 
 import ReactGA from 'react-ga'
 
@@ -326,6 +326,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
   if (currPhoto && currPhoto?.photo) {
     return (
       <div className="PhotosComponent">
+        {/* <HelmetProvider> */}
         <Helmet>
           {currPhoto.comments.length > 0 && (
             <title>{`WiSaw: ${currPhoto.comments[0].comment} -- What I Saw`}</title>
@@ -337,7 +338,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           <meta property="og:title" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
           <meta property="og:description" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
-          <meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}`} />
+          <meta name="image" property="og:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}-thumb`} />
           <meta property="og:url" content={`https://www.wisaw.com/photos/${currPhoto.photo.id}`} />
           <link rel="canonical" href={`https://www.wisaw.com/photos/${currPhoto.photo.id}`} />
 
@@ -347,8 +348,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
             ${currPhoto.comments.slice(0, 3).map(comment => comment.comment).join('\n')}`}
           />
           <meta name="twitter:description" content={currPhoto.comments.length > 0 ? currPhoto.comments[0].comment : `wisaw photo ${currPhoto.photo.id}`} />
-          <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}`} />
+          <meta name="twitter:image" content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}-thumb`} />
+          <meta property="og:type" content="article" />
         </Helmet>
+        {/* </HelmetProvider> */}
 
         {renderNavigationButtons()}
 
