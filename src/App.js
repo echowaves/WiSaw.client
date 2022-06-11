@@ -15,9 +15,10 @@ const Footer = lazy(() => import('./containers/Footer'))
 const Header = lazy(() => import('./containers/Header'))
 
 const App = () => (
-  <BrowserRouter>
-    <Suspense>
-      <HelmetProvider>
+  <HelmetProvider>
+
+    <BrowserRouter>
+      <Suspense>
         <Header />
         <Routes>
           <Route exact path="/photos/:photoId" element={<PhotosComponent />} />
@@ -26,8 +27,8 @@ const App = () => (
           <Route element={<NoMatch />} />
         </Routes>
         <Footer />
-      </HelmetProvider>
-    </Suspense>
-  </BrowserRouter>
+      </Suspense>
+    </BrowserRouter>
+  </HelmetProvider>
 )
 export default App
