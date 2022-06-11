@@ -16,7 +16,6 @@ const Header = lazy(() => import('./containers/Header'))
 
 const App = () => (
   <HelmetProvider>
-
     <BrowserRouter>
       <Suspense>
         <Header />

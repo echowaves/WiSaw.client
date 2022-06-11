@@ -75,7 +75,7 @@ const SearchComponent = () => {
   if (requestComplete) {
     return (
       <div className="PhotosComponent">
-        <Helmet>
+        <Helmet prioritizeSeoTags>
           <title>{`WiSaw: searching for ${searchString}`}</title>
 
           <meta name="description" content={`WiSaw: searching for ${searchString}`} />

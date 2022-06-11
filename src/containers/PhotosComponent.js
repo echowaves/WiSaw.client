@@ -327,7 +327,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return (
       <div className="PhotosComponent">
         {/* <HelmetProvider> */}
-        <Helmet>
+        <Helmet prioritizeSeoTags>
           {currPhoto.comments.length > 0 && (
             <title>{`WiSaw: ${currPhoto.comments[0].comment} -- What I Saw`}</title>
           )}
