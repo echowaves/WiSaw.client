@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Helmet } from "react-helmet"
+import { Helmet } from "react-helmet-async"
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from "react-loader-spinner"
 

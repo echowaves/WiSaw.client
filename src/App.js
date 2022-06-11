@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from "react"
+import { HelmetProvider } from "react-helmet-async"
 
 import {
   BrowserRouter, Route, Routes,
@@ -15,15 +16,17 @@ const Header = lazy(() => import('./containers/Header'))
 
 const App = () => (
   <BrowserRouter>
-    <Suspense fallback={() => (<div>Loading...</div>)}>
-      <Header />
-      <Routes>
-        <Route exact path="/photos/:photoId" element={<PhotosComponent />} />
-        <Route exact path="/" element={<PhotosComponent />} />
-        <Route exact path="/search/:searchString" element={<SearchComponent />} />
-        <Route element={<NoMatch />} />
-      </Routes>
-      <Footer />
+    <Suspense>
+      <HelmetProvider>
+        <Header />
+        <Routes>
+          <Route exact path="/photos/:photoId" element={<PhotosComponent />} />
+          <Route exact path="/" element={<PhotosComponent />} />
+          <Route exact path="/search/:searchString" element={<SearchComponent />} />
+          <Route element={<NoMatch />} />
+        </Routes>
+        <Footer />
+      </HelmetProvider>
     </Suspense>
   </BrowserRouter>
 )
