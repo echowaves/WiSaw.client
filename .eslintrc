@@ -11,7 +11,7 @@
     	"jest"
     // "react-hooks"
 	],
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
 	"parserOptions": {
 		"ecmaVersion": 6,
 		"sourceType": "module",
@@ -28,6 +28,7 @@
 		"jest": true,
 	},
 	"rules": {
+		
 		"jest/no-disabled-tests": "warn",
 		"jest/no-focused-tests": "error",
 		"jest/no-identical-title": "error",
