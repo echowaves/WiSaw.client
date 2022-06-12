@@ -4,11 +4,11 @@
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.4.16",
-    "@emotion/react": "^11.5.0",
-    "@emotion/styled": "^11.3.0",
+    "@emotion/react": "11.9.0",
+    "@emotion/styled": "11.8.1",
     "@material-ui/core": "5.0.0-beta.4",
     "graphql": "^15.7.1",
-    "radium": "0.26.1",
+    "radium": "0.26.2",
     "react": "18.1.0",
     "react-animations": "1.0.0",
     "react-dom": "18.1.0",
@@ -17,7 +17,7 @@
     "react-loader-spinner": "^4.0.0",
     "react-nested-status": "0.2.1",
     "react-router-dom": "6.3.0",
-    "react-scripts": "4.0.3",
+    "react-scripts": "5.0.1",
     "stringify-object": "4.0.0"    
   },
   "devDependencies": {

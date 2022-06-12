@@ -8,8 +8,8 @@
 	],
 	"plugins": [
 		"react",
-    "jest",
-    "react-hooks"
+    	"jest"
+    // "react-hooks"
 	],
   "parser": "babel-eslint",
 	"parserOptions": {
