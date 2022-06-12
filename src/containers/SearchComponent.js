@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Helmet } from "react-helmet-async"
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import Loader from "react-loader-spinner"
+import { Grid } from "react-loader-spinner"
 
 import "./PhotosComponent.css"
 
@@ -178,8 +178,7 @@ const SearchComponent = () => {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Loader
-          type="Grid"
+        <Grid
           color="#00BFFF"
           height={100}
           width={100}
