@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Helmet } from "react-helmet-async"
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import { Grid } from "react-loader-spinner"
+import { Bars } from "react-loader-spinner"
 
 import "./PhotosComponent.css"
 
@@ -75,26 +75,6 @@ const SearchComponent = () => {
   if (requestComplete) {
     return (
       <div className="PhotosComponent">
-        <Helmet prioritizeSeoTags>
-          <title>{`WiSaw: searching for ${searchString}`}</title>
-
-          <meta name="description" content={`WiSaw: searching for ${searchString}`} />
-
-          <meta property="og:title" content={`WiSaw: searching for ${searchString}`} />
-          <meta property="og:description" content={`WiSaw: searching for ${searchString}`} />
-          <meta name="image" property="og:image" content="" />
-          <meta
-            property="og:url" content={`https://www.wisaw.com/search/${searchString}`}
-          />
-          <link rel="canonical" href={`https://www.wisaw.com/search/${searchString}`} />
-
-          <meta name="twitter:title" content={`WiSaw: searching for ${searchString}`} />
-          <meta
-            name="twitter:card" content={`WiSaw: searching for ${searchString}`}
-          />
-          <meta name="twitter:description" content={`WiSaw: searching for ${searchString}`} />
-          <meta name="twitter:image" content="" />
-        </Helmet>
         <ImageList
           cols={1}
           gap={10}>
@@ -128,7 +108,7 @@ const SearchComponent = () => {
                       alignItems: 'center',
                       maxHeight: '300px',
                       maxWidth: '300px',
-                      width: 'auto',
+                      width: '100%',
                       height: 'auto',
                     }}
                     src={tile.thumbUrl}
@@ -157,26 +137,44 @@ const SearchComponent = () => {
         <div>&nbsp;</div>
         <div>&nbsp;</div>
         <div>&nbsp;</div>
+        <Helmet prioritizeSeoTags>
+          <title>{`WiSaw: searching for ${searchString}`}</title>
+
+          <meta name="description" content={`WiSaw: searching for ${searchString}`} />
+
+          <meta property="og:title" content={`WiSaw: searching for ${searchString}`} />
+          <meta property="og:description" content={`WiSaw: searching for ${searchString}`} />
+          <meta name="image" property="og:image" content="" />
+          <meta
+            property="og:url" content={`https://www.wisaw.com/search/${searchString}`}
+          />
+          <link rel="canonical" href={`https://www.wisaw.com/search/${searchString}`} />
+
+          <meta name="twitter:title" content={`WiSaw: searching for ${searchString}`} />
+          <meta
+            name="twitter:card" content={`WiSaw: searching for ${searchString}`}
+          />
+          <meta name="twitter:description" content={`WiSaw: searching for ${searchString}`} />
+          <meta name="twitter:image" content="" />
+        </Helmet>
       </div>
     )
   }
 
   return (
-    <div className="PhotosComponent">
-      <div // eslint-disable-line
-        className="crop"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}>
-        <Grid
-          color="#00BFFF"
-          height={100}
-          width={100}
-          timeout={60000}
-        />
-      </div>
+    <div // eslint-disable-line
+      className="crop"
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+      <Bars
+        color="#00BFFF"
+        height={100}
+        width={100}
+        timeout={60000}
+      />
     </div>
   )
 }
