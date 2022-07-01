@@ -95,70 +95,62 @@ const SearchComponent = () => {
           <meta name="twitter:description" content={`WiSaw: searching for ${searchString}`} />
           <meta name="twitter:image" content="" />
         </Helmet>
-        <div // eslint-disable-line
-          // className="crop"
-          style={{
-            // display: 'flex',
-            // justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <ImageList
-            cols={1}
-            gap={10}>
-            {photos.map(tile => (
-              <div
-                key={tile.id}
-                className="crop"
+        <ImageList
+          cols={1}
+          gap={10}>
+          {photos.map(tile => (
+            <div
+              key={tile.id}
+              className="crop"
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <ImageListItem
+              // className="crop"
                 style={{
-                  display: 'flex',
-                  justifyContent: 'center',
+                // display: 'flex',
+                // justifyContent: 'center',
                   alignItems: 'center',
-                }}>
-                <ImageListItem
-                // className="crop"
+                }}
+                key={tile.id}>
+                <Link
+                  to={`/photos/${tile.id}`}
+                  // className="crop"
                   style={{
                   // display: 'flex',
                   // justifyContent: 'center',
                     alignItems: 'center',
-                  }}
-                  key={tile.id}>
-                  <Link
-                    to={`/photos/${tile.id}`}
-                    // className="crop"
+                  }}>
+                  <img
                     style={{
-                    // display: 'flex',
-                    // justifyContent: 'center',
                       alignItems: 'center',
-                    }}>
-                    <img
-                      style={{
-                        alignItems: 'center',
-                        maxHeight: '300px',
-                        maxWidth: '300px',
-                        width: 'auto',
-                        height: 'auto',
-                      }}
-                      src={tile.thumbUrl}
-                      width="99%"
-                      alt={tile.lastComment}
-                    />
-                  </Link>
-                  <div
-                    style={{
-                      padding: 10,
-                      marginBottom: 10,
-                      lineHeight: "1.2em",
-                      height: "auto",
-                      textAlign: 'center',
-                    }}>
-                    {tile.lastComment}
-                  </div>
-                </ImageListItem>
-              </div>
-            ))}
-          </ImageList>
+                      maxHeight: '300px',
+                      maxWidth: '300px',
+                      width: 'auto',
+                      height: 'auto',
+                    }}
+                    src={tile.thumbUrl}
+                    width="99%"
+                    alt={tile.lastComment}
+                  />
+                </Link>
+                <div
+                  style={{
+                    padding: 10,
+                    marginBottom: 10,
+                    lineHeight: "1.2em",
+                    height: "auto",
+                    textAlign: 'center',
+                  }}>
+                  {tile.lastComment}
+                </div>
+              </ImageListItem>
+            </div>
+          ))}
+        </ImageList>
 
-        </div>
         <div>&nbsp;</div>
         <div>&nbsp;</div>
         <div>&nbsp;</div>
