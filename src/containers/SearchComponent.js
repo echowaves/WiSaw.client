@@ -108,11 +108,12 @@ const SearchComponent = () => {
                       alignItems: 'center',
                       maxHeight: '300px',
                       maxWidth: '300px',
-                      width: '100%',
+                      width: '99%',
                       height: 'auto',
                     }}
                     src={tile.thumbUrl}
-                    width="99%"
+                    width="300px"
+                    height="300px"
                     alt={tile.lastComment}
                   />
                 </Link>
