@@ -79,56 +79,47 @@ const SearchComponent = () => {
           cols={1}
           gap={10}>
           {photos.map(tile => (
-            <div
-              key={tile.id}
+            <ImageListItem
               className="crop"
               style={{
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-              }}>
-              <ImageListItem
-              // className="crop"
+              }}
+              key={tile.id}>
+              <Link
+                to={`/photos/${tile.id}`}
+                // className="crop"
                 style={{
                 // display: 'flex',
                 // justifyContent: 'center',
                   alignItems: 'center',
-                }}
-                key={tile.id}>
-                <Link
-                  to={`/photos/${tile.id}`}
-                  // className="crop"
+                }}>
+                <img
                   style={{
-                  // display: 'flex',
-                  // justifyContent: 'center',
                     alignItems: 'center',
-                  }}>
-                  <img
-                    style={{
-                      alignItems: 'center',
-                      maxHeight: '300px',
-                      maxWidth: '300px',
-                      width: '99%',
-                      height: 'auto',
-                    }}
-                    src={tile.thumbUrl}
-                    width="300px"
-                    height="300px"
-                    alt={tile.lastComment}
-                  />
-                </Link>
-                <div
-                  style={{
-                    padding: 10,
-                    marginBottom: 10,
-                    lineHeight: "1.2em",
-                    height: "auto",
-                    textAlign: 'center',
-                  }}>
-                  {tile.lastComment}
-                </div>
-              </ImageListItem>
-            </div>
+                    maxHeight: '300px',
+                    maxWidth: '300px',
+                    width: '99%',
+                    height: 'auto',
+                  }}
+                  src={tile.thumbUrl}
+                  width="300px"
+                  height="300px"
+                  alt={tile.lastComment}
+                />
+              </Link>
+              <div
+                style={{
+                  padding: 10,
+                  marginBottom: 10,
+                  lineHeight: "1.2em",
+                  height: "auto",
+                  textAlign: 'center',
+                }}>
+                {tile.lastComment}
+              </div>
+            </ImageListItem>
           ))}
         </ImageList>
 
