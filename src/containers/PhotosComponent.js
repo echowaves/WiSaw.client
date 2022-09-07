@@ -4,11 +4,13 @@ import { Helmet } from "react-helmet-async"
 import ReactGA from 'react-ga'
 
 import "./PhotosComponent.css"
+import Button from 'react-bootstrap/Button'
 
 const Footer = lazy(() => import('./Footer'))
 
 import {
-  Link,
+  Link, 
+  // NavLink,  
   useLocation,
   useParams,
 } from "react-router-dom"
@@ -394,11 +396,23 @@ this methid will fetch image into cache -- will work super fast on next call to 
             }}
           />
         </div>
-
+        <div 
+          style={{ margin: '10px', align: 'center' }}
+        >
+        <a
+        href={`${currPhoto.photo.imgUrl}`}
+              target="_blank" rel="noreferrer"
+            >
+          <Button variant="secondary">            
+              Free Download            
+          </Button> 
+          </a>
+        </div>
         <div style={{
           display: 'flex',
           justifyContent: 'center',
         }}>
+        
           <div 
             style={{ margin: '10px', align: 'center' }}
           >
