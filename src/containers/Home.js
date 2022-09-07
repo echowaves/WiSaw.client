@@ -171,7 +171,7 @@ const Home = function () {
                 src={photo.thumbUrl}             
                 style={{ width: '250px', padding: 5,}}
                 alt={photo.lastComment}                      
-              />
+              />              
               <div
                 style={{ width: '250px', paddingBottom: 15,}}
               >
