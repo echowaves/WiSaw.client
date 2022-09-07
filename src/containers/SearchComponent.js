@@ -123,12 +123,7 @@ const SearchComponent = function () {
           ))}
         </Masonry>
 
-        <div>&nbsp;</div>
-        <div>&nbsp;</div>
-        <div>&nbsp;</div>
-        <div>&nbsp;</div>
-        <div>&nbsp;</div>
-        <div>&nbsp;</div>
+        
         <Helmet prioritizeSeoTags>
           <title>{`WiSaw: searching for ${searchString}`}</title>
 
