@@ -139,7 +139,7 @@ const Home = function () {
     dataLength={photos.length} //This is important field to render the next data
     next={retrievePhotos}
     hasMore={!noMoreData}
-    loader={<h4>Loading...</h4>}
+    loader={<div>Loading...</div>}
     
     endMessage={
       <p style={{ textAlign: 'center' }}>
