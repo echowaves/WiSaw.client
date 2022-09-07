@@ -206,13 +206,13 @@ const Home = function () {
 
         }}            
       >
-      <h1
+      <h2
     style={{ 
       padding: 10
     }}
     >
       Free Stock Photos, Royalty Free Stock Images & Copyright Free Pictures, User Generated Content, Unaltered, Unedited, Taken With Phone Cameras
-    </h1>
+    </h2>
         {renderSearchComponent()}
         {renderInfiniteFeed()}
         </div>
