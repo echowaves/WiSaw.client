@@ -83,7 +83,7 @@ const Home = function () {
         setPageNumber(pageNumber+1)        
         setNoMoreData(response.data.feedRecent.noMoreData)
         setPhotos([...photos, ...response.data.feedRecent.photos ])
-        console.log({pageNumber, noMoreData: response.data.feedRecent.noMoreData})        
+        // console.log({pageNumber, noMoreData: response.data.feedRecent.noMoreData})        
       return {
         photos: response.data.feedRecent.photos,
         batch: response.data.feedRecent.batch,
@@ -114,7 +114,7 @@ const Home = function () {
         // alignItems: 'center',
         paddingBottom: '10px'
       }}        
-    >
+    >      
       <Form onSubmit={handleSearch}> 
         <Row>
           <Col xs='auto'>
@@ -206,6 +206,13 @@ const Home = function () {
 
         }}            
       >
+      <h1
+    style={{ 
+      padding: 10
+    }}
+    >
+      Free Stock Photos, Royalty Free Stock Images & Copyright Free Pictures, User Generated Content, Unaltered, Unedited, Taken With Phone Cameras
+    </h1>
         {renderSearchComponent()}
         {renderInfiniteFeed()}
         </div>
