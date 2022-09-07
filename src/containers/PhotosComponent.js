@@ -472,7 +472,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           )}
           {currPhoto.recognitions && renderRecognitions(currPhoto.recognitions[0])}
 
-          <div style={{ margin: '10px', paddingBottom: '150px', align: 'center' }} />
+          <div style={{ margin: '10px', align: 'center' }} />
         </div>
         <Footer/>
       </div>
