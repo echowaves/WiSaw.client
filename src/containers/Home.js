@@ -3,9 +3,15 @@ import Masonry from 'react-masonry-component'
 import InfiniteScroll from 'react-infinite-scroll-component'
 import {
   Link,
+  useNavigate,
   // useLocation,
   // useParams,
 } from "react-router-dom"
+
+import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
 
 // import { Helmet } from "react-helmet-async"
 
@@ -29,7 +35,9 @@ const Home = function () {
   const [pageNumber, setPageNumber] = useState(0)
   const batch = 0
   const [noMoreData, setNoMoreData] = useState(true)
-  
+  const [searchText, setSearchText] = useState('')
+  const navigate = useNavigate()
+
   useEffect(() => {
     // ReactGA.pageview(`/`)
     (async () => {
@@ -86,6 +94,96 @@ const Home = function () {
       console.log({ err15 })// eslint-disable-line
     }  
   }
+  const handleSearch = function() {
+    // console.log({event})
+    // event.preventDefault()
+    navigate(`/search/${searchText}`);
+
+    setSearchText('')
+  }
+  const searchTextHandler = function(event) {
+    setSearchText(event.target.value)
+    // console.log(event.target.value)
+  }
+
+  const renderSearchComponent = function() {
+    return <div
+      style={{ 
+        display: 'flex',
+        justifyContent: 'right',
+        // alignItems: 'center',
+        paddingBottom: '10px'
+      }}        
+    >
+      <Form onSubmit={handleSearch}> 
+        <Row>
+          <Col xs='auto'>
+            <Form.Control type="input" placeholder="What are you looking for..." onChange={searchTextHandler}/>
+          </Col>
+          <Col xs='auto'>
+            <Button variant="primary" type="submit">
+              Search
+            </Button>
+          </Col>    
+        </Row>
+      </Form>
+    </div>
+  }
+
+  const renderInfiniteFeed = function() {
+    return <InfiniteScroll        
+    style={{ 
+      position: 'relative',
+    }}
+    
+    dataLength={photos.length} //This is important field to render the next data
+    next={retrievePhotos}
+    hasMore={!noMoreData}
+    loader={<h4>Loading...</h4>}
+    
+    endMessage={
+      <p style={{ textAlign: 'center' }}>
+      <b>Yay! You have seen it all</b>
+    </p>
+    }
+    // below props only if you need pull down functionality
+    // refreshFunction={this.refresh}
+    // pullDownToRefresh
+    // pullDownToRefreshThreshold={50}
+    // pullDownToRefreshContent={
+    //   <h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
+    // }
+    // releaseToRefreshContent={
+    //   <h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
+    // }
+  >
+    <Masonry
+      style={{ 
+      }}      
+      >
+        {
+          photos.map(photo => (        
+            <Link 
+              to={`/photos/${photo.id}`}
+              style={{ width: '250px'}}
+              key={photo.id}>
+              <img 
+                src={photo.thumbUrl}             
+                style={{ width: '250px', padding: 5,}}
+                alt={photo.lastComment}                      
+              />
+              <div
+                style={{ width: '250px', paddingBottom: 15,}}
+              >
+                {photo.lastComment}
+              </div>
+            </Link>
+          ))
+        }
+      </Masonry>      
+    </InfiniteScroll>
+  }
+
   return (
       <div
         style={{         
@@ -104,58 +202,12 @@ const Home = function () {
           width: '90%',
           position: 'relative',
           alignSelf: 'center',
+          justifyContent: 'center',
+
         }}            
       >
-        <InfiniteScroll        
-          style={{ 
-          }}
-          
-          dataLength={photos.length} //This is important field to render the next data
-          next={retrievePhotos}
-          hasMore={!noMoreData}
-          loader={<h4>Loading...</h4>}
-          
-          endMessage={
-            <p style={{ textAlign: 'center' }}>
-            <b>Yay! You have seen it all</b>
-          </p>
-          }
-          // below props only if you need pull down functionality
-          // refreshFunction={this.refresh}
-          // pullDownToRefresh
-          // pullDownToRefreshThreshold={50}
-          // pullDownToRefreshContent={
-          //   <h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
-          // }
-          // releaseToRefreshContent={
-          //   <h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
-          // }
-        >
-          <Masonry
-            style={{ 
-            }}      
-            >
-              {
-                photos.map(photo => (        
-                  <Link 
-                    to={`/photos/${photo.id}`}
-                    style={{ width: '250px'}}
-                    key={photo.id}>
-                    <img 
-                      src={photo.thumbUrl}             
-                      style={{ width: '250px', padding: 5,}}
-                      alt={photo.lastComment}                      
-                    />
-                    <div
-                      style={{ width: '250px', paddingBottom: 15,}}
-                    >
-                      {photo.lastComment}
-                    </div>
-                  </Link>
-                ))
-              }
-            </Masonry>      
-          </InfiniteScroll>
+        {renderSearchComponent()}
+        {renderInfiniteFeed()}
         </div>
       </div>
   )
