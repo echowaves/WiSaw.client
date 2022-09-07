@@ -5,19 +5,19 @@ import { Bars } from "react-loader-spinner"
 
 import "./PhotosComponent.css"
 
-import { ImageList, ImageListItem } from '@material-ui/core'
+import Masonry from 'react-masonry-component'
 
 import {
   Link,
   useParams,
 } from "react-router-dom"
 
-import PropTypes from 'prop-types'
+// import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
 // import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
 
-const SearchComponent = () => {
+const SearchComponent = function () {
   const { searchString } = useParams()
 
   const [internalState, setInternalState] = useState({
@@ -75,11 +75,11 @@ const SearchComponent = () => {
   if (requestComplete) {
     return (
       <div className="PhotosComponent">
-        <ImageList
+        <Masonry
           cols={1}
           gap={10}>
           {photos.map(tile => (
-            <ImageListItem
+            <div
               className="crop"
               style={{
                 display: 'flex',
@@ -119,9 +119,9 @@ const SearchComponent = () => {
                 }}>
                 {tile.lastComment}
               </div>
-            </ImageListItem>
+            </div>
           ))}
-        </ImageList>
+        </Masonry>
 
         <div>&nbsp;</div>
         <div>&nbsp;</div>

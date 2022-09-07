@@ -12,9 +12,9 @@
       "sizes": "256x256",
       "type": "image/webp"
     }
-  ],
-  "start_url": "./index.html",
+    ],
+  "start_url": ".",
   "display": "standalone",
-  "theme_color": "#ffffff",
+  "theme_color": "#000000",
   "background_color": "#ffffff"
 }

@@ -12,7 +12,7 @@ const styles = {
     fontWeight: 'bold',
   },
 }
-const Footer = () => {
+const Footer = function () {
   const location = useLocation()
   const embedded = new URLSearchParams(location.search).get("embedded")
   if (embedded) {

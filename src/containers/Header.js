@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import ReactGA from 'react-ga'
 
-const Header = () => {
+const Header = function () {
   useEffect(() => {
     ReactGA.initialize('UA-3129031-19')
   }, [])// eslint-disable-line
