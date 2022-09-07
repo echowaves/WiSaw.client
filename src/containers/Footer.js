@@ -22,9 +22,9 @@ const Footer = function () {
     <div
       id="footer"
       style={{
-        position: 'fixed',
-        left: 0,
-        bottom: 0,
+        // position: 'fixed',
+        // left: 0,
+        // bottom: 0,
         width: '100%',
         textAlign: 'center',
       }}>
