@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, lazy } from 'react'
 import { Helmet } from "react-helmet-async"
 
 import ReactGA from 'react-ga'
 
 import "./PhotosComponent.css"
+
+const Footer = lazy(() => import('./Footer'))
 
 import {
   Link,
@@ -11,14 +13,14 @@ import {
   useParams,
 } from "react-router-dom"
 
-import PropTypes from 'prop-types'
+// import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
 import stringifyObject from 'stringify-object'
 import NoMatch from "./NoMatch.js"
 
 import * as CONST from '../consts'
 
-const PhotosComponent = () => {
+const PhotosComponent = function () {
   const [internalState, setInternalState] = useState({
     currPhoto: null,
     nextPhoto: null,
@@ -62,7 +64,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                             watchersCount
                           }
                           comments {
-                            comment
+                            comment,
+                            id
                           }
                           recognitions {
                             metaData
@@ -217,10 +220,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div>
         {labels.length > 0 && (
           <div style={{ margin: '5px' }}>
-            <div align="center">
+            <div   
+              style={{align: "center"}}
+            >
               <h2><b>AI recognized tags:</b></h2>
             </div>
-            <span align="center">
+            <span 
+              style={{align: "center"}}
+            >
               {labels.map(label => (
                 <h3 key={label.Name}>
                   <div style={{ fontSize: `${label.Confidence}%` }}>
@@ -240,10 +247,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
         {textDetections.length > 0 && (
           <div style={{ margin: '5px' }}>
-            <div align="center">
+            <div 
+              style={{align: "center"}}
+            >
               <h2><b>AI recognized text:</b></h2>
             </div>
-            <span align="center">
+            <span 
+              style={{align: "center"}}
+            >
               {textDetections.map(text => (
                 <h3 key={text.Id}><div style={{ fontSize: `${text.Confidence}%` }}>{stringifyObject(text.DetectedText).replace(/'/g, '')}</div></h3>
               ))}
@@ -254,11 +265,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {moderationLabels.length > 0 && (
           <div style={{ margin: '5px', paddingBottom: '5px' }}>
             <h2>
-              <div align="center" style={{ color: 'red' }}>
+              <div
+                style={{ color: 'red', align: 'center' }}>
                 <b>AI moderation tags:</b>
               </div>
             </h2>
-            <span align="center">
+            <span 
+              style={{align: "center"}}
+            >
               {moderationLabels.map(label => (
                 <h3 key={label.Name}><div style={{ fontSize: `${label.Confidence}%`, color: 'red' }}>{stringifyObject(label.Name).replace(/'/g, '')}</div></h3>
               ))}
@@ -385,7 +399,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           display: 'flex',
           justifyContent: 'center',
         }}>
-          <div align="center" style={{ margin: '10px' }}>
+          <div 
+            style={{ margin: '10px', align: 'center' }}
+          >
             {currPhoto.comments && currPhoto.comments.length > 0 && (
               <div style={{
                 paddingTop: 14,
@@ -398,7 +414,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
               </div>
             )}
           </div>
-          <div align="center" style={{ margin: '10px' }}>
+          <div 
+            style={{ margin: '10px', align: 'center' }}
+          >
             {currPhoto && currPhoto.photo && currPhoto.photo.watchersCount > 0 && (
               <div style={{
                 paddingTop: 14,
@@ -419,7 +437,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           justifyContent: 'center',
         }}>
           {currPhoto.comments && (
-            <div align="center" style={{ margin: '10px', paddingBottom: '10px' }}>
+            <div 
+              style={{ margin: '10px', paddingBottom: '10px', align: 'center' }}
+            >
               {currPhoto.comments.map((comment, i) => (
                 <div key={comment.id}>
                   {i === 0 && (
@@ -438,8 +458,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           )}
           {currPhoto.recognitions && renderRecognitions(currPhoto.recognitions[0])}
 
-          <div align="center" style={{ margin: '10px', paddingBottom: '150px' }} />
+          <div style={{ margin: '10px', paddingBottom: '150px', align: 'center' }} />
         </div>
+        <Footer/>
       </div>
     )
   }

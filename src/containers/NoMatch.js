@@ -3,11 +3,13 @@ import { useLocation } from "react-router-dom"
 
 import NestedStatus from 'react-nested-status'
 
-const NoMatch = () => {
+const NoMatch = function () {
   const location = useLocation()
   return (
     <NestedStatus code={404}>
-      <div align="center">
+      <div 
+        style={{align: "center"}}
+      >
         <h2>No photo found <code>{location.pathname}</code></h2>
       </div>
     </NestedStatus>
