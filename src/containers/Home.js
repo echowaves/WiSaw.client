@@ -211,7 +211,7 @@ const Home = function () {
       padding: 10
     }}
     >
-      Free Stock Photos, Royalty Free Stock Images & Copyright Free Pictures, User Generated Content, Unaltered, Unedited, Taken With Phone Cameras
+      Free Stock Photos, Royalty Free Stock Images & Copyright Free Pictures, User Generated Content, Unaltered, Authentic, Taken With Phone Cameras
     </h2>
         {renderSearchComponent()}
         {renderInfiniteFeed()}
