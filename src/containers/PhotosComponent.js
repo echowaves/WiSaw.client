@@ -35,7 +35,7 @@ const PhotosComponent = function () {
 
   useEffect(() => {
     // if (photoId) {
-    update({ photoId })
+    update({ photoId, fullSize })
     // }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -52,7 +52,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     }
   }
 
-  const fetchCurrPhoto = async ({ id }) => {
+  const fetchCurrPhoto = async ({ id, fullSize }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -97,7 +97,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchPrevPhoto = async ({ id }) => {
+  const fetchPrevPhoto = async ({ id, fullSize }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -142,7 +142,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchNextPhoto = async ({ id }) => {
+  const fetchNextPhoto = async ({ id, fullSize }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -187,7 +187,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const update = async ({ photoId }) => {
+  const update = async ({ photoId, fullSize }) => {
     let id = photoId
     if (!id) {
       const pht = await fetchPrevPhoto({ id: 2147483640 })
@@ -197,9 +197,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.pageview(`/photos/${id}`)
 
-    const currPhotoFn = fetchCurrPhoto({ id })
-    const nextPhotoFn = fetchNextPhoto({ id })
-    const prevPhotoFn = fetchPrevPhoto({ id })
+    const currPhotoFn = fetchCurrPhoto({ id, fullSize })
+    const nextPhotoFn = fetchNextPhoto({ id, fullSize })
+    const prevPhotoFn = fetchPrevPhoto({ id, fullSize })
 
     const results = await Promise.all([currPhotoFn, nextPhotoFn, prevPhotoFn])
 
@@ -293,7 +293,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             to={`/photos/${nextPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => update({ photoId: nextPhoto.photo.id })}
+            onClick={() => update({ photoId: nextPhoto.photo.id, fullSize })}
           >
             <div style={{ margin: "5px" }} className='button'>
               &lt;&nbsp;next
@@ -309,7 +309,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             to={`/photos/${prevPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => update({ photoId: prevPhoto.photo.id })}
+            onClick={() => update({ photoId: prevPhoto.photo.id, fullSize })}
           >
             <div style={{ margin: "5px" }} className='button'>
               prev&nbsp;&gt;
@@ -421,8 +421,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
             alignItems: "center",
           }}
           onClick={async () => {
-            await setFullSize(!fullSize)
-            await update({ photoId: currPhoto.photo.id })
+            setFullSize(!fullSize)
+            await update({ photoId: currPhoto.photo.id, fullSize: !fullSize })
           }}
         >
           <img
@@ -442,9 +442,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
             style={{
               maxHeight: fullSize ? "700px" : "600px",
               maxWidth: fullSize ? "700px" : "600px",
-
-              // width: "auto",
-              // height: "auto",
+              width: `${currPhoto.width + 100}`,
+              height: `${currPhoto.height + 100}`,
             }}
           />
         </div>
