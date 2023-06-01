@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react'
-import ReactGA from 'react-ga'
+import React, { useEffect } from "react"
+import ReactGA from "react-ga4"
 
 const Header = function () {
   useEffect(() => {
-    ReactGA.initialize('UA-3129031-19')
-  }, [])// eslint-disable-line
+    ReactGA.initialize("G-J1W2RB0D7R")
+  }, []) // eslint-disable-line
 
   // const embedded = new URLSearchParams(location.search).get("embedded")
   // if (embedded) {
@@ -12,24 +12,30 @@ const Header = function () {
   // }
   return (
     <header
-      id="header"
+      id='header'
       style={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-      }}>
+      }}
+    >
       <h1
-        className="align-baseline"
+        className='align-baseline'
         style={{
           paddingTop: 10,
-          fontFamily: 'verdana',
-          fontSize: '2vmax',
-        }}>
-        <a href="https://www.wisaw.com">
+          fontFamily: "verdana",
+          fontSize: "2vmax",
+        }}
+      >
+        <a href='https://www.wisaw.com'>
           <img
-            width="55" height="55" src="/android-chrome-192x192.webp" alt="wisaw logo"
+            width='55'
+            height='55'
+            src='/android-chrome-192x192.webp'
+            alt='wisaw logo'
           />
-        </a> What I Saw <a href="https://www.wisaw.com">#wisaw</a> today
+        </a>{" "}
+        What I Saw <a href='https://www.wisaw.com'>#wisaw</a> today
       </h1>
     </header>
   )

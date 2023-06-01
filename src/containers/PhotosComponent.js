@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy } from "react"
 import { Helmet } from "react-helmet-async"
 
-import ReactGA from "react-ga"
+import ReactGA from "react-ga4"
 
 import "./PhotosComponent.css"
 import Button from "react-bootstrap/Button"
@@ -195,7 +195,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
       id = pht.photo.id
     }
 
-    ReactGA.pageview(`/photos/${id}`)
+    ReactGA.send({
+      hitType: "pageview",
+      page: `/photos/${id}`,
+      // title: "Custom Title",
+    })
 
     const currPhotoFn = fetchCurrPhoto({ id, fullSize })
     const nextPhotoFn = fetchNextPhoto({ id, fullSize })
