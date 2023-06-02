@@ -39,18 +39,17 @@ const Home = function () {
   const [searchText, setSearchText] = useState("")
   const navigate = useNavigate()
 
-  useEffect(() => {
+  const init = async () => {
     ReactGA.send({
       hitType: "homeView",
       page: `/`,
       // title: "Custom Title",
-    })(
-      // ReactGA.pageview(`/`)
-      async () => {
-        await retrievePhotos()
-        //  setPageNumber(pageNumber+1)
-      },
-    )()
+    })
+  }
+
+  useEffect(() => {
+    retrievePhotos()
+    init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
