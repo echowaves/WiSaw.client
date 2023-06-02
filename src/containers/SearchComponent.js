@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { Helmet } from "react-helmet-async"
-import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
+// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import { Bars } from "react-loader-spinner"
 
 import "./PhotosComponent.css"
