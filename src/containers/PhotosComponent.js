@@ -196,7 +196,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     }
 
     ReactGA.send({
-      hitType: "photoview",
+      hitType: "photoView",
       page: `/photos/${id}`,
       // title: "Custom Title",
     })
