@@ -41,7 +41,7 @@ const Home = function () {
 
   const init = async () => {
     ReactGA.send({
-      hitType: "homeView",
+      hitType: "pageview",
       page: `/`,
       // title: "Custom Title",
     })

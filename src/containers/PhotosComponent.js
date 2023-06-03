@@ -196,7 +196,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     }
 
     ReactGA.send({
-      hitType: "photoView",
+      hitType: "pageview",
       page: `/photos/${id}`,
       // title: "Custom Title",
     })
@@ -372,7 +372,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             name='image'
             property='og:image'
-            content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}-thumb`}
+            content={`https://img.wisaw/${currPhoto.photo.id}-thumb`}
           />
           <meta
             property='og:url'
@@ -409,7 +409,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           />
           <meta
             name='twitter:image'
-            content={`https://s3.amazonaws.com/wisaw-img-prod/${currPhoto.photo.id}-thumb`}
+            content={`https://img.wisaw.com/${currPhoto.photo.id}-thumb`}
           />
           <meta property='og:type' content='article' />
         </Helmet>
@@ -483,21 +483,23 @@ this methid will fetch image into cache -- will work super fast on next call to 
             )}
           </div>
           <div style={{ margin: "10px", align: "center" }}>
-            {currPhoto && currPhoto.photo && currPhoto.photo.watchersCount > 0 && (
-              <div
-                style={{
-                  paddingTop: 14,
-                  paddingLeft: 10,
-                  height: 40,
-                  width: 40,
-                  fontSize: 12,
-                  backgroundImage: `url("/thumbs-up.webp")`,
-                  color: "white",
-                }}
-              >
-                {currPhoto.photo.watchersCount}
-              </div>
-            )}
+            {currPhoto &&
+              currPhoto.photo &&
+              currPhoto.photo.watchersCount > 0 && (
+                <div
+                  style={{
+                    paddingTop: 14,
+                    paddingLeft: 10,
+                    height: 40,
+                    width: 40,
+                    fontSize: 12,
+                    backgroundImage: `url("/thumbs-up.webp")`,
+                    color: "white",
+                  }}
+                >
+                  {currPhoto.photo.watchersCount}
+                </div>
+              )}
           </div>
         </div>
         <div
