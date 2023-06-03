@@ -33,7 +33,7 @@ const SearchComponent = function () {
 
   const update = async ({ searchString }) => {
     ReactGA.send({
-      hitType: "searchView",
+      hitType: "pageview",
       page: `/search/${searchString}`,
       // title: "Custom Title",
     })
