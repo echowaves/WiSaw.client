@@ -219,12 +219,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
     const labels = JSON.parse(recognition.metaData).Labels
     const textDetections = JSON.parse(
       recognition.metaData,
-    ).TextDetections.filter((text) => text.Type === "LINE")
+    ).TextDetections?.filter((text) => text.Type === "LINE")
     const moderationLabels = JSON.parse(recognition.metaData).ModerationLabels
 
     return (
       <div>
-        {labels.length > 0 && (
+        {labels?.length > 0 && (
           <div style={{ margin: "5px" }}>
             <div style={{ align: "center" }}>
               <h2>
@@ -245,7 +245,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           </div>
         )}
 
-        {textDetections.length > 0 && (
+        {textDetections?.length > 0 && (
           <div style={{ margin: "5px" }}>
             <div style={{ align: "center" }}>
               <h2>
@@ -264,7 +264,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           </div>
         )}
 
-        {moderationLabels.length > 0 && (
+        {moderationLabels?.length > 0 && (
           <div style={{ margin: "5px", paddingBottom: "5px" }}>
             <h2>
               <div style={{ color: "red", align: "center" }}>
@@ -338,16 +338,16 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='PhotosComponent'>
         {/* <HelmetProvider> */}
         <Helmet prioritizeSeoTags>
-          {currPhoto.comments.length > 0 && (
+          {currPhoto?.comments?.length > 0 && (
             <title>{`WiSaw: ${currPhoto.comments[0].comment} -- What I Saw`}</title>
           )}
-          {currPhoto.comments.length === 0 && (
+          {currPhoto?.comments?.length === 0 && (
             <title>{`What I Saw Today photo ${currPhoto.photo.id}`}</title>
           )}
           <meta
             name='description'
             content={
-              currPhoto.comments.length > 0
+              currPhoto?.comments?.length > 0
                 ? currPhoto.comments[0].comment
                 : `wisaw photo ${currPhoto.photo.id}`
             }
@@ -356,15 +356,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             property='og:title'
             content={
-              currPhoto.comments.length > 0
-                ? currPhoto.comments[0].comment
+              currPhoto?.comments?.length > 0
+                ? currPhoto?.comments[0]?.comment
                 : `wisaw photo ${currPhoto.photo.id}`
             }
           />
           <meta
             property='og:description'
             content={
-              currPhoto.comments.length > 0
+              currPhoto?.comments?.length > 0
                 ? currPhoto.comments[0].comment
                 : `wisaw photo ${currPhoto.photo.id}`
             }
@@ -386,8 +386,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             name='twitter:title'
             content={
-              currPhoto.comments.length > 0
-                ? currPhoto.comments[0].comment
+              currPhoto?.comments?.length > 0
+                ? currPhoto?.comments[0].comment
                 : `wisaw photo ${currPhoto.photo.id}`
             }
           />
@@ -402,8 +402,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             name='twitter:description'
             content={
-              currPhoto.comments.length > 0
-                ? currPhoto.comments[0].comment
+              currPhoto?.comments?.length > 0
+                ? currPhoto?.comments[0]?.comment
                 : `wisaw photo ${currPhoto.photo.id}`
             }
           />
@@ -439,8 +439,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 : `${currPhoto.photo.thumbUrl}`
             }
             alt={
-              currPhoto.comments.length > 0
-                ? currPhoto.comments[0].comment
+              currPhoto?.comments?.length > 0
+                ? currPhoto?.comments[0]?.comment
                 : `wisaw photo ${currPhoto.photo.id}`
             }
             style={{
@@ -467,7 +467,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           }}
         >
           <div style={{ margin: "10px", align: "center" }}>
-            {currPhoto.comments && currPhoto.comments.length > 0 && (
+            {currPhoto?.comments && currPhoto?.comments?.length > 0 && (
               <div
                 style={{
                   paddingTop: 14,
@@ -478,7 +478,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   color: "white",
                 }}
               >
-                {currPhoto.comments.length}
+                {currPhoto?.comments?.length}
               </div>
             )}
           </div>
