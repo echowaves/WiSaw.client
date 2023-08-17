@@ -432,6 +432,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            cursor: "pointer",
           }}
           onClick={async () => {
             fullSize = fullSize === "thumb" ? "full" : "thumb"
