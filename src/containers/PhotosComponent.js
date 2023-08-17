@@ -33,7 +33,7 @@ const PhotosComponent = function () {
 
   const navigate = useNavigate()
 
-  let { fullSize = "full" } = useParams()
+  let { fullSize = "thumb" } = useParams()
 
   // console.log({ fullSize })
 
