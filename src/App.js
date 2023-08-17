@@ -28,6 +28,11 @@ function App() {
               />
               <Route
                 exact
+                path='/photos/:photoId'
+                element={<PhotosComponent />}
+              />
+              <Route
+                exact
                 path='/search/:searchString'
                 element={<SearchComponent />}
               />
