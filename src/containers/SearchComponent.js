@@ -98,7 +98,7 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link
-                to={`/photos/${tile.id}`}
+                to={`/photos/${tile.id}/thumb`}
                 // className="crop"
                 style={{
                   // display: 'flex',

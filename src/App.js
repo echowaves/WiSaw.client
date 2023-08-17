@@ -1,58 +1,44 @@
 /* eslint-disable react/react-in-jsx-scope */
-import React, { lazy,  Suspense } from "react"
-import {
-  BrowserRouter, Route, Routes,
-} from "react-router-dom"
-
+import React, { lazy, Suspense } from "react"
+import { BrowserRouter, Route, Routes } from "react-router-dom"
 
 // import logo from './logo.svg'
-import './App.css'
+import "./App.css"
 import { HelmetProvider } from "react-helmet-async"
-const Home = lazy(() => import('./containers/Home'))
-const PhotosComponent = lazy(() => import('./containers/PhotosComponent'))
-const SearchComponent = lazy(() => import('./containers/SearchComponent'))
+const Home = lazy(() => import("./containers/Home"))
+const PhotosComponent = lazy(() => import("./containers/PhotosComponent"))
+const SearchComponent = lazy(() => import("./containers/SearchComponent"))
 
-const NoMatch = lazy(() => import('./containers/NoMatch'))
-const Header = lazy(() => import('./containers/Header'))
-
-
-// const App = function () {
-//   <HelmetProvider>
-//     <BrowserRouter>
-//       <Suspense>
-//         <Header />
-//         <Routes>
-//           <Route exact path="/" element={<Home />} />
-//           <Route exact path="/photos/:photoId" element={<PhotosComponent />} />          
-//           <Route exact path="/search/:searchString" element={<SearchComponent />} />
-//           <Route element={<NoMatch />} />
-//         </Routes>
-//         <Footer />
-//       </Suspense>
-//     </BrowserRouter>
-//   </HelmetProvider>
-// }
+const NoMatch = lazy(() => import("./containers/NoMatch"))
+const Header = lazy(() => import("./containers/Header"))
 
 function App() {
   return (
-    <div className="App">
+    <div className='App'>
       <HelmetProvider>
         <BrowserRouter>
           <Suspense>
             <Header />
             <Routes>
-              <Route exact path="/" element={<Home />} />
-              <Route exact path="/photos/:photoId" element={<PhotosComponent />} />          
-              <Route exact path="/search/:searchString" element={<SearchComponent />} />
+              <Route exact path='/' element={<Home />} />
+              <Route
+                exact
+                path='/photos/:photoId/:fullSize'
+                element={<PhotosComponent />}
+              />
+              <Route
+                exact
+                path='/search/:searchString'
+                element={<SearchComponent />}
+              />
               <Route element={<NoMatch />} />
-            </Routes>            
+            </Routes>
           </Suspense>
         </BrowserRouter>
-      </HelmetProvider>    
+      </HelmetProvider>
     </div>
-  );
+  )
 }
-
 
 // function App() {
 //   return (
@@ -75,4 +61,4 @@ function App() {
 //   );
 // }
 
-export default App;
+export default App

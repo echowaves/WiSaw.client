@@ -13,6 +13,7 @@ import {
   // NavLink,
   useLocation,
   useParams,
+  useNavigate,
 } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
@@ -30,12 +31,17 @@ const PhotosComponent = function () {
     requestComplete: false,
   })
 
-  const [fullSize, setFullSize] = useState(false)
+  const navigate = useNavigate()
+
+  let { fullSize = "full" } = useParams()
+
+  // console.log({ fullSize })
+
   const { photoId } = useParams()
 
   useEffect(() => {
     // if (photoId) {
-    update({ photoId, fullSize })
+    update({ photoId })
     // }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -52,7 +58,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     }
   }
 
-  const fetchCurrPhoto = async ({ id, fullSize }) => {
+  const fetchCurrPhoto = async ({ id }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -84,7 +90,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url = fullSize ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const url =
+          fullSize === "full" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -97,7 +104,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchPrevPhoto = async ({ id, fullSize }) => {
+  const fetchPrevPhoto = async ({ id }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -128,7 +135,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url = fullSize ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const url =
+          fullSize === "full" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -142,7 +150,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchNextPhoto = async ({ id, fullSize }) => {
+  const fetchNextPhoto = async ({ id }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -173,7 +181,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url = fullSize ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const url =
+          fullSize === "full" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -187,7 +196,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const update = async ({ photoId, fullSize }) => {
+  const update = async ({ photoId }) => {
     let id = photoId
     if (!id) {
       const pht = await fetchPrevPhoto({ id: 2147483640 })
@@ -197,13 +206,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.send({
       hitType: "pageview",
-      page: `/photos/${id}`,
+      page: `/photos/${id}/${fullSize}`,
       // title: "Custom Title",
     })
 
-    const currPhotoFn = fetchCurrPhoto({ id, fullSize })
-    const nextPhotoFn = fetchNextPhoto({ id, fullSize })
-    const prevPhotoFn = fetchPrevPhoto({ id, fullSize })
+    const currPhotoFn = fetchCurrPhoto({ id })
+    const nextPhotoFn = fetchNextPhoto({ id })
+    const prevPhotoFn = fetchPrevPhoto({ id })
 
     const results = await Promise.all([currPhotoFn, nextPhotoFn, prevPhotoFn])
 
@@ -294,10 +303,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='lander'>
         {nextPhoto && nextPhoto.photo ? (
           <Link
-            to={`/photos/${nextPhoto.photo.id}${
+            to={`/photos/${nextPhoto.photo.id}/${fullSize}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => update({ photoId: nextPhoto.photo.id, fullSize })}
+            onClick={() => update({ photoId: nextPhoto.photo.id })}
           >
             <div style={{ margin: "5px" }} className='button'>
               &lt;&nbsp;next
@@ -310,10 +319,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
         {prevPhoto && prevPhoto.photo ? (
           <Link
-            to={`/photos/${prevPhoto.photo.id}${
+            to={`/photos/${prevPhoto.photo.id}/${fullSize}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => update({ photoId: prevPhoto.photo.id, fullSize })}
+            onClick={() => update({ photoId: prevPhoto.photo.id })}
           >
             <div style={{ margin: "5px" }} className='button'>
               prev&nbsp;&gt;
@@ -376,11 +385,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
           />
           <meta
             property='og:url'
-            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}`}
+            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}/${fullSize}`}
           />
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}`}
+            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}/${fullSize}`}
           />
 
           <meta
@@ -425,8 +434,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
             alignItems: "center",
           }}
           onClick={async () => {
-            setFullSize(!fullSize)
-            await update({ photoId: currPhoto.photo.id, fullSize: !fullSize })
+            fullSize = fullSize === "thumb" ? "full" : "thumb"
+
+            await update({
+              photoId: currPhoto.photo.id,
+            })
+            navigate(`/photos/${currPhoto.photo.id}/${fullSize}`)
           }}
         >
           <img
@@ -434,7 +447,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             height={`${currPhoto.height + 100}`}
             className='mainImage'
             src={
-              fullSize
+              fullSize === "full"
                 ? `${currPhoto.photo.imgUrl}`
                 : `${currPhoto.photo.thumbUrl}`
             }
@@ -444,8 +457,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 : `wisaw photo ${currPhoto.photo.id}`
             }
             style={{
-              maxHeight: fullSize ? "700px" : "600px",
-              maxWidth: fullSize ? "700px" : "600px",
+              maxHeight: fullSize === "full" ? "700px" : "600px",
+              maxWidth: fullSize === "full" ? "700px" : "600px",
               width: `${currPhoto.width + 100}`,
               height: `${currPhoto.height + 100}`,
             }}
