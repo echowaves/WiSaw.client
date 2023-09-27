@@ -387,10 +387,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
             property='og:url'
             content={`https://www.wisaw.com/photos/${currPhoto.photo.id}/${fullSize}`}
           />
-          <link
-            rel='canonical'
-            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}/${fullSize}`}
-          />
+
+          {/* {fullSize === "thumb" && (
+            <link
+              rel='canonical'
+              href={`https://www.wisaw.com/photos/${currPhoto.photo.id}/full`}
+            />
+          )} */}
 
           <meta
             name='twitter:title'
