@@ -156,10 +156,6 @@ const SearchComponent = function () {
             property='og:url'
             content={`https://www.wisaw.com/search/${searchString}`}
           />
-          <link
-            rel='canonical'
-            href={`https://www.wisaw.com/search/${searchString}`}
-          />
 
           <meta
             name='twitter:title'
