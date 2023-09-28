@@ -35,7 +35,7 @@ const Header = function () {
             alt='wisaw logo'
           />
         </a>{" "}
-        What I Saw <a href='https://www.wisaw.com'>#wisaw</a> today
+        What I Saw <a href='https://www.wisaw.com'>#wisaw</a>
       </h1>
     </header>
   )
