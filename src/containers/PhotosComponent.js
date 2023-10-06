@@ -353,14 +353,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
           {currPhoto?.comments?.length === 0 && (
             <title>{`What I Saw Today photo ${currPhoto.photo.id}`}</title>
           )}
-          <meta
-            name='description'
-            content={
-              currPhoto?.comments?.length > 0
-                ? currPhoto.comments[0].comment
-                : `wisaw photo ${currPhoto.photo.id}`
-            }
-          />
 
           <meta
             property='og:title'
@@ -371,6 +363,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             }
           />
           <meta
+            name='description'
             property='og:description'
             content={
               currPhoto?.comments?.length > 0
