@@ -5,8 +5,8 @@ import { Bars } from "react-loader-spinner"
 
 import "./PhotosComponent.css"
 
-import Masonry from "react-masonry-component"
 import ReactGA from "react-ga4"
+import Masonry from "react-masonry-component"
 
 import { Link, useParams } from "react-router-dom"
 
@@ -98,7 +98,7 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link
-                to={`/photos/${tile.id}/thumb`}
+                to={`/photos/${tile.id}`}
                 // className="crop"
                 style={{
                   // display: 'flex',
