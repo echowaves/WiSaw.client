@@ -138,6 +138,12 @@ const SearchComponent = function () {
         <Helmet prioritizeSeoTags>
           <title>{`WiSaw: searching for ${searchString}`}</title>
 
+          <link
+            rel='canonical'
+            href={`https://www.wisaw.com/search/${searchString}`}
+          />
+
+
           <meta
             name='description'
             content={`WiSaw: searching for ${searchString}`}
