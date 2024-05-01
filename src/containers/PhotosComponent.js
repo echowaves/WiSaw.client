@@ -1,10 +1,10 @@
-import React, { useState, useEffect, lazy } from "react"
+import React, { lazy, useEffect, useState } from "react"
 import { Helmet } from "react-helmet-async"
 
 import ReactGA from "react-ga4"
 
-import "./PhotosComponent.css"
 import Button from "react-bootstrap/Button"
+import "./PhotosComponent.css"
 
 const Footer = lazy(() => import("./Footer"))
 
@@ -12,8 +12,8 @@ import {
   Link,
   // NavLink,
   useLocation,
-  useParams,
   useNavigate,
+  useParams,
 } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
@@ -33,7 +33,8 @@ const PhotosComponent = function () {
 
   const navigate = useNavigate()
 
-  let { fullSize = "thumb" } = useParams()
+  // let { fullSize = "thumb" } = useParams()
+  let { fullSize = "full" } = useParams()
 
   // console.log({ fullSize })
 

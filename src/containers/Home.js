@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from "react"
-import Masonry from "react-masonry-component"
+import React, { useEffect, useState } from "react"
 import InfiniteScroll from "react-infinite-scroll-component"
+import Masonry from "react-masonry-component"
 import {
   Link,
   useNavigate,
-  // useLocation,
-  // useParams,
 } from "react-router-dom"
 
 import Button from "react-bootstrap/Button"
-import Form from "react-bootstrap/Form"
 import Col from "react-bootstrap/Col"
+import Form from "react-bootstrap/Form"
 import Row from "react-bootstrap/Row"
 
 // import { Helmet } from "react-helmet-async"
@@ -171,7 +169,7 @@ const Home = function () {
         <Masonry style={{}}>
           {photos.map((photo) => (
             <Link
-              to={`/photos/${photo.id}/thumb`}
+              to={`/photos/${photo.id}`}
               style={{ width: "250px" }}
               key={photo.id}
             >
