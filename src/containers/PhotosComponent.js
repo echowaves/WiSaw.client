@@ -34,7 +34,7 @@ const PhotosComponent = function () {
   const navigate = useNavigate()
 
   // let { fullSize = "thumb" } = useParams()
-  let { fullSize = "full" } = useParams()
+  let { fullSize = "" } = useParams()
 
   // console.log({ fullSize })
 
@@ -92,7 +92,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
       if (photo) {
         const url =
-          fullSize === "full" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+          fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -137,7 +137,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
       if (photo) {
         const url =
-          fullSize === "full" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+          fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -183,7 +183,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
       if (photo) {
         const url =
-          fullSize === "full" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+          fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -384,7 +384,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}`}
+            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}/`}
           />
 
           <meta
@@ -430,7 +430,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             cursor: "pointer",
           }}
           onClick={async () => {
-            fullSize = fullSize === "thumb" ? "full" : "thumb"
+            fullSize = fullSize === "thumb" ? "" : "thumb"
 
             await update({
               photoId: currPhoto.photo.id,
@@ -443,7 +443,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             height={`${currPhoto.height + 100}`}
             className='mainImage'
             src={
-              fullSize === "full"
+              fullSize === ""
                 ? `${currPhoto.photo.imgUrl}`
                 : `${currPhoto.photo.thumbUrl}`
             }
@@ -453,8 +453,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 : `wisaw photo ${currPhoto.photo.id}`
             }
             style={{
-              maxHeight: fullSize === "full" ? "700px" : "600px",
-              maxWidth: fullSize === "full" ? "700px" : "600px",
+              maxHeight: fullSize === "" ? "700px" : "600px",
+              maxWidth: fullSize === "" ? "700px" : "600px",
               width: `${currPhoto.width + 100}`,
               height: `${currPhoto.height + 100}`,
             }}

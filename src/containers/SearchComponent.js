@@ -98,7 +98,7 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link
-                to={`/photos/${tile.id}`}
+                to={`/photos/${tile.id}/`}
                 // className="crop"
                 style={{
                   // display: 'flex',
@@ -140,7 +140,7 @@ const SearchComponent = function () {
 
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/search/${searchString}`}
+            href={`https://www.wisaw.com/search/${searchString}/`}
           />
 
 
