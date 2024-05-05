@@ -140,7 +140,7 @@ const SearchComponent = function () {
 
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/search/${searchString}/`}
+            href={`https://www.wisaw.com/search/${searchString}`}
           />
 
 
