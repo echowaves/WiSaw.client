@@ -225,12 +225,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
     })
   }
 
-  const renderRecognitions = (recognition) => {
+  const renderRecognitions = (recognition) => {    
+    if(!recognition) return(<div/>)
     const labels = JSON.parse(recognition.metaData).Labels
     const textDetections = JSON.parse(
       recognition.metaData,
-    ).TextDetections?.filter((text) => text.Type === "LINE")
+    ).TextDetections?.filter((text) => text?.Type === "LINE")
     const moderationLabels = JSON.parse(recognition.metaData).ModerationLabels
+
 
     return (
       <div>
@@ -550,7 +552,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
           )}
           {currPhoto.recognitions &&
-            renderRecognitions(currPhoto.recognitions[0])}
+            renderRecognitions(currPhoto?.recognitions[0])}
 
           <div style={{ margin: "10px", align: "center" }} />
         </div>
