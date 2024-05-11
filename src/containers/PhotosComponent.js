@@ -1,4 +1,6 @@
 import React, { lazy, useEffect, useState } from "react"
+import ReactPlayer from 'react-player'
+
 import { Helmet } from "react-helmet-async"
 
 import ReactGA from "react-ga4"
@@ -71,6 +73,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   id
                   thumbUrl
                   watchersCount
+                  video
+                  videoUrl
                 }
                 comments {
                   comment
@@ -89,7 +93,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
       ).data.getPhotoAllCurr
 
       const { photo } = response
-
       if (photo) {
         const url =
           fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
@@ -117,6 +120,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   id
                   thumbUrl
                   watchersCount
+                  video
+                  videoUrl
                 }
                 comments {
                   comment
@@ -163,6 +168,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   id
                   thumbUrl
                   watchersCount
+                  video
+                  videoUrl
                 }
                 comments {
                   comment
@@ -432,6 +439,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             cursor: "pointer",
           }}
           onClick={async () => {
+            if(currPhoto?.photo?.video === true) return
             fullSize = fullSize === "thumb" ? "" : "thumb"
 
             await update({
@@ -440,27 +448,48 @@ this methid will fetch image into cache -- will work super fast on next call to 
             navigate(`/photos/${currPhoto.photo.id}/${fullSize}`)
           }}
         >
-          <img
-            width={`${currPhoto.width + 100}`}
-            height={`${currPhoto.height + 100}`}
-            className='mainImage'
-            src={
-              fullSize === ""
-                ? `${currPhoto.photo.imgUrl}`
-                : `${currPhoto.photo.thumbUrl}`
-            }
-            alt={
-              currPhoto?.comments?.length > 0
-                ? currPhoto?.comments[0]?.comment
-                : `wisaw photo ${currPhoto.photo.id}`
-            }
-            style={{
-              maxHeight: fullSize === "" ? "700px" : "600px",
-              maxWidth: fullSize === "" ? "700px" : "600px",
-              width: `${currPhoto.width + 100}`,
-              height: `${currPhoto.height + 100}`,
-            }}
-          />
+          {currPhoto?.photo?.video === true && (
+            <ReactPlayer 
+              url={currPhoto?.photo?.videoUrl}
+              // width={`${currPhoto.width/2}`}
+              // height={`${currPhoto.height/2}`}
+              className='mainImage'
+              style={{
+                // maxHeight: fullSize === "" ? "700px" : "600px",
+                // maxWidth: fullSize === "" ? "700px" : "600px",
+                // maxWidth: `${currPhoto.width/2}`,
+                // maxHeight: `${currPhoto.height/2}`,
+                width: `${currPhoto.width + 100}`,
+                height: `${currPhoto.height + 100}`,
+              }}
+  
+              playing={true}
+              controls={true}
+
+            />)}
+
+          {currPhoto?.photo?.video !== true && (
+            <img
+              width={`${currPhoto.width + 100}`}
+              height={`${currPhoto.height + 100}`}
+              className='mainImage'
+              src={
+                fullSize === ""
+                  ? `${currPhoto.photo.imgUrl}`
+                  : `${currPhoto.photo.thumbUrl}`
+              }
+              alt={
+                currPhoto?.comments?.length > 0
+                  ? currPhoto?.comments[0]?.comment
+                  : `wisaw photo ${currPhoto.photo.id}`
+              }
+              style={{
+                maxHeight: fullSize === "" ? "700px" : "600px",
+                maxWidth: fullSize === "" ? "700px" : "600px",
+                width: `${currPhoto.width + 100}`,
+                height: `${currPhoto.height + 100}`,
+              }}
+          />)}
         </div>
         <div style={{ margin: "10px", align: "center" }}>
           <a
