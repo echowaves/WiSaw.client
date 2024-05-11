@@ -310,23 +310,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const renderNavigationButtons = () => {
     const { nextPhoto, prevPhoto } = internalState
     return (
-      <div className='lander'>
-        {nextPhoto && nextPhoto.photo ? (
-          <Link
-            to={`/photos/${nextPhoto.photo.id}/${fullSize}${
-              embedded ? "?embedded=true" : ""
-            }`}
-            onClick={() => update({ photoId: nextPhoto.photo.id })}
-          >
-            <div style={{ margin: "5px" }} className='button'>
-              &lt;&nbsp;next
-            </div>
-          </Link>
-        ) : (
-          <div style={{ margin: "5px", color: "#777" }} className='button'>
-            &lt;&nbsp;next
-          </div>
-        )}
+      <div className='lander'>      
         {prevPhoto && prevPhoto.photo ? (
           <Link
             to={`/photos/${prevPhoto.photo.id}/${fullSize}${
@@ -335,12 +319,28 @@ this methid will fetch image into cache -- will work super fast on next call to 
             onClick={() => update({ photoId: prevPhoto.photo.id })}
           >
             <div style={{ margin: "5px" }} className='button'>
-              prev&nbsp;&gt;
+            &lt;&nbsp;prev
             </div>
           </Link>
         ) : (
           <div style={{ margin: "5px", color: "#777" }} className='button'>
-            prev&nbsp;&gt;
+            &lt;&nbsp;prev
+          </div>
+        )}
+        {nextPhoto && nextPhoto.photo ? (
+          <Link
+            to={`/photos/${nextPhoto.photo.id}/${fullSize}${
+              embedded ? "?embedded=true" : ""
+            }`}
+            onClick={() => update({ photoId: nextPhoto.photo.id })}
+          >
+            <div style={{ margin: "5px" }} className='button'>
+              next&nbsp;&gt;
+            </div>
+          </Link>
+        ) : (
+          <div style={{ margin: "5px", color: "#777" }} className='button'>
+            next&nbsp;&gt;
           </div>
         )}
       </div>
