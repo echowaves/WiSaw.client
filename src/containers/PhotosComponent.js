@@ -214,7 +214,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.send({
       hitType: "pageview",
-      page: `/photos/${id}/${fullSize}/`,
+      page: `/photos/${id}${fullSize === '' ? '': '/thumb'}`,
       // title: "Custom Title",
     })
 
@@ -313,7 +313,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='lander'>      
         {prevPhoto && prevPhoto.photo ? (
           <Link
-            to={`/photos/${prevPhoto.photo.id}/${fullSize}${
+            to={`/photos/${prevPhoto.photo.id}${fullSize === '' ? '': '/thumb'}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={() => update({ photoId: prevPhoto.photo.id })}
@@ -329,7 +329,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
         {nextPhoto && nextPhoto.photo ? (
           <Link
-            to={`/photos/${nextPhoto.photo.id}/${fullSize}${
+            to={`/photos/${nextPhoto.photo.id}${fullSize === '' ? '': '/thumb'}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={() => update({ photoId: nextPhoto.photo.id })}
@@ -388,12 +388,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
           />
           <meta
             property='og:url'
-            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}/${fullSize}`}
+            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}${fullSize === '' ? '': '/thumb'}`}
           />
 
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}/`}
+            href={`https://www.wisaw.com/photos/${currPhoto.photo.id}`}
           />
 
           <meta
@@ -445,7 +445,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             await update({
               photoId: currPhoto.photo.id,
             })
-            navigate(`/photos/${currPhoto.photo.id}/${fullSize}`)
+            navigate(`/photos/${currPhoto.photo.id}${fullSize === '' ? '': '/thumb'}`)
           }}
         >
           {currPhoto?.photo?.video === true && (
