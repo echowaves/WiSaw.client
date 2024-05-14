@@ -34,7 +34,7 @@ const SearchComponent = function () {
   const update = async ({ searchString }) => {
     ReactGA.send({
       hitType: "pageview",
-      page: `/search/${searchString}/`,
+      page: `/search/${searchString}`,
       // title: "Custom Title",
     })
 
@@ -98,7 +98,7 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link
-                to={`/photos/${tile.id}/`}
+                to={`/photos/${tile.id}`}
                 // className="crop"
                 style={{
                   // display: 'flex',
