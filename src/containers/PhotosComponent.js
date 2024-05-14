@@ -358,18 +358,18 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {/* <HelmetProvider> */}
         <Helmet prioritizeSeoTags>
           {currPhoto?.comments?.length > 0 && (
-            <title>{`WiSaw: ${currPhoto.comments[0].comment} -- What I Saw`}</title>
+            <title>{`WiSaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.comments[0].comment} -- What I Saw`}</title>
           )}
           {currPhoto?.comments?.length === 0 && (
-            <title>{`What I Saw Today photo ${currPhoto.photo.id}`}</title>
+            <title>{`What I Saw Today ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.photo.id}`}</title>
           )}
 
           <meta
             property='og:title'
             content={
               currPhoto?.comments?.length > 0
-                ? currPhoto?.comments[0]?.comment
-                : `wisaw photo ${currPhoto.photo.id}`
+                ? `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto?.comments[0]?.comment}`
+                : `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.photo.id}`
             }
           />
           <meta
@@ -401,7 +401,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             content={
               currPhoto?.comments?.length > 0
                 ? currPhoto?.comments[0].comment
-                : `wisaw photo ${currPhoto.photo.id}`
+                : `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.photo.id}`
             }
           />
           <meta
