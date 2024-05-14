@@ -214,7 +214,7 @@ const Home = function () {
             padding: 10,
           }}
         >
-          Free Stock Photos, Royalty Free Stock Images & Copyright Free
+          Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free
           Pictures, User Generated Content, Unaltered, Authentic, Taken With
           Phone Cameras
         </h2>
