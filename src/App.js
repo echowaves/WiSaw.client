@@ -3,10 +3,11 @@ import React, { lazy, Suspense } from "react"
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 
 // import logo from './logo.svg'
-import "./App.css"
 import { HelmetProvider } from "react-helmet-async"
+import "./App.css"
 const Home = lazy(() => import("./containers/Home"))
 const PhotosComponent = lazy(() => import("./containers/PhotosComponent"))
+const VideosComponent = lazy(() => import("./containers/VideosComponent"))
 const SearchComponent = lazy(() => import("./containers/SearchComponent"))
 
 const NoMatch = lazy(() => import("./containers/NoMatch"))
@@ -30,6 +31,16 @@ function App() {
                 exact
                 path='/photos/:photoId'
                 element={<PhotosComponent />}
+              />
+              <Route
+                exact
+                path='/videos/:photoId/:fullSize'
+                element={<VideosComponent />}
+              />
+              <Route
+                exact
+                path='/videos/:photoId'
+                element={<VideosComponent />}
               />
               <Route
                 exact
