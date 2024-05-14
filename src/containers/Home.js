@@ -169,7 +169,7 @@ const Home = function () {
         <Masonry style={{}}>
           {photos.map((photo) => (
             <Link
-              to={`/photos/${photo.id}`}
+              to={`/${photo?.video === true ? 'videos' : 'photos'}/${photo.id}`}
               style={{ width: "250px" }}
               key={photo.id}
             >

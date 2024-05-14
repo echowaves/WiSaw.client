@@ -59,6 +59,7 @@ const SearchComponent = function () {
                   commentsCount
                   watchersCount
                   lastComment
+                  video
                 }
                 batch
                 noMoreData
@@ -97,8 +98,8 @@ const SearchComponent = function () {
               }}
               key={tile.id}
             >
-              <Link
-                to={`/photos/${tile.id}`}
+              <Link             
+                to={`/${tile?.video === true ? 'videos' : 'photos'}/${tile.id}`}
                 // className="crop"
                 style={{
                   // display: 'flex',
