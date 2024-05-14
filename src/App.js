@@ -7,7 +7,7 @@ import { HelmetProvider } from "react-helmet-async"
 import "./App.css"
 const Home = lazy(() => import("./containers/Home"))
 const PhotosComponent = lazy(() => import("./containers/PhotosComponent"))
-const VideosComponent = lazy(() => import("./containers/VideosComponent"))
+
 const SearchComponent = lazy(() => import("./containers/SearchComponent"))
 
 const NoMatch = lazy(() => import("./containers/NoMatch"))
@@ -35,12 +35,12 @@ function App() {
               <Route
                 exact
                 path='/videos/:photoId/:fullSize'
-                element={<VideosComponent />}
+                element={<PhotosComponent />}
               />
               <Route
                 exact
                 path='/videos/:photoId'
-                element={<VideosComponent />}
+                element={<PhotosComponent />}
               />
               <Route
                 exact
