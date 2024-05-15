@@ -234,7 +234,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
   const recognitionsLabels = (recognition) => {    
     if(!recognition) return ''
-    return JSON.parse(recognition.metaData).Labels.map((label) => label.Name).join(", ")
+    return JSON.parse(recognition.metaData).Labels.slice(0, 3).map((label) => label.Name).join(", ")
   }
 
   const renderRecognitions = (recognition) => {    
@@ -365,7 +365,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {/* <HelmetProvider> */}
         <Helmet prioritizeSeoTags>
           {currPhoto?.comments?.length > 0 && (
-            <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto.comments[0].comment} -- What I Saw`}</title>
+            <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} : ${currPhoto.comments[0].comment} -- What I Saw`}</title>
           )}
           {currPhoto?.comments?.length === 0 && (
             <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])}`}</title>
@@ -375,7 +375,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             property='og:title'
             content={
               currPhoto?.comments?.length > 0
-                ? `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto?.comments[0]?.comment}`
+                ? `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} : ${currPhoto?.comments[0]?.comment}`
                 : `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto.photo.id}`
             }
           />
