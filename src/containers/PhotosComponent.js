@@ -232,6 +232,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
     })
   }
 
+  const recognitionsLabels = (recognition) => {    
+    if(!recognition) return ''
+    return JSON.parse(recognition.metaData).Labels.map((label) => label.Name).join(", ")
+  }
+
   const renderRecognitions = (recognition) => {    
     if(!recognition) return(<div/>)
     const labels = JSON.parse(recognition.metaData).Labels
@@ -252,13 +257,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span style={{ align: "center" }}>
               {labels.map((label) => (
-                <h3 key={label.Name}>
+                <h1 key={label.Name}>
                   <div style={{ fontSize: `${label.Confidence}%` }}>
                     <Link to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </Link>
                   </div>
-                </h3>
+                </h1>
               ))}
             </span>
           </div>
@@ -352,33 +357,35 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const { currPhoto, requestComplete } = internalState
   const embedded = new URLSearchParams(location.search).get("embedded")
 
+  
+
   if (currPhoto && currPhoto?.photo) {
     return (
       <div className='PhotosComponent'>
         {/* <HelmetProvider> */}
         <Helmet prioritizeSeoTags>
           {currPhoto?.comments?.length > 0 && (
-            <title>{`WiSaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.comments[0].comment} -- What I Saw`}</title>
+            <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto.comments[0].comment} -- What I Saw`}</title>
           )}
           {currPhoto?.comments?.length === 0 && (
-            <title>{`What I Saw Today ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.photo.id}`}</title>
+            <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])}`}</title>
           )}
 
           <meta
             property='og:title'
             content={
               currPhoto?.comments?.length > 0
-                ? `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto?.comments[0]?.comment}`
-                : `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.photo.id}`
+                ? `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto?.comments[0]?.comment}`
+                : `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto.photo.id}`
             }
           />
           <meta
             name='description'
             property='og:description'
             content={
-              currPhoto?.comments?.length > 0
+              `${currPhoto?.comments?.length > 0
                 ? currPhoto.comments[0].comment
-                : `wisaw photo ${currPhoto.photo.id}`
+                : ` `} ${recognitionsLabels(currPhoto?.recognitions[0])}`
             }
           />
           <meta
@@ -401,7 +408,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             content={
               currPhoto?.comments?.length > 0
                 ? currPhoto?.comments[0].comment
-                : `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${currPhoto.photo.id}`
+                : `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])}`
             }
           />
           <meta
