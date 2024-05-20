@@ -491,8 +491,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   : `wisaw photo ${currPhoto.photo.id}`
               }
               style={{
-                maxHeight: fullSize === "" ? "700px" : "600px",
-                maxWidth: fullSize === "" ? "700px" : "600px",
+                // maxHeight: fullSize === "" ? "700px" : "600px",
+                // maxWidth: fullSize === "" ? "700px" : "600px",
                 width: `${currPhoto.width + 100}`,
                 height: `${currPhoto.height + 100}`,
               }}
