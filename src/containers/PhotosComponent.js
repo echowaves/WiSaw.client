@@ -54,10 +54,10 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const fetchDimensions = async ({ url }) => {
     const img = new Image()
     img.src = url
-    await img.decode()
+    // await img.decode()
     return {
-      width: img.naturalWidth,
-      height: img.naturalHeight,
+      width: fullSize === 'thumb' ? 300 : 700,  //img.naturalWidth,
+      height: fullSize === 'thumb' ? 300 : 700, //img.naturalHeight,
     }
   }
 
