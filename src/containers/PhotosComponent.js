@@ -388,11 +388,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             name='image'
             property='og:image'
-            content={`https://img.wisaw/${currPhoto.photo.id}-thumb`}
+            content={`${currPhoto.photo.thumbUrl}`}
           />
           <meta
             property='og:url'
-            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}`}
+            content={`${currPhoto.photo.thumbUrl}`}
           />
 
           <link
@@ -426,7 +426,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           />
           <meta
             name='twitter:image'
-            content={`https://img.wisaw.com/${currPhoto.photo.id}-thumb`}
+            content={`${currPhoto.photo.thumbUrl}`}
           />
           <meta property='og:type' content='article' />
         </Helmet>
@@ -475,12 +475,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
               style={{
                 // width: `${currPhoto.width + 100}`,
                 // height: `${currPhoto.height + 100}`,
-                // backgroundImage: `url("https://img.wisaw.com/${currPhoto.photo.id}-thumb")`,
-                // backgroundRepeat: 'no-repeat',
-                // backgroundPosition: 'center',
-                // backgroundSize: 'cover',
-                // width:`${currPhoto.width}`,
-                // height:`${currPhoto.height}`,
+                backgroundImage: `url("${currPhoto.photo.thumbUrl}")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                backgroundSize: 'cover',
+                width:`${currPhoto.width}`,
+                height:`${currPhoto.height}`,
                 }}
           />)}
         </div>
