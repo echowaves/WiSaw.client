@@ -14,8 +14,7 @@ import {
   Link,
   // NavLink,
   useLocation,
-  useNavigate,
-  useParams,
+  useParams
 } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
@@ -33,12 +32,7 @@ const PhotosComponent = function () {
     requestComplete: false,
   })
 
-  const navigate = useNavigate()
 
-  // let { fullSize = "thumb" } = useParams()
-  let { fullSize = "" } = useParams()
-
-  // console.log({ fullSize })
 
   const { photoId } = useParams()
 
@@ -54,10 +48,16 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const fetchDimensions = async ({ url }) => {
     const img = new Image()
     img.src = url
-    // await img.decode()
+    await img.decode()
+
+    const maxDimention = 700
+    const {naturalWidth,  naturalHeight} = img
+
+    // console.log({naturalWidth, naturalHeight})
+
     return {
-      width: fullSize === 'thumb' ? 300 : 700,  //img.naturalWidth,
-      height: fullSize === 'thumb' ? 300 : 700, //img.naturalHeight,
+      width: naturalWidth > naturalHeight ?  maxDimention : maxDimention * naturalWidth / naturalHeight, //img.naturalWidth,
+      height: naturalWidth < naturalHeight ? maxDimention: maxDimention * naturalHeight  / naturalWidth, //img.naturalHeight,
     }
   }
 
@@ -94,8 +94,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
       const { photo } = response
       if (photo) {
-        const url =
-          fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const url = `${photo.thumbUrl}` 
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -141,8 +140,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url =
-          fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const url = `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -189,8 +187,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url =
-          fullSize === "" ? `${photo.imgUrl}` : `${photo.thumbUrl}`
+        const url = `${photo.thumbUrl}`
         const dimensions = await fetchDimensions({ url })
         return {
           ...response,
@@ -214,7 +211,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     ReactGA.send({
       hitType: "pageview",
-      page: `/photos/${id}${fullSize === '' ? '': '/thumb'}`,
+      page: currPhoto?.photo?.video === true ? `/videos/${id}` : `/photos/${id}` ,
       // title: "Custom Title",
     })
 
@@ -318,7 +315,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='lander'>      
         {prevPhoto && prevPhoto.photo ? (
           <Link
-            to={`/${prevPhoto.photo.video === true ? 'videos': 'photos'}/${prevPhoto.photo.id}${fullSize === '' ? '': '/thumb'}${
+            to={`/${prevPhoto.photo.video === true ? 'videos': 'photos'}/${prevPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={() => update({ photoId: prevPhoto.photo.id })}
@@ -334,7 +331,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
         {nextPhoto && nextPhoto.photo ? (
           <Link
-            to={`/${nextPhoto.photo.video === true ? 'videos': 'photos'}/${nextPhoto.photo.id}${fullSize === '' ? '': '/thumb'}${
+            to={`/${nextPhoto.photo.video === true ? 'videos': 'photos'}/${nextPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={() => update({ photoId: nextPhoto.photo.id })}
@@ -395,7 +392,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           />
           <meta
             property='og:url'
-            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}${fullSize === '' ? '': '/thumb'}`}
+            content={`https://www.wisaw.com/photos/${currPhoto.photo.id}`}
           />
 
           <link
@@ -445,15 +442,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
             alignItems: "center",
             cursor: "pointer",
           }}
-          onClick={async () => {
-            if(currPhoto?.photo?.video === true) return
-            fullSize = fullSize === "thumb" ? "" : "thumb"
-
-            await update({
-              photoId: currPhoto.photo.id,
-            })
-            navigate(`/photos/${currPhoto.photo.id}${fullSize === '' ? '': '/thumb'}`)
-          }}
         >
           {currPhoto?.photo?.video === true && (
             <ReactPlayer 
@@ -461,13 +449,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
               // width={`${currPhoto.width/2}`}
               // height={`${currPhoto.height/2}`}
               className='mainImage'
-              style={{
-                // maxHeight: fullSize === "" ? "700px" : "600px",
-                // maxWidth: fullSize === "" ? "700px" : "600px",
+              style={{                
                 // maxWidth: `${currPhoto.width/2}`,
                 // maxHeight: `${currPhoto.height/2}`,
-                width: `${currPhoto.width + 100}`,
-                height: `${currPhoto.height + 100}`,
+                width: `${currPhoto.width}`,
+                height: `${currPhoto.height}`,
               }}
   
               playing={true}
@@ -477,25 +463,25 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           {currPhoto?.photo?.video !== true && (
             <img
-              width={`${currPhoto.width + 100}`}
-              height={`${currPhoto.height + 100}`}
+              width={`${currPhoto.width}`}
+              height={`${currPhoto.height}`}
               className='mainImage'
-              src={
-                fullSize === ""
-                  ? `${currPhoto.photo.imgUrl}`
-                  : `${currPhoto.photo.thumbUrl}`
-              }
+              src={`${currPhoto.photo.imgUrl}`}
               alt={
                 currPhoto?.comments?.length > 0
                   ? currPhoto?.comments[0]?.comment
                   : `wisaw photo ${currPhoto.photo.id}`
               }
               style={{
-                // maxHeight: fullSize === "" ? "700px" : "600px",
-                // maxWidth: fullSize === "" ? "700px" : "600px",
-                width: `${currPhoto.width + 100}`,
-                height: `${currPhoto.height + 100}`,
-              }}
+                // width: `${currPhoto.width + 100}`,
+                // height: `${currPhoto.height + 100}`,
+                // backgroundImage: `url("https://img.wisaw.com/${currPhoto.photo.id}-thumb")`,
+                // backgroundRepeat: 'no-repeat',
+                // backgroundPosition: 'center',
+                // backgroundSize: 'cover',
+                // width:`${currPhoto.width}`,
+                // height:`${currPhoto.height}`,
+                }}
           />)}
         </div>
         <div style={{ margin: "10px", align: "center" }}>

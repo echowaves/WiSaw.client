@@ -24,17 +24,7 @@ function App() {
               <Route exact path='/' element={<Home />} />
               <Route
                 exact
-                path='/photos/:photoId/:fullSize'
-                element={<PhotosComponent />}
-              />
-              <Route
-                exact
                 path='/photos/:photoId'
-                element={<PhotosComponent />}
-              />
-              <Route
-                exact
-                path='/videos/:photoId/:fullSize'
                 element={<PhotosComponent />}
               />
               <Route
