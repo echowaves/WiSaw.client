@@ -25,6 +25,7 @@ import NoMatch from "./NoMatch.js"
 import * as CONST from "../consts"
 
 const PhotosComponent = function () {
+  
   const [internalState, setInternalState] = useState({
     currPhoto: null,
     nextPhoto: null,
@@ -32,36 +33,45 @@ const PhotosComponent = function () {
     requestComplete: false,
   })
 
-
+  const [dimensions, setDimensions] = useState({width: null, height: null})
 
   const { photoId } = useParams()
 
   useEffect(() => {
-    // if (photoId) {
-    update({ photoId })
-    // }
+    console.log({photoId})
+    if (photoId) {
+      load({ photoId })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // useEffect(() => {
+  //   // if (photoId) {    
+  //   fetchDimensions()
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [internalState])
+
   /**
 this methid will fetch image into cache -- will work super fast on next call to the same url
 */
-  const fetchDimensions = async ({ url }) => {
+  const fetchDimensions = async ({photoId}) => {
     const img = new Image()
-    img.src = url
+    // console.log({'url':  `https://img.wisaw.com/${internalState?.currPhoto?.photo?.id}-thumb`})
+    img.src = `https://img.wisaw.com/${photoId}-thumb`
     await img.decode()
 
     const maxDimention = 700
     const {naturalWidth,  naturalHeight} = img
 
     // console.log({naturalWidth, naturalHeight})
-
-    return {
+    setDimensions({
       width: naturalWidth > naturalHeight ?  maxDimention : maxDimention * naturalWidth / naturalHeight, //img.naturalWidth,
       height: naturalWidth < naturalHeight ? maxDimention: maxDimention * naturalHeight  / naturalWidth, //img.naturalHeight,
-    }
+    })
   }
 
-  const fetchCurrPhoto = async ({ id }) => {
+  const fetchCurrPhoto = async ({ photoId }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -87,18 +97,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
             }
           `,
           variables: {
-            photoId: id,
+            photoId,
           },
         })
       ).data.getPhotoAllCurr
 
       const { photo } = response
       if (photo) {
-        const url = `${photo.thumbUrl}` 
-        const dimensions = await fetchDimensions({ url })
         return {
           ...response,
-          ...dimensions,
         }
       }
     } catch (err) {
@@ -107,7 +114,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchPrevPhoto = async ({ id }) => {
+  const fetchPrevPhoto = async ({ photoId }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -132,7 +139,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             }
           `,
           variables: {
-            photoId: id,
+            photoId,
           },
         })
       ).data.getPhotoAllPrev
@@ -140,11 +147,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url = `${photo.thumbUrl}`
-        const dimensions = await fetchDimensions({ url })
         return {
           ...response,
-          ...dimensions,
         }
       }
     } catch (err) {
@@ -154,7 +158,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const fetchNextPhoto = async ({ id }) => {
+  const fetchNextPhoto = async ({ photoId }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -179,7 +183,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             }
           `,
           variables: {
-            photoId: id,
+            photoId,
           },
         })
       ).data.getPhotoAllNext
@@ -187,11 +191,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const { photo } = response
 
       if (photo) {
-        const url = `${photo.thumbUrl}`
-        const dimensions = await fetchDimensions({ url })
         return {
           ...response,
-          ...dimensions,
         }
       }
     } catch (err) {
@@ -201,25 +202,27 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return null
   }
 
-  const update = async ({ photoId }) => {
-    let id = photoId
-    if (!id) {
-      const pht = await fetchPrevPhoto({ id: 2147483640 })
+  const load = async ({ photoId }) => {
 
-      id = pht.photo.id
-    }
+    // if (!id) {
+    //   const pht = await fetchPrevPhoto({ id: 2147483640 })
+
+    //   id = pht.photo.id
+    // }
 
     ReactGA.send({
       hitType: "pageview",
-      page: currPhoto?.photo?.video === true ? `/videos/${id}` : `/photos/${id}` ,
+      page: currPhoto?.photo?.video === true ? `/videos/${photoId}` : `/photos/${photoId}` ,
       // title: "Custom Title",
     })
 
-    const currPhotoFn = fetchCurrPhoto({ id })
-    const nextPhotoFn = fetchNextPhoto({ id })
-    const prevPhotoFn = fetchPrevPhoto({ id })
+    const results = await Promise.all([
+      fetchCurrPhoto({ photoId }), 
+      fetchNextPhoto({ photoId }), 
+      fetchPrevPhoto({ photoId })
+    ])
 
-    const results = await Promise.all([currPhotoFn, nextPhotoFn, prevPhotoFn])
+    fetchDimensions({photoId: results[0].photo.id})
 
     setInternalState({
       currPhoto: results[0],
@@ -228,6 +231,72 @@ this methid will fetch image into cache -- will work super fast on next call to 
       requestComplete: true,
     })
   }
+
+  const loadNext = async ({ photoId }) => {
+    setInternalState({
+      currPhoto: null,
+      nextPhoto: null,
+      prevPhoto: null,
+      requestComplete: false,
+    })
+
+    const nextPhoto = await fetchNextPhoto({ photoId })
+
+    ReactGA.send({
+      hitType: "pageview",
+      page: nextPhoto?.photo?.video === true ? `/videos/${nextPhoto?.photo?.id}` : `/photos/${nextPhoto?.photo?.id}` ,
+      // title: "Custom Title",
+    })
+
+    // setInternalState({      
+    //   nextPhoto: {},
+    //   currPhoto: {},
+    //   prevPhoto: {},
+    //   requestComplete: true,
+    // })
+    fetchDimensions({photoId: internalState.nextPhoto.photo.id})
+
+    setInternalState({      
+      nextPhoto,
+      currPhoto: internalState.nextPhoto,
+      prevPhoto: internalState.currPhoto,
+      requestComplete: true,
+    })
+  }
+
+  const loadPrev = async ({ photoId }) => {
+    setInternalState({
+      currPhoto: null,
+      nextPhoto: null,
+      prevPhoto: null,
+      requestComplete: false,
+    })
+
+    const prevPhoto = await fetchPrevPhoto({ photoId })
+    
+    ReactGA.send({
+      hitType: "pageview",
+      page: prevPhoto?.photo?.video === true ? `/videos/${prevPhoto?.photo?.id}` : `/photos/${prevPhoto?.photo?.id}` ,
+      // title: "Custom Title",
+    })
+
+    // setInternalState({      
+    //   nextPhoto: {},
+    //   currPhoto: {},
+    //   prevPhoto: {},
+    //   requestComplete: true,
+    // })
+
+    fetchDimensions({photoId: internalState.prevPhoto.photo.id})
+
+    setInternalState({      
+      nextPhoto: internalState.currPhoto,
+      currPhoto: internalState.prevPhoto,
+      prevPhoto,
+      requestComplete: true,
+    })
+  }
+
 
   const recognitionsLabels = (recognition) => {    
     if(!recognition) return ''
@@ -318,7 +387,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             to={`/${prevPhoto.photo.video === true ? 'videos': 'photos'}/${prevPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => update({ photoId: prevPhoto.photo.id })}
+            onClick={() => loadPrev({ photoId })}
           >
             <div style={{ margin: "5px" }} className='button'>
             &lt;&nbsp;prev
@@ -334,7 +403,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             to={`/${nextPhoto.photo.video === true ? 'videos': 'photos'}/${nextPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => update({ photoId: nextPhoto.photo.id })}
+            onClick={() => loadNext({ photoId })}
           >
             <div style={{ margin: "5px" }} className='button'>
               next&nbsp;&gt;
@@ -352,6 +421,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const location = useLocation()
 
   const { currPhoto, requestComplete } = internalState
+  
   const embedded = new URLSearchParams(location.search).get("embedded")
 
   
@@ -440,20 +510,18 @@ this methid will fetch image into cache -- will work super fast on next call to 
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            cursor: "pointer",
+            // cursor: "pointer",
           }}
         >
           {currPhoto?.photo?.video === true && (
             <ReactPlayer 
               url={currPhoto?.photo?.videoUrl}
-              // width={`${currPhoto.width/2}`}
-              // height={`${currPhoto.height/2}`}
               className='mainImage'
               style={{                
                 // maxWidth: `${currPhoto.width/2}`,
                 // maxHeight: `${currPhoto.height/2}`,
-                width: `${currPhoto.width}`,
-                height: `${currPhoto.height}`,
+                width: `${dimensions.width}`,
+                height: `${dimensions.height}`,
               }}
   
               playing={true}
@@ -463,8 +531,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           {currPhoto?.photo?.video !== true && (
             <img
-              width={`${currPhoto.width}`}
-              height={`${currPhoto.height}`}
+              width={`${dimensions.width}`}
+              height={`${dimensions.height}`}
               className='mainImage'
               src={`${currPhoto.photo.imgUrl}`}
               alt={
@@ -479,8 +547,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
-                width:`${currPhoto.width}`,
-                height:`${currPhoto.height}`,
+                // width:`${dimensions.width}`,
+                // height:`${dimensions.height}`,
                 }}
           />)}
         </div>
@@ -583,7 +651,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  if (requestComplete && (currPhoto === null || currPhoto.photo === null)) {
+  if (requestComplete && (currPhoto === null || currPhoto?.photo === null)) {
     return (
       <div className='PhotosComponent'>
         {renderNavigationButtons()}
