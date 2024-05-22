@@ -36,9 +36,10 @@ const PhotosComponent = function () {
   const [dimensions, setDimensions] = useState({width: null, height: null})
 
   const { photoId } = useParams()
+  // console.log({ photoId })
 
   useEffect(() => {
-    console.log({photoId})
+    // console.log({photoId})
     if (photoId) {
       load({ photoId })
     }
@@ -232,15 +233,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
     })
   }
 
-  const loadNext = async ({ photoId }) => {
+  const loadNext = async () => {
     setInternalState({
       currPhoto: null,
       nextPhoto: null,
       prevPhoto: null,
-      requestComplete: false,
+      requestComplete: false
     })
-
-    const nextPhoto = await fetchNextPhoto({ photoId })
+    const nextPhoto = await fetchNextPhoto({ photoId: internalState.nextPhoto.photo.id })
 
     ReactGA.send({
       hitType: "pageview",
@@ -248,31 +248,25 @@ this methid will fetch image into cache -- will work super fast on next call to 
       // title: "Custom Title",
     })
 
-    // setInternalState({      
-    //   nextPhoto: {},
-    //   currPhoto: {},
-    //   prevPhoto: {},
-    //   requestComplete: true,
-    // })
-    fetchDimensions({photoId: internalState.nextPhoto.photo.id})
+    await fetchDimensions({photoId: internalState.nextPhoto.photo.id})
 
-    setInternalState({      
-      nextPhoto,
-      currPhoto: internalState.nextPhoto,
+    setInternalState({            
       prevPhoto: internalState.currPhoto,
+      currPhoto: internalState.nextPhoto,
+      nextPhoto,
       requestComplete: true,
     })
   }
 
-  const loadPrev = async ({ photoId }) => {
+  const loadPrev = async () => {
     setInternalState({
       currPhoto: null,
       nextPhoto: null,
       prevPhoto: null,
-      requestComplete: false,
+      requestComplete: false
     })
 
-    const prevPhoto = await fetchPrevPhoto({ photoId })
+    const prevPhoto = await fetchPrevPhoto({ photoId: internalState.prevPhoto.photo.id })
     
     ReactGA.send({
       hitType: "pageview",
@@ -280,19 +274,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
       // title: "Custom Title",
     })
 
-    // setInternalState({      
-    //   nextPhoto: {},
-    //   currPhoto: {},
-    //   prevPhoto: {},
-    //   requestComplete: true,
-    // })
-
-    fetchDimensions({photoId: internalState.prevPhoto.photo.id})
+    await fetchDimensions({photoId: internalState.prevPhoto.photo.id })
 
     setInternalState({      
       nextPhoto: internalState.currPhoto,
       currPhoto: internalState.prevPhoto,
-      prevPhoto,
+      prevPhoto: prevPhoto,
       requestComplete: true,
     })
   }
@@ -379,15 +366,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
   }
 
   const renderNavigationButtons = () => {
-    const { nextPhoto, prevPhoto } = internalState
+    // const { nextPhoto, prevPhoto } = internalState
     return (
       <div className='lander'>      
-        {prevPhoto && prevPhoto.photo ? (
+        {internalState.prevPhoto && internalState.prevPhoto.photo ? (
           <Link
-            to={`/${prevPhoto.photo.video === true ? 'videos': 'photos'}/${prevPhoto.photo.id}${
+            to={`/${internalState.prevPhoto.photo.video === true ? 'videos': 'photos'}/${internalState.prevPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => loadPrev({ photoId })}
+            onClick={async() =>  await loadPrev()}
           >
             <div style={{ margin: "5px" }} className='button'>
             &lt;&nbsp;prev
@@ -398,12 +385,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
             &lt;&nbsp;prev
           </div>
         )}
-        {nextPhoto && nextPhoto.photo ? (
+        {internalState.nextPhoto && internalState.nextPhoto.photo ? (
           <Link
-            to={`/${nextPhoto.photo.video === true ? 'videos': 'photos'}/${nextPhoto.photo.id}${
+            to={`/${internalState.nextPhoto.photo.video === true ? 'videos': 'photos'}/${internalState.nextPhoto.photo.id}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={() => loadNext({ photoId })}
+            onClick={async() =>  await loadNext()}
           >
             <div style={{ margin: "5px" }} className='button'>
               next&nbsp;&gt;
