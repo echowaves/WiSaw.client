@@ -29,7 +29,6 @@ import * as CONST from "../consts"
 const PhotosComponent = function () {
   const screenWidth = window.innerWidth
 
-console.log({size: screenWidth})
   const [internalState, setInternalState] = useState({
     currPhoto: null,
     nextPhoto: null,
@@ -51,11 +50,19 @@ console.log({size: screenWidth})
   }, [])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // useEffect(() => {
-  //   // if (photoId) {    
-  //   fetchDimensions()
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [internalState])
+  useEffect(() => {
+    if(internalState.requestComplete) {
+      console.log({page: internalState?.currPhoto?.photo?.video === true ? 
+        `/videos/${internalState?.currPhoto?.photo?.id}` : `/photos/${internalState?.currPhoto?.photo?.id}` })
+      ReactGA.send({
+        hitType: "pageview",
+        page: internalState?.currPhoto?.photo?.video === true ? 
+        `/videos/${internalState?.currPhoto?.photo?.id}` : `/photos/${internalState?.currPhoto?.photo?.id}` ,
+        // title: "Custom Title",
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [internalState])
 
   /**
 this methid will fetch image into cache -- will work super fast on next call to the same url
@@ -215,12 +222,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
     //   id = pht.photo.id
     // }
 
-    ReactGA.send({
-      hitType: "pageview",
-      page: currPhoto?.photo?.video === true ? `/videos/${photoId}` : `/photos/${photoId}` ,
-      // title: "Custom Title",
-    })
-
     const results = await Promise.all([
       fetchCurrPhoto({ photoId }), 
       fetchNextPhoto({ photoId }), 
@@ -246,12 +247,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
     })
     const nextPhoto = await fetchNextPhoto({ photoId: internalState.nextPhoto.photo.id })
 
-    ReactGA.send({
-      hitType: "pageview",
-      page: nextPhoto?.photo?.video === true ? `/videos/${nextPhoto?.photo?.id}` : `/photos/${nextPhoto?.photo?.id}` ,
-      // title: "Custom Title",
-    })
-
     await fetchDimensions({photoId: internalState.nextPhoto.photo.id})
 
     setInternalState({            
@@ -272,12 +267,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
     const prevPhoto = await fetchPrevPhoto({ photoId: internalState.prevPhoto.photo.id })
     
-    ReactGA.send({
-      hitType: "pageview",
-      page: prevPhoto?.photo?.video === true ? `/videos/${prevPhoto?.photo?.id}` : `/photos/${prevPhoto?.photo?.id}` ,
-      // title: "Custom Title",
-    })
-
     await fetchDimensions({photoId: internalState.prevPhoto.photo.id })
 
     setInternalState({      
