@@ -227,7 +227,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       fetchPrevPhoto({ photoId })
     ])
 
-    fetchDimensions({photoId: results[0].photo.id})
+    await fetchDimensions({photoId: results[0].photo.id})
 
     setInternalState({
       currPhoto: results[0],
