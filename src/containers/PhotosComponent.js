@@ -39,10 +39,8 @@ const PhotosComponent = function () {
   const [dimensions, setDimensions] = useState({width: null, height: null})
 
   const { photoId } = useParams()
-  // console.log({ photoId })
 
   useEffect(() => {
-    // console.log({photoId})
     if (photoId) {
       load({ photoId })
     }
@@ -52,8 +50,6 @@ const PhotosComponent = function () {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if(internalState.requestComplete) {
-      console.log({page: internalState?.currPhoto?.photo?.video === true ? 
-        `/videos/${internalState?.currPhoto?.photo?.id}` : `/photos/${internalState?.currPhoto?.photo?.id}` })
       ReactGA.send({
         hitType: "pageview",
         page: internalState?.currPhoto?.photo?.video === true ? 
@@ -69,14 +65,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
 */
   const fetchDimensions = async ({photoId}) => {
     const img = new Image()
-    // console.log({'url':  `https://img.wisaw.com/${internalState?.currPhoto?.photo?.id}-thumb`})
     img.src = `https://img.wisaw.com/${photoId}-thumb`
     await img.decode()
 
     const maxDimention = screenWidth < 700 ? 300 : 700
     const {naturalWidth,  naturalHeight} = img
 
-    // console.log({naturalWidth, naturalHeight})
     setDimensions({
       width: naturalWidth > naturalHeight ?  maxDimention : maxDimention * naturalWidth / naturalHeight, //img.naturalWidth,
       height: naturalWidth < naturalHeight ? maxDimention: maxDimention * naturalHeight  / naturalWidth, //img.naturalHeight,
