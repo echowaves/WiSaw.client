@@ -7,7 +7,6 @@ import ReactGA from "react-ga4"
 
 import Button from "react-bootstrap/Button"
 
-import { useWindowSize } from "@uidotdev/usehooks"
 
 import "./PhotosComponent.css"
 
@@ -28,8 +27,9 @@ import NoMatch from "./NoMatch.js"
 import * as CONST from "../consts"
 
 const PhotosComponent = function () {
-  const size = useWindowSize()
+  const screenWidth = window.innerWidth
 
+console.log({size: screenWidth})
   const [internalState, setInternalState] = useState({
     currPhoto: null,
     nextPhoto: null,
@@ -66,7 +66,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     img.src = `https://img.wisaw.com/${photoId}-thumb`
     await img.decode()
 
-    const maxDimention = size.width < 700 ? 300 : 700
+    const maxDimention = screenWidth < 700 ? 300 : 700
     const {naturalWidth,  naturalHeight} = img
 
     // console.log({naturalWidth, naturalHeight})
@@ -525,7 +525,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
               width={`${dimensions.width}`}
               height={`${dimensions.height}`}
               className='mainImage'
-              src={`${size.width < 700 ? currPhoto.photo.thumbUrl : currPhoto.photo.imgUrl}`}
+              src={screenWidth < 700 ? `${currPhoto.photo.thumbUrl}` : `${currPhoto.photo.imgUrl}`}
               alt={
                 currPhoto?.comments?.length > 0
                   ? currPhoto?.comments[0]?.comment
