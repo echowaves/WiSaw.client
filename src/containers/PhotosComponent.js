@@ -222,7 +222,16 @@ this methid will fetch image into cache -- will work super fast on next call to 
       fetchPrevPhoto({ photoId })
     ])
 
-    await fetchDimensions({photoId: results[0].photo.id})
+    if(!results[0]) {
+      setInternalState({
+        ...internalState,
+        requestComplete: true,
+      })
+    
+      return null
+    }
+    // console.log({results})
+    await fetchDimensions({photoId: results[0]?.photo?.id})
 
     setInternalState({
       currPhoto: results[0],
@@ -625,7 +634,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  if (requestComplete && (currPhoto === null || currPhoto?.photo === null)) {
+  if (requestComplete === true && (currPhoto === null || currPhoto?.photo === null)) {
     return (
       <div className='PhotosComponent'>
         {renderNavigationButtons()}
