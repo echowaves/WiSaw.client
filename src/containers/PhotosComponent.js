@@ -210,28 +210,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
   const load = async ({ photoId }) => {
 
-    // if (!id) {
-    //   const pht = await fetchPrevPhoto({ id: 2147483640 })
-
-    //   id = pht.photo.id
-    // }
-
     const results = await Promise.all([
       fetchCurrPhoto({ photoId }), 
       fetchNextPhoto({ photoId }), 
       fetchPrevPhoto({ photoId })
     ])
 
-    if(!results[0]) {
-      setInternalState({
-        ...internalState,
-        requestComplete: true,
-      })
-    
-      return null
-    }
-    // console.log({results})
-    await fetchDimensions({photoId: results[0]?.photo?.id})
+    if(results[0]) await fetchDimensions({photoId: results[0]?.photo?.id})
 
     setInternalState({
       currPhoto: results[0],
@@ -365,9 +350,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
     // const { nextPhoto, prevPhoto } = internalState
     return (
       <div className='lander'>      
-        {internalState.prevPhoto && internalState.prevPhoto.photo ? (
+        {internalState?.prevPhoto && internalState?.prevPhoto?.photo ? (
           <Link
-            to={`/${internalState.prevPhoto.photo.video === true ? 'videos': 'photos'}/${internalState.prevPhoto.photo.id}${
+            to={`/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.prevPhoto?.photo?.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadPrev()}
@@ -381,9 +366,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
             &lt;&nbsp;prev
           </div>
         )}
-        {internalState.nextPhoto && internalState.nextPhoto.photo ? (
+        {internalState?.nextPhoto && internalState?.nextPhoto?.photo ? (
           <Link
-            to={`/${internalState.nextPhoto.photo.video === true ? 'videos': 'photos'}/${internalState.nextPhoto.photo.id}${
+            to={`/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.nextPhoto?.photo?.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadNext()}
