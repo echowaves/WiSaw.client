@@ -1,6 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
 import React, { lazy, Suspense } from "react"
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 
 // import logo from './logo.svg'
 import { HelmetProvider } from "react-helmet-async"
@@ -29,15 +29,28 @@ function App() {
               />
               <Route
                 exact
+                path='/photos/:photoId/thumb'
+                element={<PhotosComponent />}
+              />
+              <Route
+                exact
                 path='/videos/:photoId'
                 element={<PhotosComponent />}
               />
+              <Route
+                exact
+                path='/videos/:photoId/thumb'
+                element={<PhotosComponent />}
+              />
+
               <Route
                 exact
                 path='/search/:searchString'
                 element={<SearchComponent />}
               />
               <Route element={<NoMatch />} />
+              {/* default redirect to home page */}
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>
         </BrowserRouter>
