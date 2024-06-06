@@ -268,16 +268,16 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
   const recognitionsLabels = (recognition) => {    
     if(!recognition) return ''
-    return JSON.parse(recognition.metaData).Labels.slice(0, 3).map((label) => label.Name).join(", ")
+    return JSON.parse(recognition.metaData)?.Labels?.slice(0, 3).map((label) => label.Name).join(", ")
   }
 
   const renderRecognitions = (recognition) => {    
     if(!recognition) return(<div/>)
-    const labels = JSON.parse(recognition.metaData).Labels
+    const labels = JSON.parse(recognition?.metaData)?.Labels
     const textDetections = JSON.parse(
       recognition.metaData,
     ).TextDetections?.filter((text) => text?.Type === "LINE")
-    const moderationLabels = JSON.parse(recognition.metaData).ModerationLabels
+    const moderationLabels = JSON.parse(recognition?.metaData)?.ModerationLabels
 
 
     return (
@@ -292,7 +292,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             <span style={{ align: "center" }}>
               {labels.map((label) => (
                 <h1 key={label.Name}>
-                  <div style={{ fontSize: `${label.Confidence}%` }}>
+                  <div style={{ fontSize: `${label?.Confidence}%` }}>
                     <Link to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </Link>
