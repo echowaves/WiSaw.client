@@ -173,14 +173,20 @@ const Home = function () {
               style={{ width: "250px" }}
               key={photo.id}
             >
-              <img
+              {photo?.lastComment && (<><img
                 src={photo.thumbUrl}
                 style={{ width: "250px", padding: 5 }}
-                alt={photo.lastComment}
+                alt={photo?.lastComment}
               />
               <div style={{ width: "250px", paddingBottom: 15 }}>
-                {photo.lastComment}
-              </div>
+                {photo?.lastComment}
+              </div></>
+              )}
+              {!photo?.lastComment && (<img
+                src={photo.thumbUrl}
+                style={{ width: "250px", padding: 5 }}
+              />
+              )}
             </Link>
           ))}
         </Masonry>
@@ -211,11 +217,11 @@ const Home = function () {
       >
         <h1> Unaltered, Authentic, Taken with Phone Cameras.</h1>
         
-        <h4>It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times, 
+        <h2>It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times, 
           because the goal is to capture shots spontaneously, with minimal preparation—just point and shoot. 
           As photographers, we often worry too much about getting everything perfect, 
           and in doing so, we miss great opportunities.
-          </h4>
+          </h2>
         {renderSearchComponent()}
         {renderInfiniteFeed()}
       </div>
