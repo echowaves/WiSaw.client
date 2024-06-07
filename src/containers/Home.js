@@ -175,7 +175,8 @@ const Home = function () {
             >
               {photo?.lastComment && (<><img
                 src={photo.thumbUrl}
-                style={{ width: "250px", padding: 5 }}
+                style={{  padding: 5 }}
+                width={"250px"}
                 alt={photo?.lastComment}
               />
               <div style={{ width: "250px", paddingBottom: 15 }}>
@@ -184,7 +185,8 @@ const Home = function () {
               )}
               {!photo?.lastComment && (<img
                 src={photo.thumbUrl}
-                style={{ width: "250px", padding: 5 }}
+                style={{padding: 5 }}
+                width={"250px"}
               />
               )}
             </Link>
