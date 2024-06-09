@@ -217,7 +217,7 @@ const Home = function () {
           justifyContent: "center",
         }}
       >
-        <h1> Unaltered, Taken with Phone Cameras.</h1>
+        <h1> Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
         
         <h2>It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times, 
           because the goal is to capture shots spontaneously, with minimal preparation—just point and shoot. 
