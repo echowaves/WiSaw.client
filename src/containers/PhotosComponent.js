@@ -399,19 +399,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='PhotosComponent'>
         {/* <HelmetProvider> */}
         <Helmet prioritizeSeoTags>
-          {currPhoto?.comments?.length > 0 && (
-            <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} : ${currPhoto.comments[0].comment} -- What I Saw`}</title>
-          )}
-          {currPhoto?.comments?.length === 0 && (
-            <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])}`}</title>
-          )}
-
+          <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])}`}</title>
           <meta
             property='og:title'
-            content={
-              currPhoto?.comments?.length > 0
-                ? `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} : ${currPhoto?.comments[0]?.comment}`
-                : `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto.photo.id}`
+            content={                            
+                `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0])} ${currPhoto.photo.id}`
             }
           />
           <meta
