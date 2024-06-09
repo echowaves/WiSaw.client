@@ -19,10 +19,10 @@ const Header = function () {
         alignItems: "center",
       }}
     >
-      <h1
+      <div
         className='align-baseline'
         style={{
-          paddingTop: 10,
+          padding: 10,
           fontFamily: "verdana",
           fontSize: "2vmax",
         }}
@@ -36,7 +36,7 @@ const Header = function () {
           />
         </a>{" "}
         What I Saw <a href='https://www.wisaw.com'>#wisaw</a>
-      </h1>
+      </div>
     </header>
   )
 }
