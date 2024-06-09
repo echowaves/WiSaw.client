@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from "react"
+import {
+  Link,
+  useNavigate, useParams
+} from "react-router-dom"
+
 import { Helmet } from "react-helmet-async"
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import { Bars } from "react-loader-spinner"
+
+import Button from "react-bootstrap/Button"
+import Col from "react-bootstrap/Col"
+import Form from "react-bootstrap/Form"
+import Row from "react-bootstrap/Row"
 
 import "./PhotosComponent.css"
 
 import ReactGA from "react-ga4"
 import Masonry from "react-masonry-component"
 
-import { Link, useParams } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
@@ -18,10 +27,68 @@ import * as CONST from "../consts"
 const SearchComponent = function () {
   const { searchString } = useParams()
 
+  const navigate = useNavigate()
+
   const [internalState, setInternalState] = useState({
     photos: [],
     requestComplete: false,
   })
+
+  const [searchText, setSearchText] = useState(searchString)
+  const handleSearch = function () {
+    // console.log({event})
+    // event.preventDefault()
+    navigate(`/search/${searchText}`)
+    setSearchText("")
+  }
+  const searchTextHandler = function (event) {
+    setSearchText(event.target.value)
+    // console.log(event.target.value)
+  }
+
+  const renderSearchComponent = function () {
+    return (
+      <div
+      style={{
+        // width: '100%',
+        // maxWidth: "700px",
+        width: "80%",
+        position: "relative",
+        alignSelf: "right",
+        justifyContent: "right",
+      }}
+    >
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "right",
+          // alignItems: 'center',
+          paddingBottom: "10px",
+        }}
+      >
+        <Form onSubmit={handleSearch}>
+          <Row>
+            <Col xs='auto'>
+              <Form.Control
+                type='input'
+                placeholder='What are you looking for...'
+                value={searchText}
+                onChange={searchTextHandler}
+              />
+            </Col>
+            <Col xs='auto'>
+              <Button variant='primary' type='submit'>
+                Search
+              </Button>
+            </Col>
+          </Row>
+        </Form>
+      </div>
+      </div>
+    )
+  }
+
 
   useEffect(() => {
     if (searchString) {
@@ -31,7 +98,7 @@ const SearchComponent = function () {
 
   const { photos, requestComplete } = internalState
 
-  const update = async ({ searchString }) => {
+  const update = async ({ searchString }) => {    
     ReactGA.send({
       hitType: "pageview",
       page: `/search/${searchString}`,
@@ -84,10 +151,12 @@ const SearchComponent = function () {
     }
   }
 
-  if (requestComplete) {
-    return (
+  if (requestComplete ) {
+    return (<>
+      {renderSearchComponent()}
       <div className='PhotosComponent'>
-        <Masonry cols={1} gap={10}>
+      {photos?.length === 0 && (<h1>Nothing found</h1>)}
+        {photos?.length > 0 && (<Masonry cols={1} gap={10}>
           {photos.map((tile) => (
             <div
               className='crop'
@@ -134,7 +203,8 @@ const SearchComponent = function () {
               </div>
             </div>
           ))}
-        </Masonry>
+        </Masonry>)}
+
 
         <Helmet prioritizeSeoTags>
           <title>{`WiSaw: searching for ${searchString}`}</title>
@@ -178,11 +248,13 @@ const SearchComponent = function () {
           />
           <meta name='twitter:image' content='' />
         </Helmet>
-      </div>
+      </div>  
+      </> 
     )
   }
 
   return (
+
     <div // eslint-disable-line
       className='crop'
       style={{
@@ -193,6 +265,7 @@ const SearchComponent = function () {
     >
       <Bars color='#00BFFF' height={100} width={100} timeout={60000} />
     </div>
+
   )
 }
 
