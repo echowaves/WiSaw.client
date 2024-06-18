@@ -291,13 +291,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span style={{ align: "center" }}>
               {labels.map((label) => (
-                <h3 key={label.Name}>
+                <h1 key={label.Name}>
                   <div style={{ fontSize: `${label?.Confidence}%` }}>
                     <Link to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </Link>
                   </div>
-                </h3>
+                </h1>
               ))}
             </span>
           </div>
@@ -312,11 +312,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span style={{ align: "center" }}>
               {textDetections.map((text) => (
-                <h3 key={text.Id}>
+                <p key={text.Id}>
                   <div style={{ fontSize: `${text.Confidence}%` }}>
                     {stringifyObject(text.DetectedText).replace(/'/g, "")}
                   </div>
-                </h3>
+                </p>
               ))}
             </span>
           </div>
@@ -577,14 +577,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
               {currPhoto.comments.map((comment, i) => (
                 <div key={comment.id}>
                   {i === 0 && (
-                    <h2
+                    <p
                       style={{
                         margin: "10",
                         fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
                       }}
                     >
                       {comment.comment}
-                    </h2>
+                    </p>
                   )}
                   {i > 0 && (
                     <p
