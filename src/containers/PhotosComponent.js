@@ -285,20 +285,18 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {labels?.length > 0 && (
           <div style={{ margin: "5px" }}>
             <div style={{ align: "center" }}>
-              <h2>
                 <b>AI recognized tags:</b>
-              </h2>
             </div>
             <span style={{ align: "center" }}>
-              {labels.map((label) => (
-                <h1 key={label.Name}>
-                  <div style={{ fontSize: `${label?.Confidence}%` }}>
+            <h1>
+              {labels.map((label) => (                
+                  <div key={label.Name} style={{ fontSize: `${label?.Confidence}%` }}>
                     <Link to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </Link>
-                  </div>
-                </h1>
+                  </div>                
               ))}
+              </h1>
             </span>
           </div>
         )}
@@ -306,17 +304,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {textDetections?.length > 0 && (
           <div style={{ margin: "5px" }}>
             <div style={{ align: "center" }}>
-              <h2>
                 <b>AI recognized text:</b>
-              </h2>
             </div>
             <span style={{ align: "center" }}>
               {textDetections.map((text) => (
-                <p key={text.Id}>
+                <h2 key={text.Id}>
                   <div style={{ fontSize: `${text.Confidence}%` }}>
                     {stringifyObject(text.DetectedText).replace(/'/g, "")}
                   </div>
-                </p>
+                </h2>
               ))}
             </span>
           </div>
