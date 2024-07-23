@@ -288,7 +288,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 <b>AI recognized tags:</b>
             </div>
             <span style={{ align: "center" }}>
-            <h1>
+            <H1>
               {labels.map((label) => (                
                   <div key={label.Name} style={{ fontSize: `${label?.Confidence}%` }}>
                     <Link to={`/search/${label.Name}`}>
@@ -296,7 +296,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                     </Link>
                   </div>                
               ))}
-              </h1>
+              </H1>
             </span>
           </div>
         )}
@@ -308,11 +308,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span style={{ align: "center" }}>
               {textDetections.map((text) => (
-                <h2 key={text.Id}>
+                <H2 key={text.Id}>
                   <div style={{ fontSize: `${text.Confidence}%` }}>
                     {stringifyObject(text.DetectedText).replace(/'/g, "")}
                   </div>
-                </h2>
+                </H2>
               ))}
             </span>
           </div>
@@ -320,20 +320,20 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
         {moderationLabels?.length > 0 && (
           <div style={{ margin: "5px", paddingBottom: "5px" }}>
-            <h2>
+            <H2>
               <div style={{ color: "red", align: "center" }}>
                 <b>AI moderation tags:</b>
               </div>
-            </h2>
+            </H2>
             <span style={{ align: "center" }}>
               {moderationLabels.map((label) => (
-                <h3 key={label.Name}>
+                <H3 key={label.Name}>
                   <div
                     style={{ fontSize: `${label.Confidence}%`, color: "red" }}
                   >
                     {stringifyObject(label.Name).replace(/'/g, "")}
                   </div>
-                </h3>
+                </H3>
               ))}
             </span>
           </div>
