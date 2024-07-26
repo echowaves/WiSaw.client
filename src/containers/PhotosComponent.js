@@ -285,12 +285,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {labels?.length > 0 && (
           <div style={{ margin: "5px" }}>
             <div style={{ align: "center" }}>
-                <b>AI recognized tags:</b>
+                <b style={{
+                    color: "#555",
+                    fontWeight: '800'
+                    }}>AI recognized tags:</b>
             </div>
             <span style={{ align: "center" }}>
             <h1>
               {labels.map((label) => (                
-                  <div key={label.Name} style={{ fontSize: `${label?.Confidence}%` }}>
+                  <div key={label.Name} style={{ fontSize: `${label?.Confidence}%`, marginBottom: 10 }}>
                     <Link to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </Link>
@@ -304,12 +307,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
         {textDetections?.length > 0 && (
           <div style={{ margin: "5px" }}>
             <div style={{ align: "center" }}>
-                <b>AI recognized text:</b>
+                <b style={{
+                    color: "#555",
+                    fontWeight: '800'
+                    }}>AI recognized text:</b>
             </div>
             <span style={{ align: "center" }}>
               {textDetections.map((text) => (
                 <h2 key={text.Id}>
-                  <div style={{ fontSize: `${text.Confidence}%` }}>
+                  <div style={{ fontSize: `${text.Confidence}%`, color: "#555" }}>
                     {stringifyObject(text.DetectedText).replace(/'/g, "")}
                   </div>
                 </h2>
@@ -358,9 +364,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
           </Link>
         ) : (
-          <div style={{ margin: "5px", color: "#777" }} className='button'>
-            &lt;&nbsp;prev
-          </div>
+            <div/>          
         )}
         {internalState?.nextPhoto && internalState?.nextPhoto?.photo ? (
           <Link
@@ -368,15 +372,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadNext()}
-          >
+          >            
             <div style={{ margin: "5px" }} className='button'>
               next&nbsp;&gt;
             </div>
           </Link>
         ) : (
-          <div style={{ margin: "5px", color: "#777" }} className='button'>
-            next&nbsp;&gt;
-          </div>
+          <div/>          
         )}
       </div>
     )
@@ -576,6 +578,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                     <p
                       style={{
                         margin: "10",
+                        fontSize: 24,
                         fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
                       }}
                     >
@@ -586,7 +589,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                     <p
                       style={{
                         margin: "10",
-                        fontSize: 24,
+                        fontSize: 20,
                         fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
                       }}
                     >

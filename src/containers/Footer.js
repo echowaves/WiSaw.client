@@ -1,8 +1,8 @@
 import React from "react"
 import { useLocation } from "react-router-dom"
 
-import { bounce } from 'react-animations'
 import Radium, { StyleRoot } from 'radium'
+import { bounce } from 'react-animations'
 
 const styles = {
   bounce: {
@@ -81,12 +81,13 @@ const Footer = function () {
         <div style={{
           display: 'flex',
           justifyContent: 'center',
+                 
         }}>
-          <a href="https://www.echowaves.com">© echowaves</a>
+          <a href="https://www.echowaves.com" style={{color: 'blue', fontWeight: '600' }}>© echowaves</a>
 					&nbsp;&nbsp;
-          <a href="https://www.echowaves.com/support">support</a>
+          <a href="https://www.echowaves.com/support" style={{color: 'blue', fontWeight: '600' }}>support</a>
 					&nbsp;&nbsp;
-          <a href="https://www.echowaves.com/blog">blog</a>
+          <a href="https://www.echowaves.com/blog" style={{color: 'blue', fontWeight: '600' }}>blog</a>
         </div>
       </div>
     </div>
