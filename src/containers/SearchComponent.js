@@ -197,6 +197,7 @@ const SearchComponent = function () {
                   lineHeight: "1.2em",
                   height: "auto",
                   textAlign: "center",
+                  color: "#555",
                 }}
               >
                 {tile.lastComment}
