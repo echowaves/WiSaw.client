@@ -580,6 +580,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                         margin: "10",
                         fontSize: 24,
                         fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
+                        color: "#444",
                       }}
                     >
                       {comment.comment}
@@ -591,6 +592,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                         margin: "10",
                         fontSize: 20,
                         fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
+                        color: "#555",
                       }}
                     >
                       {comment.comment}
