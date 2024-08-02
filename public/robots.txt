@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.wisaw.com/sitemap.xml
+Sitemap: https://wisaw.com/sitemap.xml
