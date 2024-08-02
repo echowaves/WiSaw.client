@@ -489,6 +489,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           {currPhoto?.photo?.video !== true && (
             <img
+              fetchPriority="high"
               width={`${dimensions.width}`}
               height={`${dimensions.height}`}
               className='mainImage'
