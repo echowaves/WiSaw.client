@@ -27,21 +27,21 @@ function App() {
                 path='/photos/:photoId'
                 element={<PhotosComponent />}
               />
-              <Route
+              {/* <Route
                 exact
                 path='/photos/:photoId/thumb'
                 element={<PhotosComponent />}
-              />
+              /> */}
               <Route
                 exact
                 path='/videos/:photoId'
                 element={<PhotosComponent />}
               />
-              <Route
+              {/* <Route
                 exact
                 path='/videos/:photoId/thumb'
                 element={<PhotosComponent />}
-              />
+              /> */}
 
               <Route
                 exact
