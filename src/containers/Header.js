@@ -27,7 +27,7 @@ const Header = function () {
           fontSize: "2vmax",
         }}
       >
-        <a href='https://www.wisaw.com'>
+        <a href='https://wisaw.com'>
           <img
             width='55'
             height='55'
@@ -35,7 +35,7 @@ const Header = function () {
             alt='wisaw logo'
           />
         </a>{" "}
-        What I Saw <a href='https://www.wisaw.com'>#wisaw</a>
+        What I Saw <a href='https://wisaw.com'>#wisaw</a>
       </div>
     </header>
   )

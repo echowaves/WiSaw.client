@@ -168,7 +168,7 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link             
-                to={`/${tile?.video === true ? 'videos' : 'photos'}/${tile.id}`}
+                to={`https://wisaw.com/${tile?.video === true ? 'videos' : 'photos'}/${tile.id}`}
                 // className="crop"
                 style={{
                   // display: 'flex',
@@ -212,7 +212,7 @@ const SearchComponent = function () {
 
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/search/${searchString}`}
+            href={`https://wisaw.com/search/${searchString}`}
           />
 
 
@@ -232,7 +232,7 @@ const SearchComponent = function () {
           <meta name='image' property='og:image' content='' />
           <meta
             property='og:url'
-            content={`https://www.wisaw.com/search/${searchString}`}
+            content={`https://wisaw.com/search/${searchString}`}
           />
 
           <meta

@@ -294,7 +294,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             <h1>
               {labels.map((label) => (                
                   <div key={label.Name} style={{ fontSize: `${label?.Confidence}%`, marginBottom: 10 }}>
-                    <Link to={`/search/${label.Name}`}>
+                    <Link to={`https://wisaw.com/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </Link>
                   </div>                
@@ -354,7 +354,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='lander'>      
         {internalState?.prevPhoto && internalState?.prevPhoto?.photo ? (
           <Link
-            to={`/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.prevPhoto?.photo?.id}${
+            to={`https://wisaw.com/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.prevPhoto?.photo?.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadPrev()}
@@ -368,7 +368,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
         {internalState?.nextPhoto && internalState?.nextPhoto?.photo ? (
           <Link
-            to={`/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.nextPhoto?.photo?.id}${
+            to={`https://wisaw.com/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.nextPhoto?.photo?.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadNext()}
@@ -425,7 +425,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           <link
             rel='canonical'
-            href={`https://www.wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
+            href={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
           />
 
           <meta

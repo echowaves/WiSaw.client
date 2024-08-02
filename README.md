@@ -11,7 +11,7 @@ If you see something you do not like -- just delete it, which will have an effec
 
 This works best for events, large and small. Wedding or celebration party, at a beach or a park, student at a campus, or a conference attendee, or a group of fans at a football game -- these all will benefit from WiSaw and will definitely make it a lot more fun.
 
-To see your and others photos visit https://www.wisaw.com
+To see your and others photos visit https://wisaw.com
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
 
