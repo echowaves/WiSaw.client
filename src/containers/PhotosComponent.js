@@ -501,7 +501,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
               style={{
                 // width: `${currPhoto.width + 100}`,
                 // height: `${currPhoto.height + 100}`,
-                backgroundImage: `url("${currPhoto.photo.thumbUrl}")`,
+                backgroundImage: screenWidth < 700 ? `none`: `url("${currPhoto.photo.thumbUrl}")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
                 backgroundSize: 'cover',
