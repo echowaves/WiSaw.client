@@ -268,7 +268,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
   const recognitionsLabels = (recognition) => {    
     if(!recognition) return ''
-    return JSON.parse(recognition.metaData)?.Labels?.slice(0, 3).map((label) => label.Name).join(", ")
+    return JSON.parse(recognition.metaData)?.Labels?.slice(0, 10).map((label) => label.Name).join(", ")
   }
 
   const renderRecognitions = (recognition) => {    
@@ -443,7 +443,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
             content={
               `${currPhoto?.comments?.length > 0
                 ? currPhoto.comments[0].comment
-                : ` `} ${recognitionsLabels(currPhoto?.recognitions[0])}`
+                : recognitionsLabels(currPhoto?.recognitions[0])}`
             }
           />
           <meta
@@ -480,9 +480,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             name='twitter:description'
             content={
-              currPhoto?.comments?.length > 0
-                ? currPhoto?.comments[0]?.comment
-                : `wisaw photo ${currPhoto.photo.id}`
+              `${currPhoto?.comments?.length > 0
+                ? currPhoto.comments[0].comment
+                : recognitionsLabels(currPhoto?.recognitions[0])}`
             }
           />
           <meta
