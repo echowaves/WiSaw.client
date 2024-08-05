@@ -442,8 +442,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
             property='og:description'
             content={
               `${currPhoto?.comments?.length > 0
-                ? currPhoto.comments[0].comment
-                : recognitionsLabels(currPhoto?.recognitions[0])}`
+                ? `${currPhoto.comments[0].comment}, ${recognitionsLabels(currPhoto?.recognitions[0], 5)}`.slice(0, 150)
+                : recognitionsLabels(currPhoto?.recognitions[0], 10)}`
             }
           />
           <meta
