@@ -292,14 +292,47 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span style={{ align: "center" }}>
             <h1>
-              {labels.map((label) => (                
-                  <div key={label.Name} style={{ fontSize: `${label?.Confidence}%`, marginBottom: 10 }}>
-                    <Link to={`https://wisaw.com/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")}
-                    </Link>
-                  </div>                
+              {labels.slice(0,3).map((label) => (                                
+                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")},
+                    </Link>                                    
               ))}
               </h1>
+              <h2>
+              {labels.slice(3,6).map((label) => (                                
+                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")},
+                    </Link>                                    
+              ))}
+              </h2>
+              <h3>
+              {labels.slice(6,9).map((label) => (                                
+                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")},
+                    </Link>                                    
+              ))}
+              </h3>
+              <h4>
+              {labels.slice(9,12).map((label) => (                                
+                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")},
+                    </Link>                                    
+              ))}
+              </h4>
+              <h5>
+              {labels.slice(12,15).map((label) => (                                
+                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")},
+                    </Link>                                    
+              ))}
+              </h5>
+              <h6>
+              {labels.slice(15).map((label) => (                                
+                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")}&nbsp;
+                    </Link>                                    
+              ))}
+              </h6>
             </span>
           </div>
         )}
