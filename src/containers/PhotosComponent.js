@@ -304,13 +304,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return (
       <div>
         {labels?.length > 0 && (
-          <div style={{ margin: "5px" }}>
-            <div style={{ align: "center" }}>
-                <b style={{
-                    color: "#555",
-                    fontWeight: '800'
-                    }}>AI recognized tags:</b>
-            </div>
+          <div style={{ margin: "5px" }}>            
               <h2>
               {labels.slice(3,6).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
@@ -355,7 +349,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 <b style={{
                     color: "#555",
                     fontWeight: '800'
-                    }}>AI recognized text:</b>
+                    }}>recognized text:</b>
             </div>
             <span style={{ align: "center" }}>
               {textDetections.map((text) => (
@@ -373,7 +367,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <div style={{ margin: "5px", paddingBottom: "5px" }}>
             <h2>
               <div style={{ color: "red", align: "center" }}>
-                <b>AI moderation tags:</b>
+                <b>moderation tags:</b>
               </div>
             </h2>
             <span style={{ align: "center" }}>
