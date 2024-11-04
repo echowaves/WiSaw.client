@@ -168,7 +168,7 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link             
-                to={`https://wisaw.com/${tile?.video === true ? 'videos' : 'photos'}/${tile.id}`}
+                to={`/${tile?.video === true ? 'videos' : 'photos'}/${tile.id}`}
                 // className="crop"
                 style={{
                   // display: 'flex',

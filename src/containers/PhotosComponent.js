@@ -5,7 +5,6 @@ import { Helmet } from "react-helmet-async"
 
 import ReactGA from "react-ga4"
 
-import Button from "react-bootstrap/Button"
 
 
 import "./PhotosComponent.css"
@@ -271,6 +270,28 @@ this methid will fetch image into cache -- will work super fast on next call to 
     return JSON.parse(recognition.metaData)?.Labels?.slice(0, lebelsToInclude).map((label) => label.Name).join(", ")
   }
 
+  const renderRecognitionsH1 = (recognition) => {    
+    if(!recognition) return(<div/>)
+    const labels = JSON.parse(recognition?.metaData)?.Labels
+
+    return (
+      <div>
+        {labels?.length > 0 && (
+          <div style={{ margin: "5px" }}>
+            <h1>
+              {labels.slice(0,3).map((label) => (                                
+                    <Link key={label.Name} to={`/search/${label.Name}`}>
+                      {stringifyObject(label.Name).replace(/'/g, "")},
+                    </Link>                                    
+              ))}
+              </h1>
+          </div>
+        )}
+        
+      </div>
+    )
+  }
+
   const renderRecognitions = (recognition) => {    
     if(!recognition) return(<div/>)
     const labels = JSON.parse(recognition?.metaData)?.Labels
@@ -290,50 +311,41 @@ this methid will fetch image into cache -- will work super fast on next call to 
                     fontWeight: '800'
                     }}>AI recognized tags:</b>
             </div>
-            <span style={{ align: "center" }}>
-            <h1>
-              {labels.slice(0,3).map((label) => (                                
-                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")},
-                    </Link>                                    
-              ))}
-              </h1>
               <h2>
               {labels.slice(3,6).map((label) => (                                
-                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                    <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
               </h2>
               <h3>
               {labels.slice(6,9).map((label) => (                                
-                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                    <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
               </h3>
               <h4>
               {labels.slice(9,12).map((label) => (                                
-                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                    <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
               </h4>
               <h5>
               {labels.slice(12,15).map((label) => (                                
-                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                    <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
               </h5>
               <h6>
               {labels.slice(15).map((label) => (                                
-                    <Link key={label.Name} to={`https://wisaw.com/search/${label.Name}`}>
+                    <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}&nbsp;
                     </Link>                                    
               ))}
               </h6>
-            </span>
           </div>
         )}
 
@@ -387,7 +399,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div className='lander'>      
         {internalState?.prevPhoto && internalState?.prevPhoto?.photo ? (
           <Link
-            to={`https://wisaw.com/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.prevPhoto?.photo?.id}${
+            to={`/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.prevPhoto?.photo?.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadPrev()}
@@ -401,7 +413,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
         {internalState?.nextPhoto && internalState?.nextPhoto?.photo ? (
           <Link
-            to={`https://wisaw.com/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.nextPhoto?.photo?.id}${
+            to={`/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.nextPhoto?.photo?.id}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadNext()}
@@ -458,7 +470,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           <link
             rel='canonical'
-            href={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
+            href={`/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
           />
 
           <meta
@@ -492,6 +504,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta property='og:type' content='article' />
         </Helmet>
         {/* </HelmetProvider> */}
+
+        {currPhoto.recognitions &&
+            renderRecognitionsH1(currPhoto?.recognitions[0])}
 
         {renderNavigationButtons()}
 
@@ -542,57 +557,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 // height:`${dimensions.height}`,
                 }}
           />)}
-        </div>
-        <div style={{ margin: "10px", align: "center" }}>
-          <a
-            href={`${currPhoto.photo.imgUrl}`}
-            target='_blank'
-            rel='noreferrer'
-          >
-            <Button variant='secondary'>Free Download</Button>
-          </a>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ margin: "10px", align: "center" }}>
-            {currPhoto?.comments && currPhoto?.comments?.length > 0 && (
-              <div
-                style={{
-                  paddingTop: 14,
-                  height: 40,
-                  width: 40,
-                  fontSize: 12,
-                  backgroundImage: `url("/comment.webp")`,
-                  color: "white",
-                }}
-              >
-                {currPhoto?.comments?.length}
-              </div>
-            )}
-          </div>
-          <div style={{ margin: "10px", align: "center" }}>
-            {currPhoto &&
-              currPhoto.photo &&
-              currPhoto.photo.watchersCount > 0 && (
-                <div
-                  style={{
-                    paddingTop: 14,
-                    paddingLeft: 10,
-                    height: 40,
-                    width: 40,
-                    fontSize: 12,
-                    backgroundImage: `url("/thumbs-up.webp")`,
-                    color: "white",
-                  }}
-                >
-                  {currPhoto.photo.watchersCount}
-                </div>
-              )}
-          </div>
         </div>
         <div
           style={{
