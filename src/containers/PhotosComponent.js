@@ -278,13 +278,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
       <div>
         {labels?.length > 0 && (
           <div style={{ margin: "5px" }}>
-            <h1>
+            <H1>
               {labels.slice(0,3).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
-              </h1>
+              </H1>
           </div>
         )}
         
@@ -311,41 +311,41 @@ this methid will fetch image into cache -- will work super fast on next call to 
                     fontWeight: '800'
                     }}>AI recognized tags:</b>
             </div>
-              <h2>
+              <H2>
               {labels.slice(3,6).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
-              </h2>
-              <h3>
+              </H2>
+              <H3>
               {labels.slice(6,9).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
-              </h3>
-              <h4>
+              </H3>
+              <H4>
               {labels.slice(9,12).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
-              </h4>
-              <h5>
+              </H4>
+              <H5>
               {labels.slice(12,15).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")},
                     </Link>                                    
               ))}
-              </h5>
-              <h6>
+              </H5>
+              <H6>
               {labels.slice(15).map((label) => (                                
                     <Link key={label.Name} to={`/search/${label.Name}`}>
                       {stringifyObject(label.Name).replace(/'/g, "")}&nbsp;
                     </Link>                                    
               ))}
-              </h6>
+              </H6>
           </div>
         )}
 
@@ -359,11 +359,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
             </div>
             <span style={{ align: "center" }}>
               {textDetections.map((text) => (
-                <h2 key={text.Id}>
+                <H2 key={text.Id}>
                   <div style={{ fontSize: `${text.Confidence}%`, color: "#555" }}>
                     {stringifyObject(text.DetectedText).replace(/'/g, "")}
                   </div>
-                </h2>
+                </H2>
               ))}
             </span>
           </div>
@@ -371,11 +371,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
         {moderationLabels?.length > 0 && (
           <div style={{ margin: "5px", paddingBottom: "5px" }}>
-            <h2>
+            <H2>
               <div style={{ color: "red", align: "center" }}>
                 <b>AI moderation tags:</b>
               </div>
-            </h2>
+            </H2>
             <span style={{ align: "center" }}>
               {moderationLabels.map((label) => (
                 <h3 key={label.Name}>
