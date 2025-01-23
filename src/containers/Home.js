@@ -145,6 +145,7 @@ const Home = function () {
       <InfiniteScroll
         style={{
           position: "relative",
+          overflow: 'unset',
         }}
         dataLength={photos.length} //This is important field to render the next data
         next={retrievePhotos}
