@@ -7,11 +7,12 @@ import { HelmetProvider } from "react-helmet-async"
 import "./App.css"
 const Home = lazy(() => import("./containers/Home"))
 const PhotosComponent = lazy(() => import("./containers/PhotosComponent"))
-
 const SearchComponent = lazy(() => import("./containers/SearchComponent"))
-
 const NoMatch = lazy(() => import("./containers/NoMatch"))
 const Header = lazy(() => import("./containers/Header"))
+const About = lazy(() => import("./containers/About"))
+const Contact = lazy(() => import("./containers/Contact"))
+const Terms = lazy(() => import("./containers/Terms"))
 
 function App() {
   return (
@@ -27,27 +28,19 @@ function App() {
                 path='/photos/:photoId'
                 element={<PhotosComponent />}
               />
-              {/* <Route
-                exact
-                path='/photos/:photoId/thumb'
-                element={<PhotosComponent />}
-              /> */}
               <Route
                 exact
                 path='/videos/:photoId'
                 element={<PhotosComponent />}
               />
-              {/* <Route
-                exact
-                path='/videos/:photoId/thumb'
-                element={<PhotosComponent />}
-              /> */}
-
               <Route
                 exact
                 path='/search/:searchString'
                 element={<SearchComponent />}
               />
+              <Route path='/about' element={<About />} />
+              <Route path='/contact' element={<Contact />} />
+              <Route path='/terms' element={<Terms />} />
               <Route element={<NoMatch />} />
               {/* default redirect to home page */}
               <Route path="*" element={<Navigate to="/" />} />
@@ -58,26 +51,5 @@ function App() {
     </div>
   )
 }
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
 
 export default App
