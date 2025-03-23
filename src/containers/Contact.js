@@ -1,4 +1,5 @@
-import React from "react";
+import React, { lazy } from "react";
+const Footer = lazy(() => import("./Footer"))
 
 const Contact = () => {
 return (
@@ -29,6 +30,7 @@ return (
             <h3>Support</h3>
             <p style={{ textAlign: "left" }}>For technical support, please <a href="https://www.echowaves.com/support" target="_blank" rel="noopener noreferrer">submit a request</a></p>
         </div>
+        <Footer />
     </div>
 );
 };

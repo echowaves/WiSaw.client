@@ -50,6 +50,7 @@ const Footer = function () {
               margin: '5px',
             }}>
             <a
+            target="_blank" rel="noopener noreferrer"
               href="http://itunes.apple.com/us/app/wisaw/id1299949122">
               <div>
                 <img
@@ -66,6 +67,7 @@ const Footer = function () {
               margin: '5px',
             }}>
             <a
+            target="_blank" rel="noopener noreferrer"
               href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw">
               <div>
                 <img
@@ -83,11 +85,11 @@ const Footer = function () {
           justifyContent: 'center',
                  
         }}>
-          <a href="https://www.echowaves.com" style={{color: 'blue', fontWeight: '600' }}>© echowaves</a>
+          <a target="_blank" rel="noopener noreferrer" href="https://www.echowaves.com" style={{color: 'blue', fontWeight: '600' }}>© echowaves</a>
 					&nbsp;&nbsp;
-          <a href="https://www.echowaves.com/support" style={{color: 'blue', fontWeight: '600' }}>support</a>
+          <a target="_blank" rel="noopener noreferrer" href="https://www.echowaves.com/support" style={{color: 'blue', fontWeight: '600' }}>support</a>
 					&nbsp;&nbsp;
-          <a href="https://www.echowaves.com/blog" style={{color: 'blue', fontWeight: '600' }}>blog</a>
+          <a target="_blank" rel="noopener noreferrer" href="https://www.echowaves.com/blog" style={{color: 'blue', fontWeight: '600' }}>blog</a>
         </div>
       </div>
     </div>
