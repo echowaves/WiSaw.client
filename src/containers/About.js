@@ -1,4 +1,5 @@
-import React from "react";
+import React, { lazy } from "react";
+const Footer = lazy(() => import("./Footer"))
 
 const About = () => {
   return (
@@ -41,6 +42,7 @@ Thank you for being a part of our journey. Let’s create something amazing toge
 </p>
 <h2>Contact Us</h2>
 <p>Have questions, feedback, or just want to say hello? <a href="/contact">Reach out to us</a>. We’d love to hear from you!</p>
+<Footer />
     </div>
   );
 };
