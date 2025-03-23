@@ -18,18 +18,23 @@ const Header = function () {
     <header id='header'>
       <div className="header-container">
         <div className="logo-container">
-          <a href='/'>
+          <Link to='/'>
             <img
               width='55'
               height='55'
               src='/android-chrome-192x192.webp'
               alt='wisaw logo'
             />
-          </a>{" "}
-          <span className="logo-text">What I Saw <a href='/'>#wisaw</a></span>
+          </Link>{" "}
+          <span className="logo-text">What I Saw <Link to='/'>#wisaw</Link></span>
         </div>
         
-        <div className="hamburger-menu" onClick={toggleMenu}>
+        <div className="hamburger-menu" onClick={toggleMenu}
+             onKeyDown={(e) => e.key === 'Enter' && toggleMenu()}
+             tabIndex={0}
+             role="button"
+             aria-label="Menu"
+             aria-expanded={menuOpen}>
           <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`}></div>
           <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`}></div>
           <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`}></div>
