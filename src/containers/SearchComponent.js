@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, lazy } from "react"
 import {
   Link,
   useNavigate, useParams
 } from "react-router-dom"
+
+const Footer = lazy(() => import("./Footer"))
 
 import { Helmet } from "react-helmet-async"
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
@@ -65,6 +67,7 @@ const SearchComponent = function () {
           justifyContent: "right",
           // alignItems: 'center',
           paddingBottom: "10px",
+          paddingTop: "20px",
         }}
       >
         <Form onSubmit={handleSearch}>
@@ -249,7 +252,10 @@ const SearchComponent = function () {
           />
           <meta name='twitter:image' content='' />
         </Helmet>
+
+        <Footer />
       </div>  
+      
       </> 
     )
   }
@@ -264,7 +270,7 @@ const SearchComponent = function () {
         alignItems: "center",
       }}
     >
-      <Bars color='#00BFFF' height={100} width={100} timeout={60000} />
+      <Bars color='#00BFFF' height={100} width={100} timeout={60000} />      
     </div>
 
   )
