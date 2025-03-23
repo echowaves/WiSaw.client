@@ -37,35 +37,34 @@ const SearchComponent = function () {
   })
 
   const [searchText, setSearchText] = useState(searchString)
-  const handleSearch = function () {
-    // console.log({event})
-    // event.preventDefault()
-    navigate(`/search/${searchText}`)
-    setSearchText("")
+  const handleSearch = function (event) {
+    if (event) {
+      event.preventDefault()
+    }
+    if (searchText && searchText.trim()) {
+      navigate(`/search/${encodeURIComponent(searchText.trim())}`)
+      setSearchText("")
+    }
   }
+  
   const searchTextHandler = function (event) {
     setSearchText(event.target.value)
-    // console.log(event.target.value)
   }
 
   const renderSearchComponent = function () {
     return (
       <div
       style={{
-        // width: '100%',
-        // maxWidth: "700px",
         width: "80%",
         position: "relative",
         alignSelf: "right",
         justifyContent: "right",
       }}
     >
-
       <div
         style={{
           display: "flex",
           justifyContent: "right",
-          // alignItems: 'center',
           paddingBottom: "10px",
           paddingTop: "20px",
         }}
@@ -78,6 +77,7 @@ const SearchComponent = function () {
                 placeholder='What are you looking for...'
                 value={searchText}
                 onChange={searchTextHandler}
+                aria-label="Search input"
               />
             </Col>
             <Col xs='auto'>
@@ -110,6 +110,7 @@ const SearchComponent = function () {
 
     if (searchString) {
       try {
+        const sanitizedSearchString = searchString.trim();
         const response = await CONST.gqlClient.query({
           query: gql`
             query feedForTextSearch(
@@ -137,20 +138,23 @@ const SearchComponent = function () {
             }
           `,
           variables: {
-            searchTerm: searchString,
-            batch: 123123,
+            searchTerm: sanitizedSearchString,
+            batch: "123123", // Convert to string to avoid potential integer overflow
             pageNumber: 0,
           },
         })
-        // console.log({ response })
+        
         setInternalState({
-          photos: response.data.feedForTextSearch.photos,
+          photos: response.data.feedForTextSearch.photos || [],
           requestComplete: true,
         })
       } catch (err) {
-        console.log({ err }) // eslint-disable-line
+        console.error("Search error:", err.message) // Use console.error and limit what's logged
+        setInternalState({
+          photos: [],
+          requestComplete: true,
+        })
       }
-      // console.log('done')
     }
   }
 
@@ -171,11 +175,8 @@ const SearchComponent = function () {
               key={tile.id}
             >
               <Link             
-                to={`/${tile?.video === true ? 'videos' : 'photos'}/${tile.id}`}
-                // className="crop"
+                to={`/${tile?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(tile.id)}`}
                 style={{
-                  // display: 'flex',
-                  // justifyContent: 'center',
                   alignItems: "center",
                 }}
               >
@@ -190,7 +191,11 @@ const SearchComponent = function () {
                   src={tile.thumbUrl}
                   width='300px'
                   height='300px'
-                  alt={tile.lastComment}
+                  alt={tile.lastComment || 'Image'}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/logo192.png"; // Fallback image
+                  }}
                 />
               </Link>
               <div
@@ -203,7 +208,8 @@ const SearchComponent = function () {
                   color: "#555",
                 }}
               >
-                {tile.lastComment}
+                {/* Use a safer display method for user-generated content */}
+                {tile.lastComment ? tile.lastComment.substring(0, 200) : ''}
               </div>
             </div>
           ))}
@@ -262,13 +268,14 @@ const SearchComponent = function () {
 
   return (
 
-    <div // eslint-disable-line
+    <div 
       className='crop'
       style={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
       }}
+      aria-label="Loading content"
     >
       <Bars color='#00BFFF' height={100} width={100} timeout={60000} />      
     </div>

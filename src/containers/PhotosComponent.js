@@ -63,17 +63,23 @@ const PhotosComponent = function () {
 this methid will fetch image into cache -- will work super fast on next call to the same url
 */
   const fetchDimensions = async ({photoId}) => {
-    const img = new Image()
-    img.src = `https://img.wisaw.com/${photoId}-thumb`
-    await img.decode()
+    try {
+      const img = new Image()
+      img.src = `https://img.wisaw.com/${photoId}-thumb`
+      await img.decode()
 
-    const maxDimention = screenWidth < 700 ? 300 : 700
-    const {naturalWidth,  naturalHeight} = img
+      const maxDimention = screenWidth < 700 ? 300 : 700
+      const {naturalWidth,  naturalHeight} = img
 
-    setDimensions({
-      width: naturalWidth > naturalHeight ?  maxDimention : maxDimention * naturalWidth / naturalHeight, //img.naturalWidth,
-      height: naturalWidth < naturalHeight ? maxDimention: maxDimention * naturalHeight  / naturalWidth, //img.naturalHeight,
-    })
+      setDimensions({
+        width: naturalWidth > naturalHeight ?  maxDimention : maxDimention * naturalWidth / naturalHeight, //img.naturalWidth,
+        height: naturalWidth < naturalHeight ? maxDimention: maxDimention * naturalHeight  / naturalWidth, //img.naturalHeight,
+      })
+    } catch (err) {
+      console.error("Error fetching image dimensions:", err.message)
+      // Set fallback dimensions
+      setDimensions({width: 300, height: 300})
+    }
   }
 
   const fetchCurrPhoto = async ({ photoId }) => {
@@ -267,133 +273,155 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
   const recognitionsLabels = (recognition, lebelsToInclude = 10) => {    
     if(!recognition) return ''
-    return JSON.parse(recognition.metaData)?.Labels?.slice(0, lebelsToInclude).map((label) => label.Name).join(", ")
+    try {
+      return JSON.parse(recognition.metaData)?.Labels?.slice(0, lebelsToInclude).map((label) => label.Name).join(", ")
+    } catch (err) {
+      console.error("Error parsing recognition data:", err.message)
+      return ''
+    }
   }
 
   const renderRecognitionsH1 = (recognition) => {    
     if(!recognition) return(<div/>)
-    const labels = JSON.parse(recognition?.metaData)?.Labels
+    try {
+      const labels = JSON.parse(recognition?.metaData)?.Labels
 
-    return (
-      <div>
-        {labels?.length > 0 && (
-          <div style={{ margin: "5px" }}>
-            <h1>
-              {labels.slice(0,3).map((label) => (                                
-                    <Link key={label.Name} to={`/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")},
-                    </Link>                                    
-              ))}
-              </h1>
-          </div>
-        )}
-        
-      </div>
-    )
+      return (
+        <div>
+          {labels?.length > 0 && (
+            <div style={{ margin: "5px" }}>
+              <h1>
+                {labels.slice(0,3).map((label) => (                                
+                      <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                        {stringifyObject(label.Name).replace(/'/g, "")}
+                        {label !== labels.slice(0,3).slice(-1)[0] && ','}
+                      </Link>                                    
+                ))}
+                </h1>
+            </div>
+          )}
+          
+        </div>
+      )
+    } catch (err) {
+      console.error("Error rendering recognition data:", err.message)
+      return <div/>
+    }
   }
 
   const renderRecognitions = (recognition) => {    
     if(!recognition) return(<div/>)
-    const labels = JSON.parse(recognition?.metaData)?.Labels
-    const textDetections = JSON.parse(
-      recognition.metaData,
-    ).TextDetections?.filter((text) => text?.Type === "LINE")
-    const moderationLabels = JSON.parse(recognition?.metaData)?.ModerationLabels
+    try {
+      const labels = JSON.parse(recognition?.metaData)?.Labels
+      const textDetections = JSON.parse(
+        recognition.metaData,
+      ).TextDetections?.filter((text) => text?.Type === "LINE")
+      const moderationLabels = JSON.parse(recognition?.metaData)?.ModerationLabels
 
 
-    return (
-      <div>
-        {labels?.length > 0 && (
-          <div style={{ margin: "5px" }}>            
+      return (
+        <div>
+          {labels?.length > 0 && (
+            <div style={{ margin: "5px" }}>            
               <h2>
-              {labels.slice(3,6).map((label) => (                                
-                    <Link key={label.Name} to={`/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")},
-                    </Link>                                    
-              ))}
+                {labels.slice(3,6).map((label) => (                                
+                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                    {stringifyObject(label.Name).replace(/'/g, "")}
+                    {label !== labels.slice(3,6).slice(-1)[0] && ','}
+                  </Link>                                    
+                ))}
               </h2>
               <h3>
-              {labels.slice(6,9).map((label) => (                                
-                    <Link key={label.Name} to={`/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")},
-                    </Link>                                    
-              ))}
+                {labels.slice(6,9).map((label) => (                                
+                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                    {stringifyObject(label.Name).replace(/'/g, "")}
+                    {label !== labels.slice(6,9).slice(-1)[0] && ','}
+                  </Link>                                    
+                ))}
               </h3>
               <h4>
-              {labels.slice(9,12).map((label) => (                                
-                    <Link key={label.Name} to={`/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")},
-                    </Link>                                    
-              ))}
+                {labels.slice(9,12).map((label) => (                                
+                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                    {stringifyObject(label.Name).replace(/'/g, "")}
+                    {label !== labels.slice(9,12).slice(-1)[0] && ','}
+                  </Link>                                    
+                ))}
               </h4>
               <h5>
-              {labels.slice(12,15).map((label) => (                                
-                    <Link key={label.Name} to={`/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")},
-                    </Link>                                    
-              ))}
+                {labels.slice(12,15).map((label) => (                                
+                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                    {stringifyObject(label.Name).replace(/'/g, "")}
+                    {label !== labels.slice(12,15).slice(-1)[0] && ','}
+                  </Link>                                    
+                ))}
               </h5>
               <h6>
-              {labels.slice(15).map((label) => (                                
-                    <Link key={label.Name} to={`/search/${label.Name}`}>
-                      {stringifyObject(label.Name).replace(/'/g, "")}&nbsp;
-                    </Link>                                    
-              ))}
+                {labels.slice(15).map((label) => (                                
+                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                    {stringifyObject(label.Name).replace(/'/g, "")}&nbsp;
+                  </Link>                                    
+                ))}
               </h6>
-          </div>
-        )}
-
-        {textDetections?.length > 0 && (
-          <div style={{ margin: "5px" }}>
-            <div style={{ align: "center" }}>
-                <b style={{
-                    color: "#555",
-                    fontWeight: '800'
-                    }}>recognized text:</b>
             </div>
-            <span style={{ align: "center" }}>
-              {textDetections.map((text) => (
-                <h2 key={text.Id}>
-                  <div style={{ fontSize: `${text.Confidence}%`, color: "#555" }}>
-                    {stringifyObject(text.DetectedText).replace(/'/g, "")}
-                  </div>
-                </h2>
-              ))}
-            </span>
-          </div>
-        )}
+          )}
 
-        {moderationLabels?.length > 0 && (
-          <div style={{ margin: "5px", paddingBottom: "5px" }}>
-            <h2>
-              <div style={{ color: "red", align: "center" }}>
-                <b>moderation tags:</b>
+          {textDetections?.length > 0 && (
+            <div style={{ margin: "5px" }}>
+              <div style={{ textAlign: "center" }}>
+                <b style={{
+                  color: "#555",
+                  fontWeight: '800'
+                }}>recognized text:</b>
               </div>
-            </h2>
-            <span style={{ align: "center" }}>
-              {moderationLabels.map((label) => (
-                <h3 key={label.Name}>
-                  <div
-                    style={{ fontSize: `${label.Confidence}%`, color: "red" }}
-                  >
-                    {stringifyObject(label.Name).replace(/'/g, "")}
-                  </div>
-                </h3>
-              ))}
-            </span>
-          </div>
-        )}
-      </div>
-    )
+              <span style={{ textAlign: "center" }}>
+                {textDetections.map((text) => (
+                  <h2 key={text.Id}>
+                    <div style={{ fontSize: `${Math.min(text.Confidence, 100)}%`, color: "#555" }}>
+                      {stringifyObject(text.DetectedText).replace(/'/g, "")}
+                    </div>
+                  </h2>
+                ))}
+              </span>
+            </div>
+          )}
+
+          {moderationLabels?.length > 0 && (
+            <div style={{ margin: "5px", paddingBottom: "5px" }}>
+              <h2>
+                <div style={{ color: "red", textAlign: "center" }}>
+                  <b>moderation tags:</b>
+                </div>
+              </h2>
+              <span style={{ textAlign: "center" }}>
+                {moderationLabels.map((label) => (
+                  <h3 key={label.Name}>
+                    <div style={{ fontSize: `${Math.min(label.Confidence, 100)}%`, color: "red" }}>
+                      {stringifyObject(label.Name).replace(/'/g, "")}
+                    </div>
+                  </h3>
+                ))}
+              </span>
+            </div>
+          )}
+        </div>
+      )
+    } catch (err) {
+      console.error("Error rendering recognition data:", err.message)
+      return <div/>
+    }
   }
+
+  const location = useLocation()
 
   const renderNavigationButtons = () => {
     // const { nextPhoto, prevPhoto } = internalState
+    const embedded = new URLSearchParams(location.search).get("embedded")
+    
     return (
       <div className='lander'>      
         {internalState?.prevPhoto && internalState?.prevPhoto?.photo ? (
           <Link
-            to={`/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.prevPhoto?.photo?.id}${
+            to={`/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${encodeURIComponent(internalState?.prevPhoto?.photo?.id)}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadPrev()}
@@ -407,7 +435,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
         )}
         {internalState?.nextPhoto && internalState?.nextPhoto?.photo ? (
           <Link
-            to={`/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${internalState?.nextPhoto?.photo?.id}${
+            to={`/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${encodeURIComponent(internalState?.nextPhoto?.photo?.id)}${
               embedded ? "?embedded=true" : ""
             }`}
             onClick={async() =>  await loadNext()}
@@ -423,34 +451,32 @@ this methid will fetch image into cache -- will work super fast on next call to 
     )
   }
 
-  const location = useLocation()
+  
 
   const { currPhoto, requestComplete } = internalState
   
-  const embedded = new URLSearchParams(location.search).get("embedded")
-
-  
+  // const embedded = new URLSearchParams(location.search).get("embedded")
 
   if (currPhoto && currPhoto?.photo) {
+    const safeDescription = currPhoto?.comments?.length > 0
+      ? `${currPhoto.comments[0].comment || ''}, ${recognitionsLabels(currPhoto?.recognitions[0], 5)}`.slice(0, 150)
+      : recognitionsLabels(currPhoto?.recognitions[0], 10);
+    
+    const safeTitle = `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3)}`;
+    
     return (
       <div className='PhotosComponent'>
         {/* <HelmetProvider> */}
         <Helmet prioritizeSeoTags>
-          <title>{`${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3)}`}</title>
+          <title>{safeTitle}</title>
           <meta
             property='og:title'
-            content={                            
-                `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3)} ${currPhoto.photo.id}`
-            }
+            content={`${safeTitle} ${currPhoto.photo.id}`}
           />
           <meta
             name='description'
             property='og:description'
-            content={
-              `${currPhoto?.comments?.length > 0
-                ? `${currPhoto.comments[0].comment}, ${recognitionsLabels(currPhoto?.recognitions[0], 5)}`.slice(0, 150)
-                : recognitionsLabels(currPhoto?.recognitions[0], 10)}`
-            }
+            content={safeDescription}
           />
           <meta
             name='image'
@@ -470,9 +496,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
           <meta
             name='twitter:title'
             content={
-              currPhoto?.comments?.length > 0
+              currPhoto?.comments?.length > 0 && currPhoto?.comments[0].comment
                 ? currPhoto?.comments[0].comment
-                : `wisaw ${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3)}`
+                : `wisaw ${safeTitle}`
             }
           />
           <meta
@@ -480,16 +506,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
             content={`Check out what I saw today:
             ${currPhoto.comments
               .slice(0, 3)
-              .map((comment) => comment.comment)
+              .map((comment) => comment.comment || '')
+              .filter(Boolean)
               .join("\n")}`}
           />
           <meta
             name='twitter:description'
-            content={
-              `${currPhoto?.comments?.length > 0
-                ? currPhoto.comments[0].comment
-                : recognitionsLabels(currPhoto?.recognitions[0])}`
-            }
+            content={safeDescription}
           />
           <meta
             name='twitter:image'

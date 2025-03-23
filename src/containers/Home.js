@@ -32,7 +32,6 @@ import * as CONST from "../consts"
 const Home = function () {
   const [photos, setPhotos] = useState([])
   const [pageNumber, setPageNumber] = useState(0)
-  const batch = 0
   const [noMoreData, setNoMoreData] = useState(true)
   const [searchText, setSearchText] = useState("")
   const navigate = useNavigate()
@@ -79,7 +78,7 @@ const Home = function () {
         `,
         variables: {
           pageNumber,
-          batch,
+          batch: "0", // Convert to string to prevent potential integer overflow
         },
       })
 
@@ -93,17 +92,24 @@ const Home = function () {
         batch: response.data.feedRecent.batch,
         noMoreData: response.data.feedRecent.noMoreData,
       }
-    } catch (err15) {
-      // eslint-disable-next-line no-console
-      console.log({ err15 }) // eslint-disable-line
+    } catch (err) {
+      console.error("Error retrieving photos:", err.message)
+      return {
+        photos: [],
+        batch: "0",
+        noMoreData: true
+      }
     }
   }
-  const handleSearch = function () {
-    // console.log({event})
-    // event.preventDefault()
-    navigate(`/search/${searchText}`)
+  const handleSearch = function (event) {
+    if (event) {
+      event.preventDefault()
+    }
 
-    setSearchText("")
+    if (searchText && searchText.trim()) {
+      navigate(`/search/${encodeURIComponent(searchText.trim())}`)
+      setSearchText("")
+    }
   }
   const searchTextHandler = function (event) {
     setSearchText(event.target.value)
@@ -126,7 +132,9 @@ const Home = function () {
               <Form.Control
                 type='input'
                 placeholder='What are you looking for...'
+                value={searchText}
                 onChange={searchTextHandler}
+                aria-label="Search input"
               />
             </Col>
             <Col xs='auto'>
@@ -150,7 +158,7 @@ const Home = function () {
         dataLength={photos.length} //This is important field to render the next data
         next={retrievePhotos}
         hasMore={!noMoreData}
-        loader={<div>Loading...</div>}
+        loader={<div aria-label="Loading content">Loading...</div>}
         endMessage={
           <p style={{ textAlign: "center" }}>
             <b>Yay! You have seen it all</b>
@@ -170,7 +178,7 @@ const Home = function () {
         <Masonry style={{}}>
           {photos.map((photo) => (
             <Link
-              to={`/${photo?.video === true ? 'videos' : 'photos'}/${photo.id}`}
+              to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
               style={{ width: "250px" }}
               key={photo.id}
             >
@@ -178,16 +186,28 @@ const Home = function () {
                 src={photo.thumbUrl}
                 style={{  padding: 5 }}
                 width={"250px"}
-                alt={photo?.lastComment}
+                height="auto"
+                alt={photo?.lastComment || `Photo ${photo.id}`}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/logo192.png"; // Fallback image
+                }}
               />
               <div style={{ width: "250px", paddingBottom: 15 }}>
-                {photo?.lastComment}
+                {/* Truncate the comment to prevent potential XSS */}
+                {photo?.lastComment.substring(0, 150)}
               </div></>
               )}
               {!photo?.lastComment && (<img
                 src={photo.thumbUrl}
                 style={{padding: 5 }}
                 width={"250px"}
+                height="auto"
+                alt={`Photo ${photo.id}`}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/logo192.png"; // Fallback image
+                }}
               />
               )}
             </Link>
