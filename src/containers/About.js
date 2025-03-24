@@ -1,10 +1,20 @@
 import React, { lazy } from "react";
+import { Helmet } from "react-helmet-async"
+
 const Footer = lazy(() => import("./Footer"))
 
 const About = () => {
   return (
     <>
     <div className="container" style={{ padding: "20px" }}>
+        <Helmet prioritizeSeoTags>
+        <title>Free Stock Photos & Videos -- What I Saw, about us</title>
+        <link
+            rel='canonical'
+            href={`/about`}
+          />
+        </Helmet>
+
       <h1  style={{ textAlign: "left" }}>About WiSaw</h1>
       <p style={{ textAlign: "left" }}>
       Welcome to WiSaw – a platform where authenticity meets creativity. 
