@@ -3,6 +3,7 @@ const Footer = lazy(() => import("./Footer"))
 
 const Contact = () => {
 return (
+    <>
     <div className="container" style={{ padding: "20px", textAlign: "left" }}>
         <h1>Contact Us</h1>
         <p style={{ textAlign: "left" }}>
@@ -29,9 +30,10 @@ return (
             
             <h3>Support</h3>
             <p style={{ textAlign: "left" }}>For technical support, please <a href="https://www.echowaves.com/support" target="_blank" rel="noopener noreferrer">submit a request</a></p>
-        </div>
-        <Footer />
+        </div>       
     </div>
+    <Footer />
+    </>
 );
 };
 
