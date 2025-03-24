@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react"
+import { Helmet } from "react-helmet-async"
+
 import InfiniteScroll from "react-infinite-scroll-component"
 import Masonry from "react-masonry-component"
 import {
@@ -228,6 +230,31 @@ const Home = function () {
         // backgroundColor: '#0666a3'
       }}
     >
+
+<title>Free Stock Photos & Videos -- What I Saw</title>    
+        <Helmet prioritizeSeoTags>
+        <title>Free Stock Photos & Videos -- What I Saw</title>
+        <meta name="description" property="og:description" content="Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras, free pictures no copyright" data-rh="true"/>    
+        <meta property="og:type" content="website"/>    
+        <link
+            rel='canonical'
+            href={`https://wisaw.com`}
+          />
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://wisaw.com" />
+        <meta property="og:title" content="WiSaw - Free Authentic Stock Photos & Videos" />
+        <meta property="og:description" content="Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide." />
+        <meta property="og:image" content="https://wisaw.com/android-chrome-512x512.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://wisaw.com" />
+        <meta name="twitter:title" content="WiSaw - Free Authentic Stock Photos & Videos" />
+        <meta name="twitter:description" content="Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide." />
+        <meta name="twitter:image" content="https://wisaw.com/android-chrome-512x512.png" />
+        </Helmet>
+
       <div
         style={{
           // width: '100%',

@@ -8,7 +8,7 @@ const Terms = () => {
     <>
     <div className="container" style={{ padding: "20px" }}>
         <Helmet prioritizeSeoTags>
-        <title>Free Stock Photos & Videos -- What I Saw, out terms and conditions</title>
+        <title>Free Stock Photos & Videos -- What I Saw, our terms and conditions</title>
         <meta name="description" content="View WiSaw's Terms and Conditions. Learn about our content usage policies, user-generated content guidelines, and more for our free stock photos and videos platform." />
         <link
           rel='canonical'
