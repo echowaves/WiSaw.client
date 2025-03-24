@@ -9,10 +9,24 @@ const About = () => {
     <div className="container" style={{ padding: "20px" }}>
         <Helmet prioritizeSeoTags>
         <title>Free Stock Photos & Videos -- What I Saw, about us</title>
+        <meta name="description" content="WiSaw is a platform for authentic, unfiltered stock photos and videos created by real people. Join our community of creators sharing genuine visual content." />
         <link
             rel='canonical'
             href={`https://wisaw.com/about`}
           />
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://wisaw.com/about" />
+        <meta property="og:title" content="About WiSaw - Free Authentic Stock Photos & Videos" />
+        <meta property="og:description" content="Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide." />
+        <meta property="og:image" content="https://wisaw.com/android-chrome-512x512.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://wisaw.com/about" />
+        <meta name="twitter:title" content="About WiSaw - Free Authentic Stock Photos & Videos" />
+        <meta name="twitter:description" content="Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide." />
+        <meta name="twitter:image" content="https://wisaw.com/android-chrome-512x512.png" />
         </Helmet>
 
       <h1  style={{ textAlign: "left" }}>About WiSaw</h1>

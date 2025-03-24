@@ -1,5 +1,4 @@
 import React, { lazy } from "react";
-
 import { Helmet } from "react-helmet-async"
 
 const Footer = lazy(() => import("./Footer"))
@@ -10,12 +9,25 @@ const Terms = () => {
     <div className="container" style={{ padding: "20px" }}>
         <Helmet prioritizeSeoTags>
         <title>Free Stock Photos & Videos -- What I Saw, out terms and conditions</title>
-
-                        <link
-                          rel='canonical'
-                          href={`https://wisaw.com/terms`}
-                        />
-                      </Helmet>
+        <meta name="description" content="View WiSaw's Terms and Conditions. Learn about our content usage policies, user-generated content guidelines, and more for our free stock photos and videos platform." />
+        <link
+          rel='canonical'
+          href={`https://wisaw.com/terms`}
+        />
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://wisaw.com/terms" />
+        <meta property="og:title" content="WiSaw Terms and Conditions - Free Stock Photos & Videos" />
+        <meta property="og:description" content="Review WiSaw's Terms and Conditions governing the use of our royalty-free stock photos and videos platform, including content usage rights and user responsibilities." />
+        <meta property="og:image" content="https://wisaw.com/android-chrome-512x512.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://wisaw.com/terms" />
+        <meta name="twitter:title" content="WiSaw Terms and Conditions - Free Stock Photos & Videos" />
+        <meta name="twitter:description" content="Review WiSaw's Terms and Conditions governing the use of our royalty-free stock photos and videos platform, including content usage rights and user responsibilities." />
+        <meta name="twitter:image" content="https://wisaw.com/android-chrome-512x512.png" />
+        </Helmet>
 
       <h1 style={{ textAlign: "left" }}>Terms and Conditions</h1>
       <p style={{ textAlign: "left" }}>
