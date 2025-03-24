@@ -490,7 +490,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
 
           <link
             rel='canonical'
-            href={`/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
+            href={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
           />
 
           <meta
