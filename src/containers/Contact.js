@@ -13,7 +13,7 @@ return (
 
                   <link
                     rel='canonical'
-                    href={`/contact`}
+                    href={`https://wisaw.com/contact`}
                   />
                 </Helmet>
         
