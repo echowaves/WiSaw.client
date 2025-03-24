@@ -3,6 +3,7 @@ const Footer = lazy(() => import("./Footer"))
 
 const About = () => {
   return (
+    <>
     <div className="container" style={{ padding: "20px" }}>
       <h1  style={{ textAlign: "left" }}>About WiSaw</h1>
       <p style={{ textAlign: "left" }}>
@@ -42,8 +43,10 @@ Thank you for being a part of our journey. Let’s create something amazing toge
 </p>
 <h2 style={{ textAlign: "left" }}>Contact Us</h2>
 <p style={{ textAlign: "left" }}>Have questions, feedback, or just want to say hello? <a href="/contact">Reach out to us</a>. We’d love to hear from you!</p>
-<Footer />
+
     </div>
+    <Footer />
+    </>
   );
 };
 

@@ -3,6 +3,7 @@ const Footer = lazy(() => import("./Footer"))
 
 const Terms = () => {
   return (
+    <>
     <div className="container" style={{ padding: "20px" }}>
       <h1 style={{ textAlign: "left" }}>Terms and Conditions</h1>
       <p style={{ textAlign: "left" }}>
@@ -70,8 +71,10 @@ We may update these Terms and Conditions at any time. Your continued use of WiSa
 If you have any questions or concerns about these Terms and Conditions, please <a href="https://www.echowaves.com/support" target="_blank" rel="noopener noreferrer">submit a request</a>.
 </p>
 
-<Footer />
+
     </div>
+    <Footer />
+    </>
   );
 };
 

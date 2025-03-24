@@ -29,7 +29,9 @@ const Footer = function () {
         textAlign: 'center',
       }}>
       <div style={{
-        backgroundColor: 'rgba(245, 245, 245, 0.8)',
+         width: "100%",
+         backgroundColor: "white",
+         boxShadow: '0 2px 5px',
       }}>
         <StyleRoot>
           <div
