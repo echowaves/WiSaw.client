@@ -1,17 +1,17 @@
 import React from "react"
 import { useLocation } from "react-router-dom"
 
-import Radium, { StyleRoot } from 'radium'
-import { bounce } from 'react-animations'
+// import Radium, { StyleRoot } from 'radium'
+// import { bounce } from 'react-animations'
 
-const styles = {
-  bounce: {
-    animation: 'x 2s',
-    animationName: Radium.keyframes(bounce, 'bounce'),
-    color: 'red',
-    fontWeight: 'bold',
-  },
-}
+// const styles = {
+//   bounce: {
+//     animation: 'x 2s',
+//     animationName: Radium.keyframes(bounce, 'bounce'),
+//     color: 'red',
+//     fontWeight: 'bold',
+//   },
+// }
 const Footer = function () {
   const location = useLocation()
   const embedded = new URLSearchParams(location.search).get("embedded")
@@ -33,13 +33,14 @@ const Footer = function () {
          backgroundColor: "white",
          boxShadow: '0 2px 5px',
       }}>
-        <StyleRoot>
+        {/* <StyleRoot> */}
           <div
-            style={styles.bounce}>
+            // style={styles.bounce}
+            >
             To incognito-share photos and comments get the app
 
           </div>
-        </StyleRoot>
+        {/* </StyleRoot> */}
         <div
           id="stores"
           style={{
