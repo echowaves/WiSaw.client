@@ -25,24 +25,26 @@ const About = () => {
         </p>
       <h2 style={{ textAlign: "left" }}>What Makes Us Different</h2>
       <p style={{ textAlign: "left" }}>
+      </p>
+      <ul style={{ textAlign: "left" }}>
         <li>
             <strong>Authenticity First:</strong> At WiSaw, we prioritize real, everyday visuals over staged or overly edited content. Each contribution reflects genuine human experiences.
         </li>
         <li>
-            <strong>Community-Driven:</strong>Our platform thrives on the creativity and passion of our contributors. We’re committed to building a supportive environment where creators can share their work with the world.
+            <strong>Community-Driven:</strong> Our platform thrives on the creativity and passion of our contributors. We're committed to building a supportive environment where creators can share their work with the world.
         </li>
         <li>
-            <strong>Completely Free:</strong>All content on WiSaw is free to use for personal and commercial purposes, with clear licensing terms that ensure peace of mind.
+            <strong>Completely Free:</strong> All content on WiSaw is free to use for personal and commercial purposes, with clear licensing terms that ensure peace of mind.
         </li>
-      </p>
+      </ul>
       <h2 style={{ textAlign: "left" }}>Join Our Community</h2>
-      <p style={{ textAlign: "left" }}>Whether you’re here to find the perfect photo or video for your project or to share your unique perspective, we welcome you to the WiSaw family. Together, we can redefine what stock media means by putting authenticity and creativity at the forefront.
+      <p style={{ textAlign: "left" }}>Whether you're here to find the perfect photo or video for your project or to share your unique perspective, we welcome you to the WiSaw family. Together, we can redefine what stock media means by putting authenticity and creativity at the forefront.
 
-Thank you for being a part of our journey. Let’s create something amazing together.
+Thank you for being a part of our journey. Let's create something amazing together.
 
 </p>
 <h2 style={{ textAlign: "left" }}>Contact Us</h2>
-<p style={{ textAlign: "left" }}>Have questions, feedback, or just want to say hello? <a href="/contact">Reach out to us</a>. We’d love to hear from you!</p>
+<p style={{ textAlign: "left" }}>Have questions, feedback, or just want to say hello? <a href="/contact">Reach out to us</a>. We'd love to hear from you!</p>
 
     </div>
     <Footer />

@@ -18,7 +18,7 @@ Last Updated: 03-23-2025
 
 <h2 style={{ textAlign: "left" }}>2. Use of Content</h2>
 
-<pre style={{ textAlign: "left" }}> 
+<ul style={{ textAlign: "left" }}>
 <li>All images and videos on WiSaw are free to use for personal and commercial purposes unless otherwise stated.</li>
 
 <li>Attribution is not required but is appreciated when possible.</li>
@@ -26,7 +26,7 @@ Last Updated: 03-23-2025
 <li>You may not sell, redistribute, or claim ownership of any content found on WiSaw.</li>
 
 <li>Content must not be used in any manner that is illegal, misleading, defamatory, or offensive.</li>
-</pre>
+</ul>
 
 <h2 style={{ textAlign: "left" }}>3. User-Generated Content</h2>
 <p style={{ textAlign: "left" }}>
