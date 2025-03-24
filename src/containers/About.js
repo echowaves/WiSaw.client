@@ -11,7 +11,7 @@ const About = () => {
         <title>Free Stock Photos & Videos -- What I Saw, about us</title>
         <link
             rel='canonical'
-            href={`/about`}
+            href={`https://wisaw.com/about`}
           />
         </Helmet>
 

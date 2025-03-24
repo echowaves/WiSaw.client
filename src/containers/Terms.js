@@ -13,7 +13,7 @@ const Terms = () => {
 
                         <link
                           rel='canonical'
-                          href={`/terms`}
+                          href={`https://wisaw.com/terms`}
                         />
                       </Helmet>
 
