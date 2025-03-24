@@ -1,10 +1,22 @@
 import React, { lazy } from "react";
+
+import { Helmet } from "react-helmet-async"
+
 const Footer = lazy(() => import("./Footer"))
 
 const Terms = () => {
   return (
     <>
     <div className="container" style={{ padding: "20px" }}>
+        <Helmet prioritizeSeoTags>
+        <title>Free Stock Photos & Videos -- What I Saw, out terms and conditions</title>
+
+                        <link
+                          rel='canonical'
+                          href={`/terms`}
+                        />
+                      </Helmet>
+
       <h1 style={{ textAlign: "left" }}>Terms and Conditions</h1>
       <p style={{ textAlign: "left" }}>
 

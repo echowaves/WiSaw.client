@@ -1,10 +1,22 @@
 import React, { lazy } from "react";
+
+import { Helmet } from "react-helmet-async"
+
 const Footer = lazy(() => import("./Footer"))
 
 const Contact = () => {
 return (
     <>
     <div className="container" style={{ padding: "20px", textAlign: "left" }}>
+                <Helmet prioritizeSeoTags>
+                <title>Free Stock Photos & Videos -- What I Saw, contact us</title>
+
+                  <link
+                    rel='canonical'
+                    href={`/contact`}
+                  />
+                </Helmet>
+        
         <h1>Contact Us</h1>
         <p style={{ textAlign: "left" }}>
             We&apos;d love to hear from you! If you have any questions, feedback, or concerns,
