@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["33P3Q88Y8K.com.echowaves.Wisaw"],
+        "appIDs": ["33P3Q88Y8K.com.echowaves"],
         "components": [
           {
             "/": "*",
