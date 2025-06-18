@@ -1,0 +1,12 @@
+# Verification files for universal deep linking
+
+## Apple App Site Association
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+
+/apple-app-site-association
+  Content-Type: application/json
+
+## Android Asset Links  
+/.well-known/assetlinks.json
+  Content-Type: application/json
