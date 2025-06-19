@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import React, { lazy, Suspense } from "react"
+import { lazy, Suspense } from "react"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 
 // import logo from './logo.svg'
