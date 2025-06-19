@@ -38,6 +38,11 @@ function App() {
                 path='/search/:searchString'
                 element={<SearchComponent />}
               />
+              <Route
+                exact
+                path='/search'
+                element={<SearchComponent />}
+              />
               <Route path='/about' element={<About />} />
               <Route path='/contact' element={<Contact />} />
               <Route path='/terms' element={<Terms />} />
