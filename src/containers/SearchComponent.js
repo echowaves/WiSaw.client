@@ -28,7 +28,6 @@ import * as CONST from "../consts"
 
 const SearchComponent = function () {
   const { searchString } = useParams()
-
   const navigate = useNavigate()
 
   const [internalState, setInternalState] = useState({
@@ -36,14 +35,21 @@ const SearchComponent = function () {
     requestComplete: false,
   })
 
-  const [searchText, setSearchText] = useState(searchString)
+  const [searchText, setSearchText] = useState(searchString || "")
   const handleSearch = function (event) {
     if (event) {
       event.preventDefault()
     }
     if (searchText && searchText.trim()) {
-      navigate(`/search/${encodeURIComponent(searchText.trim())}`)
-      setSearchText("")
+      const newSearchTerm = searchText.trim()
+      
+      // If searching for the same term, just re-run the search
+      if (newSearchTerm === searchString) {
+        update({ searchString: newSearchTerm })
+      } else {
+        // Navigate to new search term
+        navigate(`/search/${encodeURIComponent(newSearchTerm)}`)
+      }
     }
   }
   
@@ -55,18 +61,20 @@ const SearchComponent = function () {
     return (
       <div
       style={{
-        width: "80%",
+        width: searchString ? "80%" : "100%",
         position: "relative",
-        alignSelf: "right",
-        justifyContent: "right",
+        alignSelf: searchString ? "right" : "center",
+        justifyContent: searchString ? "right" : "center",
+        display: "flex",
       }}
     >
       <div
         style={{
           display: "flex",
-          justifyContent: "right",
+          justifyContent: searchString ? "right" : "center",
           paddingBottom: "10px",
           paddingTop: "20px",
+          width: "100%",
         }}
       >
         <Form onSubmit={handleSearch}>
@@ -78,6 +86,10 @@ const SearchComponent = function () {
                 value={searchText}
                 onChange={searchTextHandler}
                 aria-label="Search input"
+                style={{
+                  minWidth: searchString ? "250px" : "400px",
+                  fontSize: searchString ? "14px" : "16px"
+                }}
               />
             </Col>
             <Col xs='auto'>
@@ -94,14 +106,29 @@ const SearchComponent = function () {
 
 
   useEffect(() => {
+    // Update searchText state when URL parameter changes
+    setSearchText(searchString || "")
+    
     if (searchString) {
       update({ searchString })
+    } else {
+      // If no search string, just show the search form
+      setInternalState({
+        photos: [],
+        requestComplete: true,
+      })
     }
-  }, []) // eslint-disable-line
+  }, [searchString]) // Watch searchString parameter changes
 
   const { photos, requestComplete } = internalState
 
   const update = async ({ searchString }) => {    
+    // Set loading state
+    setInternalState({
+      photos: [],
+      requestComplete: false,
+    })
+    
     ReactGA.send({
       hitType: "pageview",
       page: `/search/${searchString}`,
@@ -158,11 +185,19 @@ const SearchComponent = function () {
     }
   }
 
-  if (requestComplete ) {
+  if (requestComplete) {
     return (<>
       {renderSearchComponent()}
       <div className='PhotosComponent'>
-      {photos?.length === 0 && (<h1>Nothing found</h1>)}
+      {/* Show message when no search string provided */}
+      {!searchString && (
+        <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+          <h2>Search WiSaw</h2>
+          <p>Enter a search term to find photos and videos</p>
+        </div>
+      )}
+      {/* Show "nothing found" only when we have a search string but no results */}
+      {searchString && photos?.length === 0 && (<h1>Nothing found</h1>)}
         {photos?.length > 0 && (<Masonry cols={1} gap={10}>
           {photos.map((tile) => (
             <div
@@ -217,44 +252,43 @@ const SearchComponent = function () {
 
 
         <Helmet prioritizeSeoTags>
-          <title>{`WiSaw: searching for ${searchString}`}</title>
+          <title>{searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}</title>
 
           <link
             rel='canonical'
-            href={`https://wisaw.com/search/${searchString}`}
+            href={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
           />
-
 
           <meta
             name='description'
-            content={`WiSaw: searching for ${searchString}`}
+            content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
           />
 
           <meta
             property='og:title'
-            content={`WiSaw: searching for ${searchString}`}
+            content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
           />
           <meta
             property='og:description'
-            content={`WiSaw: searching for ${searchString}`}
+            content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
           />
           <meta name='image' property='og:image' content='' />
           <meta
             property='og:url'
-            content={`https://wisaw.com/search/${searchString}`}
+            content={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
           />
 
           <meta
             name='twitter:title'
-            content={`WiSaw: searching for ${searchString}`}
+            content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
           />
           <meta
             name='twitter:card'
-            content={`WiSaw: searching for ${searchString}`}
+            content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
           />
           <meta
             name='twitter:description'
-            content={`WiSaw: searching for ${searchString}`}
+            content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
           />
           <meta name='twitter:image' content='' />
         </Helmet>
