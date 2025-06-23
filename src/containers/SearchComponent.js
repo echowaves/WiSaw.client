@@ -1,4 +1,4 @@
-import { lazy, useEffect, useState } from "react"
+import React, { useEffect, useState, lazy } from "react"
 import {
   Link,
   useNavigate, useParams
