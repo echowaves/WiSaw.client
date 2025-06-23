@@ -3,12 +3,7 @@
     "details": [
       {
         "appIDs": ["33P3Q88Y8K.com.echowaves"],
-        "components": [
-          {
-            "/": "*",
-            "comment": "Matches all paths"
-          }
-        ]
+        "paths": ["/photos/*", "/friends/*"]
       }
     ]
   },
