@@ -1,4 +1,4 @@
-import { lazy, useEffect, useState } from "react"
+import React, { useEffect, useState, lazy } from "react"
 import ReactPlayer from 'react-player'
 
 import { Helmet } from "react-helmet-async"
@@ -87,7 +87,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const response = (
         await CONST.gqlClient.query({
           query: gql`
-            query getPhotoAllCurr($photoId: ID!) {
+            query getPhotoAllCurr($photoId: String!) {
               getPhotoAllCurr(photoId: $photoId) {
                 photo {
                   imgUrl
@@ -130,7 +130,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const response = (
         await CONST.gqlClient.query({
           query: gql`
-            query getPhotoAllPrev($photoId: ID!) {
+            query getPhotoAllPrev($photoId: String!) {
               getPhotoAllPrev(photoId: $photoId) {
                 photo {
                   imgUrl
@@ -174,7 +174,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
       const response = (
         await CONST.gqlClient.query({
           query: gql`
-            query getPhotoAllNext($photoId: ID!) {
+            query getPhotoAllNext($photoId: String!) {
               getPhotoAllNext(photoId: $photoId) {
                 photo {
                   imgUrl
