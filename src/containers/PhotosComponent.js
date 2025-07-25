@@ -1,4 +1,4 @@
-import React, { lazy, useEffect, useState } from "react"
+import { lazy, useEffect, useState } from "react"
 import ReactPlayer from 'react-player'
 
 import { Helmet } from "react-helmet-async"
@@ -65,7 +65,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
   const fetchDimensions = async ({photoId}) => {
     try {
       const img = new Image()
-      img.src = `https://img.wisaw.com/${photoId}-thumb`
+      img.src = `https://img.wisaw.com/${photoId}-thumb.webp`
       await img.decode()
 
       const maxDimention = screenWidth < 700 ? 300 : 700

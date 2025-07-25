@@ -1,7 +1,7 @@
-import React, { useEffect, useState, lazy } from "react"
+import { lazy, useEffect, useState } from "react"
 import {
-  Link,
-  useNavigate, useParams
+    Link,
+    useNavigate, useParams
 } from "react-router-dom"
 
 const Footer = lazy(() => import("./Footer"))
