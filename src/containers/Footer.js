@@ -1,104 +1,115 @@
-import React from "react"
 import { useLocation } from "react-router-dom"
+import "./Footer.css"
 
-// import Radium, { StyleRoot } from 'radium'
-// import { bounce } from 'react-animations'
-
-// const styles = {
-//   bounce: {
-//     animation: 'x 2s',
-//     animationName: Radium.keyframes(bounce, 'bounce'),
-//     color: 'red',
-//     fontWeight: 'bold',
-//   },
-// }
 const Footer = function () {
   const location = useLocation()
   const embedded = new URLSearchParams(location.search).get("embedded")
+  
   if (embedded) {
-    return (<div />)
+    return <div />
   }
-  return (
-    <div
-      id="footer"
-      style={{
-        // position: 'fixed',
-        // left: 0,
-        // bottom: 0,
-        width: '100%',
-        textAlign: 'center',
-      }}>
-      <div style={{
-         width: "100%",
-         backgroundColor: "white",
-         boxShadow: '0 2px 5px',
-      }}>
-        {/* <StyleRoot> */}
-          <div
-            // style={styles.bounce}
-            >
-            To incognito-share photos and comments get the app
 
+  return (
+    <footer className="modern-footer">
+      <div className="footer-content">
+        {/* App Promotion Section */}
+        <div className="app-promotion">
+          <div className="app-promo-text">
+            <h3>Get the Mobile App</h3>
+            <p>Share photos and comments privately with the WiSaw mobile app</p>
           </div>
-        {/* </StyleRoot> */}
-        <div
-          id="stores"
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            padding: '5px',
-          }}>
-          <div
-            style={{
-              margin: '5px',
-            }}>
+          
+          <div className="app-stores">
             <a
-            target="_blank" rel="noopener noreferrer"
-              href="http://itunes.apple.com/us/app/wisaw/id1299949122">
-              <div>
-                <img
-                  width="177px"
-                  height="56px"
-                  alt="wisaw itunes store"
-                  src="/appstore.webp"
-                />
-              </div>
+              href="http://itunes.apple.com/us/app/wisaw/id1299949122"
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="store-link app-store"
+              aria-label="Download WiSaw from App Store"
+            >
+              <img
+                width="156"
+                height="52"
+                alt="Download on the App Store"
+                src="/appstore.webp"
+              />
             </a>
-          </div>
-          <div
-            style={{
-              margin: '5px',
-            }}>
+            
             <a
-            target="_blank" rel="noopener noreferrer"
-              href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw">
-              <div>
-                <img
-                  width="176px"
-                  height="53px"
-                  alt="wisaw google play store"
-                  src="/googleplay.webp"
-                />
-              </div>
+              href="http://play.google.com/store/apps/details?id=com.echowaves.wisaw"
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="store-link google-play"
+              aria-label="Get WiSaw on Google Play"
+            >
+              <img
+                width="156"
+                height="52"
+                alt="Get it on Google Play"
+                src="/googleplay.webp"
+              />
             </a>
           </div>
         </div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-                 
-        }}>
-          <a target="_blank" rel="noopener noreferrer" href="https://www.echowaves.com" style={{color: 'blue', fontWeight: '600' }}>© echowaves</a>
-					&nbsp;&nbsp;
-          <a target="_blank" rel="noopener noreferrer" href="https://www.echowaves.com/support" style={{color: 'blue', fontWeight: '600' }}>support</a>
-					&nbsp;&nbsp;
-          <a target="_blank" rel="noopener noreferrer" href="https://www.echowaves.com/blog" style={{color: 'blue', fontWeight: '600' }}>blog</a>
+
+        {/* Divider */}
+        <div className="footer-divider"></div>
+
+        {/* Links Section */}
+        <div className="footer-links">
+          <div className="footer-section">
+            <h4>Company</h4>
+            <div className="link-group">
+              <a href="https://www.echowaves.com" target="_blank" rel="noopener noreferrer">
+                About Echowaves
+              </a>
+              <a href="https://www.echowaves.com/blog" target="_blank" rel="noopener noreferrer">
+                Blog
+              </a>
+              <a href="/about">
+                About WiSaw
+              </a>
+            </div>
+          </div>
+
+          <div className="footer-section">
+            <h4>Support</h4>
+            <div className="link-group">
+              <a href="https://www.echowaves.com/support" target="_blank" rel="noopener noreferrer">
+                Help Center
+              </a>
+              <a href="/contact">
+                Contact Us
+              </a>
+              <a href="/terms">
+                Terms & Privacy
+              </a>
+            </div>
+          </div>
+
+          <div className="footer-section">
+            <h4>Community</h4>
+            <div className="link-group">
+              <a href="/" className="footer-brand">
+                WiSaw Gallery
+              </a>
+              <span className="hashtag">#wisaw</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="footer-bottom">
+          <div className="copyright">
+            <span>© {new Date().getFullYear()} Echowaves. All rights reserved.</span>
+          </div>
+          <div className="footer-logo">
+            <span className="brand-text">WiSaw</span>
+          </div>
         </div>
       </div>
-    </div>
+    </footer>
   )
 }
 
 export default Footer
-
-// export default Footer

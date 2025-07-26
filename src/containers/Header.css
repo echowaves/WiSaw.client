@@ -1,49 +1,106 @@
 /* Header.css */
 #header {
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   position: sticky;
   top: 0;
   z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+#header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%);
+  z-index: -1;
 }
 
 .header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 24px;
   max-width: 1200px;
   margin: 0 auto;
-  height: 70px;
+  height: 80px;
 }
 
+/* Logo Section */
 .logo-container {
-  display: flex;
-  align-items: center;
   transition: transform 0.3s ease;
 }
 
 .logo-container:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
 
-.logo-text {
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.logo-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.logo-icon:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(5deg) scale(1.05);
+}
+
+.logo-icon img {
+  border-radius: 12px;
+}
+
+.logo-text-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logo-title {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-left: 10px;
+  font-size: 1.75rem;
+  font-weight: 800;
   color: #1a202c;
-  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
   background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  line-height: 1;
+  text-shadow: 0 2px 10px rgba(0, 255, 148, 0.3);
 }
 
+.logo-subtitle {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(26, 32, 44, 0.7);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: -2px;
+}
+
+/* Navigation */
 .nav-menu {
   display: flex;
   align-items: center;
@@ -54,24 +111,27 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  gap: 8px;
 }
 
 .nav-menu li {
-  margin: 0 10px;
+  position: relative;
 }
 
 .nav-menu a {
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
-  color: #1a202c;
-  font-size: 1rem;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+  color: rgba(26, 32, 44, 0.8);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
-  transform: translateZ(0); /* Hardware acceleration */
-  will-change: transform, background-color; /* Optimize for animations */
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid transparent;
+  backdrop-filter: blur(10px);
 }
 
 .nav-menu a::before {
@@ -81,45 +141,74 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
-  border-radius: 20px;
+  border-radius: 16px;
+  z-index: -1;
 }
 
-.nav-menu a:hover::before {
+.nav-menu a:hover,
+.nav-menu a.active {
+  color: white;
+  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 148, 0.4);
+}
+
+.nav-menu a:hover::before,
+.nav-menu a.active::before {
   opacity: 1;
 }
 
-.nav-menu a:hover {
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
-  color: white;
-  transform: translateY(-1px) translateZ(0);
-  box-shadow: 0 4px 15px rgba(0, 255, 148, 0.5);
-}
-
+/* Hamburger Menu */
 .hamburger-menu {
   display: none;
   flex-direction: column;
   justify-content: space-between;
-  width: 30px;
-  height: 21px;
+  width: 28px;
+  height: 20px;
   cursor: pointer;
-}
-
-.hamburger-bar {
-  height: 3px;
-  width: 100%;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
-  border-radius: 2px;
+  padding: 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
 }
 
-/* For mobile devices */
+.hamburger-menu:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.hamburger-bar {
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Mobile Responsive Design */
 @media screen and (max-width: 768px) {
+  .header-container {
+    padding: 0 16px;
+    height: 70px;
+  }
+
+  .logo-title {
+    font-size: 1.5rem;
+  }
+
+  .logo-subtitle {
+    font-size: 0.7rem;
+  }
+
   .hamburger-menu {
     display: flex;
-    z-index: 1000;
+    z-index: 1001;
   }
 
   .hamburger-bar.open:nth-child(1) {
@@ -128,6 +217,7 @@
 
   .hamburger-bar.open:nth-child(2) {
     opacity: 0;
+    transform: scale(0);
   }
 
   .hamburger-bar.open:nth-child(3) {
@@ -139,31 +229,86 @@
     top: 70px;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
     flex-direction: column;
     align-items: center;
     height: 0;
     overflow: hidden;
-    transition: height 0.3s ease;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 100;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 1000;
+  }
+
+  .nav-menu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 255, 148, 0.05) 0%, rgba(114, 12, 240, 0.05) 100%);
+    z-index: -1;
   }
 
   .nav-menu.open {
     height: auto;
+    padding: 20px 0;
   }
 
   .nav-menu ul {
     flex-direction: column;
     width: 100%;
-    padding: 20px 0;
+    gap: 12px;
+    padding: 0 20px;
   }
 
   .nav-menu li {
-    margin: 10px 0;
+    width: 100%;
+  }
+
+  .nav-menu a {
     width: 100%;
     text-align: center;
+    padding: 16px 24px;
+    font-size: 1rem;
+    border-radius: 12px;
+    justify-content: center;
+  }
+
+  .nav-menu a:hover,
+  .nav-menu a.active {
+    transform: scale(1.02);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .header-container {
+    padding: 0 12px;
+  }
+
+  .logo-link {
+    gap: 8px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .logo-icon img {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .logo-title {
+    font-size: 1.25rem;
+  }
+
+  .logo-subtitle {
+    font-size: 0.65rem;
   }
 }
