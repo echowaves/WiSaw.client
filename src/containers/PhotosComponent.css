@@ -171,22 +171,27 @@
   color: #4c1d95;
   text-decoration: none;
   transition: all 0.3s ease;
-  padding: 2px 8px;
-  border-radius: 20px;
-  margin: 0 4px;
+  padding: 6px 12px;
+  border-radius: 25px;
+  margin: 0 4px 8px 0;
   display: inline-block;
   transform: translateZ(0); /* Hardware acceleration */
   will-change: transform, background-color; /* Optimize for animations */
-  font-weight: 500;
-  border: 1px solid transparent;
+  font-weight: 600;
+  border: 2px solid #e2e8f0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 245, 251, 0.95) 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  font-size: 14px;
 }
 
 .recognition-tags a:hover {
   background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
   color: white;
-  transform: translateY(-1px) translateZ(0);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 12px rgba(0, 255, 148, 0.3);
+  transform: translateY(-2px) translateZ(0);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 255, 148, 0.4);
 }
 
 .comments-section {
