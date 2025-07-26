@@ -365,50 +365,110 @@ this methid will fetch image into cache -- will work super fast on next call to 
           )}
 
           {textDetections?.length > 0 && (
-            <div style={{ margin: "20px 0" }}>
-              <div style={{ textAlign: "center", marginBottom: "15px" }}>
-                <b className="text-detection" style={{
-                  fontSize: "18px",
-                  fontWeight: '700'
-                }}>Recognized Text</b>
+            <div style={{ 
+              margin: "20px 0",
+              padding: "25px",
+              background: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "16px",
+              backdropFilter: "blur(15px)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)"
+            }}>
+              <div style={{ 
+                textAlign: "center", 
+                marginBottom: "20px",
+                padding: "10px 0",
+                borderBottom: "2px solid rgba(0, 255, 148, 0.2)"
+              }}>
+                <h3 style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  margin: "0",
+                  background: "linear-gradient(135deg, #00ff94 0%, #720cf0 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  textShadow: "none"
+                }}>📝 Recognized Text</h3>
               </div>
-              <div style={{ textAlign: "center" }}>
+              <div style={{ 
+                textAlign: "center",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "8px"
+              }}>
                 {textDetections.map((text) => (
-                  <h2 key={text.Id} style={{ margin: "10px 0" }}>
-                    <div className="text-detection" style={{ 
-                      fontSize: `${Math.max(Math.min(text.Confidence, 100), 60)}%`,
-                      lineHeight: 1.4,
-                      opacity: Math.max(0.5, text.Confidence / 100),
-                      fontWeight: Math.max(400, 400 + (text.Confidence / 100) * 300)
-                    }}>
-                      {stringifyObject(text.DetectedText).replace(/'/g, "")}
-                    </div>
-                  </h2>
+                  <div key={text.Id} style={{ 
+                    fontSize: `${Math.max(Math.min(text.Confidence, 100), 60)}%`,
+                    lineHeight: 1.6,
+                    opacity: Math.max(0.6, text.Confidence / 100),
+                    fontWeight: Math.max(500, 500 + (text.Confidence / 100) * 200),
+                    padding: "8px 14px",
+                    background: "linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%)",
+                    borderRadius: "20px",
+                    border: "1px solid rgba(0, 255, 148, 0.2)",
+                    display: "inline-block",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 2px 8px rgba(0, 255, 148, 0.1)"
+                  }}>
+                    "{stringifyObject(text.DetectedText).replace(/'/g, "")}"
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
           {moderationLabels?.length > 0 && (
-            <div style={{ margin: "20px 0", paddingBottom: "15px" }}>
-              <div style={{ textAlign: "center", marginBottom: "15px" }}>
-                <b className="moderation-labels" style={{
-                  fontSize: "18px",
-                  fontWeight: '700'
-                }}>Moderation Tags</b>
+            <div style={{ 
+              margin: "20px 0", 
+              padding: "25px",
+              background: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "16px",
+              backdropFilter: "blur(15px)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)"
+            }}>
+              <div style={{ 
+                textAlign: "center", 
+                marginBottom: "20px",
+                padding: "10px 0",
+                borderBottom: "2px solid rgba(255, 94, 77, 0.2)"
+              }}>
+                <h3 style={{
+                  fontSize: "20px",
+                  fontWeight: "700",
+                  margin: "0",
+                  background: "linear-gradient(135deg, #ff5e4d 0%, #d32f2f 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  textShadow: "none"
+                }}>⚠️ Content Moderation</h3>
               </div>
-              <div style={{ textAlign: "center" }}>
+              <div style={{ 
+                textAlign: "center",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "8px"
+              }}>
                 {moderationLabels.map((label) => (
-                  <h3 key={label.Name} style={{ margin: "8px 0" }}>
-                    <div className="moderation-labels" style={{ 
-                      fontSize: `${Math.max(Math.min(label.Confidence, 100), 60)}%`,
-                      lineHeight: 1.4,
-                      opacity: Math.max(0.5, label.Confidence / 100),
-                      fontWeight: Math.max(400, 400 + (label.Confidence / 100) * 300)
-                    }}>
-                      {stringifyObject(label.Name).replace(/'/g, "")}
-                    </div>
-                  </h3>
+                  <div key={label.Name} style={{ 
+                    fontSize: `${Math.max(Math.min(label.Confidence, 100), 60)}%`,
+                    lineHeight: 1.6,
+                    opacity: Math.max(0.6, label.Confidence / 100),
+                    fontWeight: Math.max(500, 500 + (label.Confidence / 100) * 200),
+                    padding: "8px 14px",
+                    background: "linear-gradient(135deg, rgba(255, 94, 77, 0.1) 0%, rgba(211, 47, 47, 0.1) 100%)",
+                    borderRadius: "18px",
+                    border: "1px solid rgba(255, 94, 77, 0.3)",
+                    display: "inline-block",
+                    transition: "all 0.3s ease",
+                    boxShadow: "0 2px 8px rgba(255, 94, 77, 0.1)"
+                  }}>
+                    {stringifyObject(label.Name).replace(/'/g, "")}
+                  </div>
                 ))}
               </div>
             </div>
