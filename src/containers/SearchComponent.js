@@ -1,8 +1,8 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, useEffect, useState } from "react"
 import {
-    Link,
-    useNavigate, useParams
+  Link,
+  useNavigate, useParams
 } from "react-router-dom"
 
 const Footer = lazy(() => import("./Footer"))
@@ -10,6 +10,8 @@ const Footer = lazy(() => import("./Footer"))
 import { Helmet } from "react-helmet-async"
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import { Bars } from "react-loader-spinner"
+
+import InfiniteScroll from "react-infinite-scroll-component"
 
 import Button from "react-bootstrap/Button"
 import Col from "react-bootstrap/Col"
@@ -19,8 +21,6 @@ import Row from "react-bootstrap/Row"
 import "./PhotosComponent.css"
 
 import ReactGA from "react-ga4"
-import Masonry from "react-masonry-component"
-
 
 // import PropTypes from 'prop-types'
 import { gql } from "@apollo/client"
@@ -31,11 +31,10 @@ const SearchComponent = function () {
   const { searchString } = useParams()
   const navigate = useNavigate()
 
-  const [internalState, setInternalState] = useState({
-    photos: [],
-    requestComplete: false,
-  })
-
+  const [photos, setPhotos] = useState([])
+  const [pageNumber, setPageNumber] = useState(0)
+  const [noMoreData, setNoMoreData] = useState(true)
+  const [requestComplete, setRequestComplete] = useState(false)
   const [searchText, setSearchText] = useState(searchString || "")
   const handleSearch = function (event) {
     if (event) {
@@ -61,21 +60,11 @@ const SearchComponent = function () {
   const renderSearchComponent = function () {
     return (
       <div
-      style={{
-        width: searchString ? "80%" : "100%",
-        position: "relative",
-        alignSelf: searchString ? "right" : "center",
-        justifyContent: searchString ? "right" : "center",
-        display: "flex",
-      }}
-    >
-      <div
         style={{
           display: "flex",
-          justifyContent: searchString ? "right" : "center",
+          justifyContent: "right",
+          // alignItems: 'center',
           paddingBottom: "10px",
-          paddingTop: "20px",
-          width: "100%",
         }}
       >
         <Form onSubmit={handleSearch}>
@@ -87,10 +76,6 @@ const SearchComponent = function () {
                 value={searchText}
                 onChange={searchTextHandler}
                 aria-label="Search input"
-                style={{
-                  minWidth: searchString ? "250px" : "400px",
-                  fontSize: searchString ? "14px" : "16px"
-                }}
               />
             </Col>
             <Col xs='auto'>
@@ -100,7 +85,6 @@ const SearchComponent = function () {
             </Col>
           </Row>
         </Form>
-      </div>
       </div>
     )
   }
@@ -114,21 +98,17 @@ const SearchComponent = function () {
       update({ searchString })
     } else {
       // If no search string, just show the search form
-      setInternalState({
-        photos: [],
-        requestComplete: true,
-      })
+      setPhotos([])
+      setRequestComplete(true)
     }
   }, [searchString]) // Watch searchString parameter changes
 
-  const { photos, requestComplete } = internalState
-
   const update = async ({ searchString }) => {    
     // Set loading state
-    setInternalState({
-      photos: [],
-      requestComplete: false,
-    })
+    setPhotos([])
+    setPageNumber(0)
+    setNoMoreData(true)
+    setRequestComplete(false)
     
     ReactGA.send({
       hitType: "pageview",
@@ -153,12 +133,15 @@ const SearchComponent = function () {
               ) {
                 photos {
                   id
+                  uuid
                   imgUrl
                   thumbUrl
+                  videoUrl
+                  video
                   commentsCount
                   watchersCount
                   lastComment
-                  video
+                  createdAt
                 }
                 batch
                 noMoreData
@@ -167,23 +150,148 @@ const SearchComponent = function () {
           `,
           variables: {
             searchTerm: sanitizedSearchString,
-            batch: "123123", // Convert to string to avoid potential integer overflow
+            batch: "0", // Convert to string to avoid potential integer overflow
             pageNumber: 0,
           },
         })
         
-        setInternalState({
-          photos: response.data.feedForTextSearch.photos || [],
-          requestComplete: true,
-        })
+        setPhotos(response.data.feedForTextSearch.photos || [])
+        setPageNumber(1)
+        setNoMoreData(response.data.feedForTextSearch.noMoreData)
+        setRequestComplete(true)
       } catch (err) {
         console.error("Search error:", err.message) // Use console.error and limit what's logged
-        setInternalState({
-          photos: [],
-          requestComplete: true,
-        })
+        setPhotos([])
+        setRequestComplete(true)
       }
     }
+  }
+
+  const retrieveMorePhotos = async () => {
+    if (!searchString) return
+
+    try {
+      const sanitizedSearchString = searchString.trim();
+      const response = await CONST.gqlClient.query({
+        query: gql`
+          query feedForTextSearch(
+            $searchTerm: String!
+            $pageNumber: Int!
+            $batch: String!
+          ) {
+            feedForTextSearch(
+              searchTerm: $searchTerm
+              pageNumber: $pageNumber
+              batch: $batch
+            ) {
+              photos {
+                id
+                uuid
+                imgUrl
+                thumbUrl
+                videoUrl
+                video
+                commentsCount
+                watchersCount
+                lastComment
+                createdAt
+              }
+              batch
+              noMoreData
+            }
+          }
+        `,
+        variables: {
+          searchTerm: sanitizedSearchString,
+          batch: "0",
+          pageNumber,
+        },
+      })
+
+      setPageNumber(pageNumber + 1)
+      setNoMoreData(response.data.feedForTextSearch.noMoreData)
+      setPhotos([...photos, ...response.data.feedForTextSearch.photos])
+      
+      return {
+        photos: response.data.feedForTextSearch.photos,
+        batch: response.data.feedForTextSearch.batch,
+        noMoreData: response.data.feedForTextSearch.noMoreData,
+      }
+    } catch (err) {
+      console.error("Error retrieving more photos:", err.message)
+      return {
+        photos: [],
+        batch: "0",
+        noMoreData: true
+      }
+    }
+  }
+
+  const renderInfiniteFeed = function () {
+    return (
+      <InfiniteScroll
+        style={{
+          position: "relative",
+          overflow: 'unset',
+        }}
+        dataLength={photos.length} //This is important field to render the next data
+        next={retrieveMorePhotos}
+        hasMore={!noMoreData}
+        loader={<div aria-label="Loading content">Loading...</div>}
+        endMessage={
+          <p style={{ textAlign: "center" }}>
+            <b>Yay! You have seen it all</b>
+          </p>
+        }
+      >
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-start',
+            gap: '10px',
+            width: '100%'
+          }}
+        >
+          {photos.map((photo) => (
+            <Link
+              to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
+              style={{ width: "250px" }}
+              key={photo.id}
+            >
+              {photo?.lastComment && (<><img
+                src={photo.thumbUrl}
+                style={{  padding: 5 }}
+                width={"250px"}
+                height="auto"
+                alt={photo?.lastComment || `Photo ${photo.id}`}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/logo192.png"; // Fallback image
+                }}
+              />
+              <div style={{ width: "250px", paddingBottom: 15 }}>
+                {/* Truncate the comment to prevent potential XSS */}
+                {photo?.lastComment.substring(0, 150)}
+              </div></>
+              )}
+              {!photo?.lastComment && (<img
+                src={photo.thumbUrl}
+                style={{padding: 5 }}
+                width={"250px"}
+                height="auto"
+                alt={`Photo ${photo.id}`}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "/logo192.png"; // Fallback image
+                }}
+              />
+              )}
+            </Link>
+          ))}
+        </div>
+      </InfiniteScroll>
+    )
   }
 
   if (requestComplete) {
@@ -194,16 +302,13 @@ const SearchComponent = function () {
           width: "100%",
           position: "relative",
           justifyContent: "center",
-          minHeight: "100vh",
-          background: "linear-gradient(135deg, #00ff94 0%, #720cf0 100%)",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-          fontWeight: 400,
-          fontSize: "16px",
-          color: "#1a202c"
+          // textAlign: 'center',
+          // backgroundColor: '#0666a3'
         }}
       >
         <div
           style={{
+            // width: '100%',
             maxWidth: "1120px",
             width: "90%",
             position: "relative",
@@ -211,7 +316,16 @@ const SearchComponent = function () {
             justifyContent: "center",
           }}
         >
+          {searchString && (
+            <h1 style={{
+              fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+              lineHeight: "1.2",
+              marginBottom: "1rem"
+            }}>Search results for: {searchString}</h1>
+          )}
+          
           {renderSearchComponent()}
+          
           {/* Show message when no search string provided */}
           {!searchString && (
             <div style={{ textAlign: 'center', padding: '50px 20px' }}>
@@ -219,54 +333,16 @@ const SearchComponent = function () {
               <p>Enter a search term to find photos and videos</p>
             </div>
           )}
+          
           {/* Show "nothing found" only when we have a search string but no results */}
-          {searchString && photos?.length === 0 && (<h1>Nothing found</h1>)}
-          {photos?.length > 0 && (
-            <Masonry 
-              className="react-masonry-component"
-              style={{}}
-            >
-              {photos.map((photo) => (
-                <Link
-                  to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                  style={{ width: "250px" }}
-                  key={photo.id}
-                >
-                  {photo?.lastComment && (
-                    <>
-                      <img
-                        src={photo.thumbUrl}
-                        style={{ padding: 5 }}
-                        width={"250px"}
-                        height="auto"
-                        alt={photo?.lastComment || `Photo ${photo.id}`}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = "/logo192.png"; // Fallback image
-                        }}
-                      />
-                      <div style={{ width: "250px", paddingBottom: 15 }}>
-                        {photo?.lastComment.substring(0, 150)}
-                      </div>
-                    </>
-                  )}
-                  {!photo?.lastComment && (
-                    <img
-                      src={photo.thumbUrl}
-                      style={{ padding: 5 }}
-                      width={"250px"}
-                      height="auto"
-                      alt={`Photo ${photo.id}`}
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "/logo192.png"; // Fallback image
-                      }}
-                    />
-                  )}
-                </Link>
-              ))}
-            </Masonry>
+          {searchString && photos?.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+              <h2>Nothing found</h2>
+              <p>Try adjusting your search terms</p>
+            </div>
           )}
+          
+          {photos?.length > 0 && renderInfiniteFeed()}
 
           <Helmet prioritizeSeoTags>
             <title>{searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}</title>
