@@ -229,7 +229,7 @@
     top: 70px;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px);
     flex-direction: column;
     align-items: center;
@@ -275,6 +275,8 @@
     font-size: 1rem;
     border-radius: 12px;
     justify-content: center;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.4);
   }
 
   .nav-menu a:hover,
