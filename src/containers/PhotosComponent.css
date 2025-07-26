@@ -427,3 +427,11 @@ a[style*="width: 250px"] div {
   display: inline-block !important;
   vertical-align: top !important;
 }
+
+.photo-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+  object-fit: cover;
+}

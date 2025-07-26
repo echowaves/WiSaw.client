@@ -5,8 +5,8 @@ import { Helmet } from "react-helmet-async"
 import InfiniteScroll from "react-infinite-scroll-component"
 import Masonry from "react-masonry-component"
 import {
-    Link,
-    useNavigate,
+  Link,
+  useNavigate,
 } from "react-router-dom"
 
 import Button from "react-bootstrap/Button"
@@ -180,40 +180,78 @@ const Home = function () {
       >
         <Masonry style={{}}>
           {photos.map((photo) => (
-            <Link
-              to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-              style={{ width: "250px" }}
+            <div
+              style={{
+                borderRadius: "12px",
+                backgroundColor: "white",
+                margin: "3px",
+                overflow: "hidden",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+              }}
               key={photo.id}
             >
-              {photo?.lastComment && (<><img
-                src={photo.thumbUrl}
-                style={{  padding: 5 }}
-                width={"250px"}
-                height="auto"
-                alt={photo?.lastComment || `Photo ${photo.id}`}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/logo192.png"; // Fallback image
-                }}
-              />
-              <div style={{ width: "250px", paddingBottom: 15 }}>
+              <Link
+                to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
+                style={{ width: "244px", display: "block", padding: "3px" }}
+              >
+              {photo?.lastComment && (<>
+              <div style={{
+                borderRadius: "12px",
+                overflow: "hidden",
+                display: "block",
+                width: "100%",
+                lineHeight: 0
+              }}>
+                <img
+                  src={photo.thumbUrl}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    objectFit: "cover",
+                    margin: 0,
+                    padding: 0
+                  }}
+                  alt={photo?.lastComment || `Photo ${photo.id}`}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/logo192.png"; // Fallback image
+                  }}
+                />
+              </div>
+              <div style={{ width: "100%", paddingBottom: 15 }}>
                 {/* Truncate the comment to prevent potential XSS */}
                 {photo?.lastComment.substring(0, 150)}
               </div></>
               )}
-              {!photo?.lastComment && (<img
-                src={photo.thumbUrl}
-                style={{padding: 5 }}
-                width={"250px"}
-                height="auto"
-                alt={`Photo ${photo.id}`}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/logo192.png"; // Fallback image
-                }}
-              />
+              {!photo?.lastComment && (
+              <div style={{
+                borderRadius: "12px",
+                overflow: "hidden",
+                display: "block",
+                width: "100%",
+                lineHeight: 0
+              }}>
+                <img
+                  src={photo.thumbUrl}
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    display: "block",
+                    objectFit: "cover",
+                    margin: 0,
+                    padding: 0
+                  }}
+                  alt={`Photo ${photo.id}`}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "/logo192.png"; // Fallback image
+                  }}
+                />
+              </div>
               )}
             </Link>
+            </div>
           ))}
         </Masonry>
       </InfiniteScroll>
