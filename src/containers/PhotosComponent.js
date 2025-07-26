@@ -1,4 +1,5 @@
-import React, { useEffect, useState, lazy } from "react"
+/* eslint-disable react/react-in-jsx-scope */
+import { lazy, useEffect, useState } from "react"
 import ReactPlayer from 'react-player'
 
 import { Helmet } from "react-helmet-async"
@@ -41,10 +42,17 @@ const PhotosComponent = function () {
 
   useEffect(() => {
     if (photoId) {
+      // Reset state when navigating to show loading
+      setInternalState({
+        currPhoto: null,
+        nextPhoto: null,
+        prevPhoto: null,
+        requestComplete: false,
+      })
       load({ photoId })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [photoId])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -231,46 +239,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
     })
   }
 
-  const loadNext = async () => {
-    setInternalState({
-      currPhoto: null,
-      nextPhoto: null,
-      prevPhoto: null,
-      requestComplete: false
-    })
-    const nextPhoto = await fetchNextPhoto({ photoId: internalState.nextPhoto.photo.id })
-
-    await fetchDimensions({photoId: internalState.nextPhoto.photo.id})
-
-    setInternalState({            
-      prevPhoto: internalState.currPhoto,
-      currPhoto: internalState.nextPhoto,
-      nextPhoto,
-      requestComplete: true,
-    })
-  }
-
-  const loadPrev = async () => {
-    setInternalState({
-      currPhoto: null,
-      nextPhoto: null,
-      prevPhoto: null,
-      requestComplete: false
-    })
-
-    const prevPhoto = await fetchPrevPhoto({ photoId: internalState.prevPhoto.photo.id })
-    
-    await fetchDimensions({photoId: internalState.prevPhoto.photo.id })
-
-    setInternalState({      
-      nextPhoto: internalState.currPhoto,
-      currPhoto: internalState.prevPhoto,
-      prevPhoto: prevPhoto,
-      requestComplete: true,
-    })
-  }
-
-
   const recognitionsLabels = (recognition, lebelsToInclude = 10) => {    
     if(!recognition) return ''
     try {
@@ -294,7 +262,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 {labels.slice(0,3).map((label) => (                                
                       <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
                         {stringifyObject(label.Name).replace(/'/g, "")}
-                        {label !== labels.slice(0,3).slice(-1)[0] && ','}
                       </Link>                                    
                 ))}
                 </h1>
@@ -327,7 +294,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 {labels.slice(3,6).map((label) => (                                
                   <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
                     {stringifyObject(label.Name).replace(/'/g, "")}
-                    {label !== labels.slice(3,6).slice(-1)[0] && ','}
                   </Link>                                    
                 ))}
               </h2>
@@ -335,7 +301,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 {labels.slice(6,9).map((label) => (                                
                   <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
                     {stringifyObject(label.Name).replace(/'/g, "")}
-                    {label !== labels.slice(6,9).slice(-1)[0] && ','}
                   </Link>                                    
                 ))}
               </h3>
@@ -343,7 +308,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 {labels.slice(9,12).map((label) => (                                
                   <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
                     {stringifyObject(label.Name).replace(/'/g, "")}
-                    {label !== labels.slice(9,12).slice(-1)[0] && ','}
                   </Link>                                    
                 ))}
               </h4>
@@ -351,7 +315,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 {labels.slice(12,15).map((label) => (                                
                   <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
                     {stringifyObject(label.Name).replace(/'/g, "")}
-                    {label !== labels.slice(12,15).slice(-1)[0] && ','}
                   </Link>                                    
                 ))}
               </h5>
@@ -366,41 +329,48 @@ this methid will fetch image into cache -- will work super fast on next call to 
           )}
 
           {textDetections?.length > 0 && (
-            <div style={{ margin: "5px" }}>
-              <div style={{ textAlign: "center" }}>
-                <b style={{
-                  color: "#555",
-                  fontWeight: '800'
-                }}>recognized text:</b>
+            <div style={{ margin: "20px 0" }}>
+              <div style={{ textAlign: "center", marginBottom: "15px" }}>
+                <b className="text-detection" style={{
+                  fontSize: "18px",
+                  fontWeight: '700'
+                }}>Recognized Text</b>
               </div>
-              <span style={{ textAlign: "center" }}>
+              <div style={{ textAlign: "center" }}>
                 {textDetections.map((text) => (
-                  <h2 key={text.Id}>
-                    <div style={{ fontSize: `${Math.min(text.Confidence, 100)}%`, color: "#555" }}>
+                  <h2 key={text.Id} style={{ margin: "10px 0" }}>
+                    <div className="text-detection" style={{ 
+                      fontSize: `${Math.max(Math.min(text.Confidence, 100), 60)}%`,
+                      lineHeight: 1.4
+                    }}>
                       {stringifyObject(text.DetectedText).replace(/'/g, "")}
                     </div>
                   </h2>
                 ))}
-              </span>
+              </div>
             </div>
           )}
 
           {moderationLabels?.length > 0 && (
-            <div style={{ margin: "5px", paddingBottom: "5px" }}>
-              <h2>
-                <div style={{ color: "red", textAlign: "center" }}>
-                  <b>moderation tags:</b>
-                </div>
-              </h2>
-              <span style={{ textAlign: "center" }}>
+            <div style={{ margin: "20px 0", paddingBottom: "15px" }}>
+              <div style={{ textAlign: "center", marginBottom: "15px" }}>
+                <b className="moderation-labels" style={{
+                  fontSize: "18px",
+                  fontWeight: '700'
+                }}>Moderation Tags</b>
+              </div>
+              <div style={{ textAlign: "center" }}>
                 {moderationLabels.map((label) => (
-                  <h3 key={label.Name}>
-                    <div style={{ fontSize: `${Math.min(label.Confidence, 100)}%`, color: "red" }}>
+                  <h3 key={label.Name} style={{ margin: "8px 0" }}>
+                    <div className="moderation-labels" style={{ 
+                      fontSize: `${Math.max(Math.min(label.Confidence, 100), 60)}%`,
+                      lineHeight: 1.4
+                    }}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </div>
                   </h3>
                 ))}
-              </span>
+              </div>
             </div>
           )}
         </div>
@@ -424,7 +394,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
             to={`/${internalState?.prevPhoto?.photo?.video === true ? 'videos': 'photos'}/${encodeURIComponent(internalState?.prevPhoto?.photo?.id)}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={async() =>  await loadPrev()}
           >
             <div style={{ margin: "5px" }} className='button'>
             &lt;&nbsp;prev
@@ -438,7 +407,6 @@ this methid will fetch image into cache -- will work super fast on next call to 
             to={`/${internalState?.nextPhoto?.photo?.video === true ? 'videos': 'photos'}/${encodeURIComponent(internalState?.nextPhoto?.photo?.id)}${
               embedded ? "?embedded=true" : ""
             }`}
-            onClick={async() =>  await loadNext()}
           >            
             <div style={{ margin: "5px" }} className='button'>
               next&nbsp;&gt;
@@ -466,160 +434,162 @@ this methid will fetch image into cache -- will work super fast on next call to 
     
     return (
       <div className='PhotosComponent'>
-        {/* <HelmetProvider> */}
-        <Helmet prioritizeSeoTags>
-          <title>{safeTitle}</title>
-          <meta
-            property='og:title'
-            content={`${safeTitle} ${currPhoto.photo.id}`}
-          />
-          <meta
-            name='description'
-            property='og:description'
-            content={safeDescription}
-          />
-          <meta
-            name='image'
-            property='og:image'
-            content={`${currPhoto.photo.thumbUrl}`}
-          />
-          <meta
-            property='og:url'
-            content={`${currPhoto.photo.thumbUrl}`}
-          />
+        <div className="content-container">
+          {/* <HelmetProvider> */}
+          <Helmet prioritizeSeoTags>
+            <title>{safeTitle}</title>
+            <meta
+              property='og:title'
+              content={`${safeTitle} ${currPhoto.photo.id}`}
+            />
+            <meta
+              name='description'
+              property='og:description'
+              content={safeDescription}
+            />
+            <meta
+              name='image'
+              property='og:image'
+              content={`${currPhoto.photo.thumbUrl}`}
+            />
+            <meta
+              property='og:url'
+              content={`${currPhoto.photo.thumbUrl}`}
+            />
 
-          <link
-            rel='canonical'
-            href={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
-          />
+            <link
+              rel='canonical'
+              href={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
+            />
 
-          <meta
-            name='twitter:title'
-            content={
-              currPhoto?.comments?.length > 0 && currPhoto?.comments[0].comment
-                ? currPhoto?.comments[0].comment
-                : `wisaw ${safeTitle}`
-            }
-          />
-          <meta
-            name='twitter:card'
-            content={`Check out what I saw today:
-            ${currPhoto.comments
-              .slice(0, 3)
-              .map((comment) => comment.comment || '')
-              .filter(Boolean)
-              .join("\n")}`}
-          />
-          <meta
-            name='twitter:description'
-            content={safeDescription}
-          />
-          <meta
-            name='twitter:image'
-            content={`${currPhoto.photo.thumbUrl}`}
-          />
-          <meta property='og:type' content='article' />
-        </Helmet>
-        {/* </HelmetProvider> */}
-
-        {currPhoto.recognitions &&
-            renderRecognitionsH1(currPhoto?.recognitions[0])}
-
-        {renderNavigationButtons()}
-
-        <div // eslint-disable-line
-          className='crop'
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            // cursor: "pointer",
-          }}
-        >
-          {currPhoto?.photo?.video === true && (
-            <ReactPlayer 
-              url={currPhoto?.photo?.videoUrl}
-              className='mainImage'
-              style={{                
-                // maxWidth: `${currPhoto.width/2}`,
-                // maxHeight: `${currPhoto.height/2}`,
-                width: `${dimensions.width}`,
-                height: `${dimensions.height}`,
-              }}
-  
-              playing={true}
-              controls={true}
-
-            />)}
-
-          {currPhoto?.photo?.video !== true && (
-            <img
-              width={`${dimensions.width}`}
-              height={`${dimensions.height}`}
-              className='mainImage'
-              src={screenWidth < 700 ? `${currPhoto.photo.thumbUrl}` : `${currPhoto.photo.imgUrl}`}
-              alt={
-                currPhoto?.comments?.length > 0
-                  ? currPhoto?.comments[0]?.comment
-                  : `wisaw photo ${currPhoto.photo.id}`
+            <meta
+              name='twitter:title'
+              content={
+                currPhoto?.comments?.length > 0 && currPhoto?.comments[0].comment
+                  ? currPhoto?.comments[0].comment
+                  : `wisaw ${safeTitle}`
               }
-              style={{
-                // width: `${currPhoto.width + 100}`,
-                // height: `${currPhoto.height + 100}`,
-                backgroundImage: screenWidth < 700 ? `none`: `url("${currPhoto.photo.thumbUrl}")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'center',
-                backgroundSize: 'cover',
-                // width:`${dimensions.width}`,
-                // height:`${dimensions.height}`,
-                }}
-          />)}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          {currPhoto.comments && (
-            <div
-              style={{ margin: "10px", paddingBottom: "10px", align: "center" }}
-            >
-              {currPhoto.comments.map((comment, i) => (
-                <div key={comment.id}>
-                  {i === 0 && (
-                    <p
-                      style={{
-                        margin: "10",
-                        fontSize: 24,
-                        fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
-                        color: "#444",
-                      }}
-                    >
-                      {comment.comment}
-                    </p>
-                  )}
-                  {i > 0 && (
-                    <p
-                      style={{
-                        margin: "10",
-                        fontSize: 20,
-                        fontFamily: "Comic Sans MS,Comic Sans,sans-serif",
-                        color: "#555",
-                      }}
-                    >
-                      {comment.comment}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          {currPhoto.recognitions &&
-            renderRecognitions(currPhoto?.recognitions[0])}
+            />
+            <meta
+              name='twitter:card'
+              content={`Check out what I saw today:
+              ${currPhoto.comments
+                .slice(0, 3)
+                .map((comment) => comment.comment || '')
+                .filter(Boolean)
+                .join("\n")}`}
+            />
+            <meta
+              name='twitter:description'
+              content={safeDescription}
+            />
+            <meta
+              name='twitter:image'
+              content={`${currPhoto.photo.thumbUrl}`}
+            />
+            <meta property='og:type' content='article' />
+          </Helmet>
+          {/* </HelmetProvider> */}
 
-          <div style={{ margin: "10px", align: "center" }} />
+          <div className="recognition-tags">
+            {currPhoto.recognitions &&
+                renderRecognitionsH1(currPhoto?.recognitions[0])}
+          </div>
+
+          {renderNavigationButtons()}
+
+          <div // eslint-disable-line
+            className='crop'
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              // cursor: "pointer",
+            }}
+          >
+            {currPhoto?.photo?.video === true && (
+              <ReactPlayer 
+                url={currPhoto?.photo?.videoUrl}
+                className='mainImage'
+                style={{                
+                  // maxWidth: `${currPhoto.width/2}`,
+                  // maxHeight: `${currPhoto.height/2}`,
+                  width: `${dimensions.width}`,
+                  height: `${dimensions.height}`,
+                }}
+    
+                playing={true}
+                controls={true}
+
+              />)}
+
+            {currPhoto?.photo?.video !== true && (
+              <img
+                width={`${dimensions.width}`}
+                height={`${dimensions.height}`}
+                className='mainImage'
+                src={screenWidth < 700 ? `${currPhoto.photo.thumbUrl}` : `${currPhoto.photo.imgUrl}`}
+                alt={
+                  currPhoto?.comments?.length > 0
+                    ? currPhoto?.comments[0]?.comment
+                    : `wisaw photo ${currPhoto.photo.id}`
+                }
+                style={{
+                  // width: `${currPhoto.width + 100}`,
+                  // height: `${currPhoto.height + 100}`,
+                  backgroundImage: screenWidth < 700 ? `none`: `url("${currPhoto.photo.thumbUrl}")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                  backgroundSize: 'cover',
+                  // width:`${dimensions.width}`,
+                  // height:`${dimensions.height}`,
+                  }}
+            />)}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+            }}
+          >
+            {currPhoto.comments && currPhoto.comments.length > 0 && (
+              <div className="comments-section">
+                {currPhoto.comments.map((comment, i) => (
+                  <div key={comment.id}>
+                    {i === 0 && (
+                      <p
+                        className="comment-text"
+                        style={{
+                          fontSize: 24,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {comment.comment}
+                      </p>
+                    )}
+                    {i > 0 && (
+                      <p
+                        className="comment-text"
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 400,
+                        }}
+                      >
+                        {comment.comment}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="recognition-tags">
+              {currPhoto.recognitions &&
+                renderRecognitions(currPhoto?.recognitions[0])}
+            </div>
+
+            <div style={{ margin: "10px", align: "center" }} />
+          </div>
         </div>
         <Footer />
       </div>
@@ -629,13 +599,26 @@ this methid will fetch image into cache -- will work super fast on next call to 
   if (requestComplete === true && (currPhoto === null || currPhoto?.photo === null)) {
     return (
       <div className='PhotosComponent'>
-        {renderNavigationButtons()}
-        <NoMatch />
+        <div className="content-container">
+          {renderNavigationButtons()}
+          <NoMatch />
+        </div>
       </div>
     )
   }
 
-  return <div />
+  return (
+    <div className='PhotosComponent'>
+      <div className="content-container" style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '400px' 
+      }}>
+        <div className="loading-spinner"></div>
+      </div>
+    </div>
+  )
 }
 
 export default PhotosComponent

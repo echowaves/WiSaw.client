@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react"
+/* eslint-disable react/react-in-jsx-scope */
+import { useEffect, useState } from "react"
 import { Helmet } from "react-helmet-async"
 
 import InfiniteScroll from "react-infinite-scroll-component"
 import Masonry from "react-masonry-component"
 import {
-  Link,
-  useNavigate,
+    Link,
+    useNavigate,
 } from "react-router-dom"
 
 import Button from "react-bootstrap/Button"
@@ -258,7 +259,7 @@ const Home = function () {
       <div
         style={{
           // width: '100%',
-          maxWidth: "1000px",
+          maxWidth: "1120px",
           width: "90%",
           position: "relative",
           alignSelf: "center",
