@@ -260,7 +260,15 @@ this methid will fetch image into cache -- will work super fast on next call to 
             <div style={{ margin: "5px" }}>
               <h1>
                 {labels.slice(0,3).map((label) => (                                
-                      <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                      <Link 
+                        key={label.Name} 
+                        to={`/search/${encodeURIComponent(label.Name)}`}
+                        style={{
+                          opacity: Math.max(0.6, label.Confidence / 100),
+                          fontSize: `${Math.max(0.8, label.Confidence / 100)}em`,
+                          fontWeight: Math.max(400, 400 + (label.Confidence / 100) * 300)
+                        }}
+                      >
                         {stringifyObject(label.Name).replace(/'/g, "")}
                       </Link>                                    
                 ))}
@@ -285,6 +293,14 @@ this methid will fetch image into cache -- will work super fast on next call to 
       ).TextDetections?.filter((text) => text?.Type === "LINE")
       const moderationLabels = JSON.parse(recognition?.metaData)?.ModerationLabels
 
+      // Helper function to get confidence-based styles
+      const getConfidenceStyle = (confidence) => ({
+        opacity: Math.max(0.5, confidence / 100),
+        fontSize: `${Math.max(0.7, confidence / 100)}em`,
+        fontWeight: Math.max(400, 400 + (confidence / 100) * 300),
+        transform: `scale(${Math.max(0.85, confidence / 100)})`,
+        borderWidth: `${Math.max(1, (confidence / 100) * 3)}px`
+      })
 
       return (
         <div>
@@ -292,35 +308,55 @@ this methid will fetch image into cache -- will work super fast on next call to 
             <div style={{ margin: "5px" }}>            
               <h2>
                 {labels.slice(3,6).map((label) => (                                
-                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                  <Link 
+                    key={label.Name} 
+                    to={`/search/${encodeURIComponent(label.Name)}`}
+                    style={getConfidenceStyle(label.Confidence)}
+                  >
                     {stringifyObject(label.Name).replace(/'/g, "")}
                   </Link>                                    
                 ))}
               </h2>
               <h3>
                 {labels.slice(6,9).map((label) => (                                
-                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                  <Link 
+                    key={label.Name} 
+                    to={`/search/${encodeURIComponent(label.Name)}`}
+                    style={getConfidenceStyle(label.Confidence)}
+                  >
                     {stringifyObject(label.Name).replace(/'/g, "")}
                   </Link>                                    
                 ))}
               </h3>
               <h4>
                 {labels.slice(9,12).map((label) => (                                
-                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                  <Link 
+                    key={label.Name} 
+                    to={`/search/${encodeURIComponent(label.Name)}`}
+                    style={getConfidenceStyle(label.Confidence)}
+                  >
                     {stringifyObject(label.Name).replace(/'/g, "")}
                   </Link>                                    
                 ))}
               </h4>
               <h5>
                 {labels.slice(12,15).map((label) => (                                
-                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                  <Link 
+                    key={label.Name} 
+                    to={`/search/${encodeURIComponent(label.Name)}`}
+                    style={getConfidenceStyle(label.Confidence)}
+                  >
                     {stringifyObject(label.Name).replace(/'/g, "")}
                   </Link>                                    
                 ))}
               </h5>
               <h6>
                 {labels.slice(15).map((label) => (                                
-                  <Link key={label.Name} to={`/search/${encodeURIComponent(label.Name)}`}>
+                  <Link 
+                    key={label.Name} 
+                    to={`/search/${encodeURIComponent(label.Name)}`}
+                    style={getConfidenceStyle(label.Confidence)}
+                  >
                     {stringifyObject(label.Name).replace(/'/g, "")}&nbsp;
                   </Link>                                    
                 ))}
@@ -341,7 +377,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   <h2 key={text.Id} style={{ margin: "10px 0" }}>
                     <div className="text-detection" style={{ 
                       fontSize: `${Math.max(Math.min(text.Confidence, 100), 60)}%`,
-                      lineHeight: 1.4
+                      lineHeight: 1.4,
+                      opacity: Math.max(0.5, text.Confidence / 100),
+                      fontWeight: Math.max(400, 400 + (text.Confidence / 100) * 300)
                     }}>
                       {stringifyObject(text.DetectedText).replace(/'/g, "")}
                     </div>
@@ -364,7 +402,9 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   <h3 key={label.Name} style={{ margin: "8px 0" }}>
                     <div className="moderation-labels" style={{ 
                       fontSize: `${Math.max(Math.min(label.Confidence, 100), 60)}%`,
-                      lineHeight: 1.4
+                      lineHeight: 1.4,
+                      opacity: Math.max(0.5, label.Confidence / 100),
+                      fontWeight: Math.max(400, 400 + (label.Confidence / 100) * 300)
                     }}>
                       {stringifyObject(label.Name).replace(/'/g, "")}
                     </div>
