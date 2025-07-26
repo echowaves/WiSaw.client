@@ -1,4 +1,5 @@
-import React, { useEffect, useState, lazy } from "react"
+/* eslint-disable react/react-in-jsx-scope */
+import { lazy, useEffect, useState } from "react"
 import {
     Link,
     useNavigate, useParams
@@ -186,117 +187,128 @@ const SearchComponent = function () {
   }
 
   if (requestComplete) {
-    return (<>
-      {renderSearchComponent()}
-      <div className='PhotosComponent'>
-      {/* Show message when no search string provided */}
-      {!searchString && (
-        <div style={{ textAlign: 'center', padding: '50px 20px' }}>
-          <h2>Search WiSaw</h2>
-          <p>Enter a search term to find photos and videos</p>
-        </div>
-      )}
-      {/* Show "nothing found" only when we have a search string but no results */}
-      {searchString && photos?.length === 0 && (<h1>Nothing found</h1>)}
-        {photos?.length > 0 && (<Masonry cols={1} gap={10}>
-          {photos.map((tile) => (
-            <div
-              className='crop'
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              key={tile.id}
-            >
-              <Link             
-                to={`/${tile?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(tile.id)}`}
-                style={{
-                  alignItems: "center",
-                }}
-              >
-                <img
-                  style={{
-                    alignItems: "center",
-                    maxHeight: "300px",
-                    maxWidth: "300px",
-                    width: "99%",
-                    height: "auto",
-                  }}
-                  src={tile.thumbUrl}
-                  width='300px'
-                  height='300px'
-                  alt={tile.lastComment || 'Image'}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/logo192.png"; // Fallback image
-                  }}
-                />
-              </Link>
-              <div
-                style={{
-                  padding: 10,
-                  marginBottom: 10,
-                  lineHeight: "1.2em",
-                  height: "auto",
-                  textAlign: "center",
-                  color: "#555",
-                }}
-              >
-                {/* Use a safer display method for user-generated content */}
-                {tile.lastComment ? tile.lastComment.substring(0, 200) : ''}
-              </div>
+    return (
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          position: "relative",
+          justifyContent: "center",
+          minHeight: "100vh",
+          background: "linear-gradient(135deg, #00ff94 0%, #720cf0 100%)",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+          fontWeight: 400,
+          fontSize: "16px",
+          color: "#1a202c"
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1120px",
+            width: "90%",
+            position: "relative",
+            alignSelf: "center",
+            justifyContent: "center",
+          }}
+        >
+          {renderSearchComponent()}
+          {/* Show message when no search string provided */}
+          {!searchString && (
+            <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+              <h2>Search WiSaw</h2>
+              <p>Enter a search term to find photos and videos</p>
             </div>
-          ))}
-        </Masonry>)}
+          )}
+          {/* Show "nothing found" only when we have a search string but no results */}
+          {searchString && photos?.length === 0 && (<h1>Nothing found</h1>)}
+          {photos?.length > 0 && (
+            <Masonry 
+              className="react-masonry-component"
+              style={{}}
+            >
+              {photos.map((photo) => (
+                <Link
+                  to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
+                  style={{ width: "250px" }}
+                  key={photo.id}
+                >
+                  {photo?.lastComment && (
+                    <>
+                      <img
+                        src={photo.thumbUrl}
+                        style={{ padding: 5 }}
+                        width={"250px"}
+                        height="auto"
+                        alt={photo?.lastComment || `Photo ${photo.id}`}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/logo192.png"; // Fallback image
+                        }}
+                      />
+                      <div style={{ width: "250px", paddingBottom: 15 }}>
+                        {photo?.lastComment.substring(0, 150)}
+                      </div>
+                    </>
+                  )}
+                  {!photo?.lastComment && (
+                    <img
+                      src={photo.thumbUrl}
+                      style={{ padding: 5 }}
+                      width={"250px"}
+                      height="auto"
+                      alt={`Photo ${photo.id}`}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "/logo192.png"; // Fallback image
+                      }}
+                    />
+                  )}
+                </Link>
+              ))}
+            </Masonry>
+          )}
 
+          <Helmet prioritizeSeoTags>
+            <title>{searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}</title>
+            <link
+              rel='canonical'
+              href={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
+            />
+            <meta
+              name='description'
+              content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
+            />
+            <meta
+              property='og:title'
+              content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
+            />
+            <meta
+              property='og:description'
+              content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
+            />
+            <meta name='image' property='og:image' content='' />
+            <meta
+              property='og:url'
+              content={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
+            />
+            <meta
+              name='twitter:title'
+              content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
+            />
+            <meta
+              name='twitter:card'
+              content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
+            />
+            <meta
+              name='twitter:description'
+              content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
+            />
+            <meta name='twitter:image' content='' />
+          </Helmet>
 
-        <Helmet prioritizeSeoTags>
-          <title>{searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}</title>
-
-          <link
-            rel='canonical'
-            href={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
-          />
-
-          <meta
-            name='description'
-            content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
-          />
-
-          <meta
-            property='og:title'
-            content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
-          />
-          <meta
-            property='og:description'
-            content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
-          />
-          <meta name='image' property='og:image' content='' />
-          <meta
-            property='og:url'
-            content={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
-          />
-
-          <meta
-            name='twitter:title'
-            content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
-          />
-          <meta
-            name='twitter:card'
-            content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
-          />
-          <meta
-            name='twitter:description'
-            content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
-          />
-          <meta name='twitter:image' content='' />
-        </Helmet>
-
-        <Footer />
-      </div>  
-      
-      </> 
+          <Footer />
+        </div>
+      </div>
     )
   }
 
