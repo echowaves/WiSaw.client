@@ -412,7 +412,7 @@ this methid will fetch image into cache -- will work super fast on next call to 
                     transition: "all 0.3s ease",
                     boxShadow: "0 2px 8px rgba(0, 255, 148, 0.1)"
                   }}>
-                    "{stringifyObject(text.DetectedText).replace(/'/g, "")}"
+                    &ldquo;{stringifyObject(text.DetectedText).replace(/'/g, "")}&rdquo;
                   </div>
                 ))}
               </div>
