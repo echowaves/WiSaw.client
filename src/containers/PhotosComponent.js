@@ -13,10 +13,10 @@ import "./PhotosComponent.css"
 const Footer = lazy(() => import("./Footer"))
 
 import {
-  Link,
-  // NavLink,
-  useLocation,
-  useParams
+    Link,
+    // NavLink,
+    useLocation,
+    useParams
 } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
@@ -68,25 +68,21 @@ const PhotosComponent = function () {
   }, [internalState])
 
   /**
-this methid will fetch image into cache -- will work super fast on next call to the same url
-*/
-  const fetchDimensions = async ({photoId}) => {
-    try {
-      const img = new Image()
-      img.src = `https://img.wisaw.com/${photoId}-thumb.webp`
-      await img.decode()
-
-      const maxDimention = screenWidth < 700 ? 300 : 700
-      const {naturalWidth,  naturalHeight} = img
-
-      setDimensions({
-        width: naturalWidth > naturalHeight ?  maxDimention : maxDimention * naturalWidth / naturalHeight, //img.naturalWidth,
-        height: naturalWidth < naturalHeight ? maxDimention: maxDimention * naturalHeight  / naturalWidth, //img.naturalHeight,
-      })
-    } catch (err) {
-      console.error("Error fetching image dimensions:", err.message)
-      // Set fallback dimensions
-      setDimensions({width: 300, height: 300})
+   * Get dimensions from GraphQL instead of manual image loading
+   */
+  const getDimensionsFromPhoto = (photo) => {
+    if (!photo?.width || !photo?.height) {
+      return {width: 300, height: 300}
+    }
+    
+    const screenWidth = window.innerWidth
+    const maxDimension = screenWidth < 700 ? 300 : 700
+    const naturalWidth = photo.width
+    const naturalHeight = photo.height
+    
+    return {
+      width: naturalWidth > naturalHeight ? maxDimension : maxDimension * naturalWidth / naturalHeight,
+      height: naturalWidth < naturalHeight ? maxDimension : maxDimension * naturalHeight / naturalWidth,
     }
   }
 
@@ -104,6 +100,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   watchersCount
                   video
                   videoUrl
+                  width
+                  height
                 }
                 comments {
                   comment
@@ -147,6 +145,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   watchersCount
                   video
                   videoUrl
+                  width
+                  height
                 }
                 comments {
                   comment
@@ -191,6 +191,8 @@ this methid will fetch image into cache -- will work super fast on next call to 
                   watchersCount
                   video
                   videoUrl
+                  width
+                  height
                 }
                 comments {
                   comment
@@ -229,7 +231,13 @@ this methid will fetch image into cache -- will work super fast on next call to 
       fetchPrevPhoto({ photoId })
     ])
 
-    if(results[0]) await fetchDimensions({photoId: results[0]?.photo?.id})
+    // Use dimensions from GraphQL instead of manual calculation
+    if(results[0]?.photo) {
+      const calculatedDimensions = getDimensionsFromPhoto(results[0].photo)
+      setDimensions(calculatedDimensions)
+    } else {
+      setDimensions({width: 300, height: 300})
+    }
 
     setInternalState({
       currPhoto: results[0],
@@ -611,11 +619,11 @@ this methid will fetch image into cache -- will work super fast on next call to 
               <ReactPlayer 
                 url={currPhoto?.photo?.videoUrl}
                 className='mainImage'
+                width={`${dimensions.width}px`}
+                height={`${dimensions.height}px`}
                 style={{                
-                  // maxWidth: `${currPhoto.width/2}`,
-                  // maxHeight: `${currPhoto.height/2}`,
-                  width: `${dimensions.width}`,
-                  height: `${dimensions.height}`,
+                  width: `${dimensions.width}px`,
+                  height: `${dimensions.height}px`,
                 }}
     
                 playing={true}
@@ -637,12 +645,12 @@ this methid will fetch image into cache -- will work super fast on next call to 
                 style={{
                   // width: `${currPhoto.width + 100}`,
                   // height: `${currPhoto.height + 100}`,
+                  width: `${dimensions.width}px`,
+                  height: `${dimensions.height}px`,
                   backgroundImage: screenWidth < 700 ? `none`: `url("${currPhoto.photo.thumbUrl}")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'center',
                   backgroundSize: 'cover',
-                  // width:`${dimensions.width}`,
-                  // height:`${dimensions.height}`,
                   }}
             />)}
           </div>

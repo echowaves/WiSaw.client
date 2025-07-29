@@ -31,6 +31,7 @@ import "./PhotosComponent.css"
 import { gql } from "@apollo/client"
 
 import * as CONST from "../consts"
+import { getOptimizedThumbnailDimensions } from "../utils/imageUtils"
 
 const Home = function () {
   const [photos, setPhotos] = useState([])
@@ -73,6 +74,8 @@ const Home = function () {
                 watchersCount
                 lastComment
                 createdAt
+                width
+                height
               }
               batch
               noMoreData
@@ -179,7 +182,10 @@ const Home = function () {
         // }
       >
         <Masonry style={{}}>
-          {photos.map((photo) => (
+          {photos.map((photo) => {
+            const thumbDimensions = getOptimizedThumbnailDimensions(photo)
+            
+            return (
             <div
               style={{
                 borderRadius: "12px",
@@ -204,6 +210,9 @@ const Home = function () {
               }}>
                 <img
                   src={photo.thumbUrl}
+                  width={thumbDimensions?.width}
+                  height={thumbDimensions?.height}
+                  loading="lazy"
                   style={{
                     width: "100%",
                     height: "auto",
@@ -234,6 +243,9 @@ const Home = function () {
               }}>
                 <img
                   src={photo.thumbUrl}
+                  width={thumbDimensions?.width}
+                  height={thumbDimensions?.height}
+                  loading="lazy"
                   style={{
                     width: "100%",
                     height: "auto",
@@ -252,7 +264,8 @@ const Home = function () {
               )}
             </Link>
             </div>
-          ))}
+            )
+          })}
         </Masonry>
       </InfiniteScroll>
     )
@@ -269,12 +282,9 @@ const Home = function () {
         // backgroundColor: '#0666a3'
       }}
     >
-
-<title>Free Stock Photos & Videos -- What I Saw</title>    
         <Helmet prioritizeSeoTags>
         <title>Free Stock Photos & Videos -- What I Saw</title>
-        <meta name="description" property="og:description" content="Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras, free pictures no copyright" data-rh="true"/>    
-        <meta property="og:type" content="website"/>    
+        <meta name="description" content="Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras, free pictures no copyright" />    
         <link
             rel='canonical'
             href={`https://wisaw.com`}

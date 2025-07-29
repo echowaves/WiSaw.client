@@ -1,8 +1,8 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, useEffect, useState } from "react"
 import {
-    Link,
-    useNavigate, useParams
+  Link,
+  useNavigate, useParams
 } from "react-router-dom"
 
 const Footer = lazy(() => import("./Footer"))
@@ -26,6 +26,7 @@ import ReactGA from "react-ga4"
 import { gql } from "@apollo/client"
 // import stringifyObject from 'stringify-object'
 import * as CONST from "../consts"
+import { getSearchGridDimensions } from "../utils/imageUtils"
 
 const SearchComponent = function () {
   const { searchString } = useParams()
@@ -35,26 +36,22 @@ const SearchComponent = function () {
   const [pageNumber, setPageNumber] = useState(0)
   const [noMoreData, setNoMoreData] = useState(true)
   const [requestComplete, setRequestComplete] = useState(false)
-  const [searchText, setSearchText] = useState(searchString || "")
+  const [searchText, setSearchText] = useState("")
+
   const handleSearch = function (event) {
     if (event) {
       event.preventDefault()
     }
+
     if (searchText && searchText.trim()) {
-      const newSearchTerm = searchText.trim()
-      
-      // If searching for the same term, just re-run the search
-      if (newSearchTerm === searchString) {
-        update({ searchString: newSearchTerm })
-      } else {
-        // Navigate to new search term
-        navigate(`/search/${encodeURIComponent(newSearchTerm)}`)
-      }
+      navigate(`/search/${encodeURIComponent(searchText.trim())}`)
+      setSearchText("")
     }
   }
-  
+
   const searchTextHandler = function (event) {
     setSearchText(event.target.value)
+    // console.log(event.target.value)
   }
 
   const renderSearchComponent = function () {
@@ -142,6 +139,8 @@ const SearchComponent = function () {
                   watchersCount
                   lastComment
                   createdAt
+                  width
+                  height
                 }
                 batch
                 noMoreData
@@ -195,6 +194,8 @@ const SearchComponent = function () {
                 watchersCount
                 lastComment
                 createdAt
+                width
+                height
               }
               batch
               noMoreData
@@ -248,25 +249,40 @@ const SearchComponent = function () {
           style={{
             display: 'flex',
             flexWrap: 'wrap',
-            justifyContent: 'flex-start',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
             gap: '10px',
-            width: '100%'
+            width: '100%',
+            // Responsive layout adjustments
+            '@media (max-width: 768px)': {
+              gap: '5px'
+            }
           }}
         >
-          {photos.map((photo) => (
+          {photos.map((photo) => {
+            const thumbDimensions = getSearchGridDimensions(photo)
+            
+            return (
             <div
               style={{
                 borderRadius: "12px",
                 backgroundColor: "white",
                 margin: "3px",
                 overflow: "hidden",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                width: `${thumbDimensions.width + 6}px`, // +6 for padding
+                height: "auto",
+                flexShrink: 0 // Prevent items from shrinking
               }}
               key={photo.id}
             >
               <Link
                 to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                style={{ width: "244px", display: "block", padding: "3px" }}
+                style={{ 
+                  width: "100%", 
+                  display: "block", 
+                  padding: "3px"
+                }}
               >
               {photo?.lastComment && (<>
               <div style={{
@@ -278,6 +294,9 @@ const SearchComponent = function () {
               }}>
                 <img
                   src={photo.thumbUrl}
+                  width={thumbDimensions.width}
+                  height={thumbDimensions.height}
+                  loading="lazy"
                   style={{
                     width: "100%",
                     height: "auto",
@@ -308,6 +327,9 @@ const SearchComponent = function () {
               }}>
                 <img
                   src={photo.thumbUrl}
+                  width={thumbDimensions.width}
+                  height={thumbDimensions.height}
+                  loading="lazy"
                   style={{
                     width: "100%",
                     height: "auto",
@@ -326,7 +348,8 @@ const SearchComponent = function () {
               )}
             </Link>
             </div>
-          ))}
+            )
+          })}
         </div>
       </InfiniteScroll>
     )
@@ -379,7 +402,7 @@ const SearchComponent = function () {
               <p>Try adjusting your search terms</p>
             </div>
           )}
-          
+
           {photos?.length > 0 && renderInfiniteFeed()}
 
           <Helmet prioritizeSeoTags>
@@ -437,9 +460,16 @@ const SearchComponent = function () {
       }}
       aria-label="Loading content"
     >
-      <Bars color='#00BFFF' height={100} width={100} timeout={60000} />      
+      <Bars
+        height='80'
+        width='80'
+        color='#4fa94d'
+        ariaLabel='bars-loading'
+        wrapperStyle={{}}
+        wrapperClass=''
+        visible={true}
+      />
     </div>
-
   )
 }
 
