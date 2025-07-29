@@ -13,10 +13,10 @@ import "./PhotosComponent.css"
 const Footer = lazy(() => import("./Footer"))
 
 import {
-    Link,
-    // NavLink,
-    useLocation,
-    useParams
+  Link,
+  // NavLink,
+  useLocation,
+  useParams
 } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
@@ -37,6 +37,7 @@ const PhotosComponent = function () {
   })
 
   const [dimensions, setDimensions] = useState({width: null, height: null})
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   const { photoId } = useParams()
 
@@ -49,6 +50,7 @@ const PhotosComponent = function () {
         prevPhoto: null,
         requestComplete: false,
       })
+      setImageLoaded(false)
       load({ photoId })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,6 +65,9 @@ const PhotosComponent = function () {
         `/videos/${internalState?.currPhoto?.photo?.id}` : `/photos/${internalState?.currPhoto?.photo?.id}` ,
         // title: "Custom Title",
       })
+      
+      // Reset image loading state when photo data changes
+      setImageLoaded(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [internalState])
@@ -84,6 +89,17 @@ const PhotosComponent = function () {
       width: naturalWidth > naturalHeight ? maxDimension : maxDimension * naturalWidth / naturalHeight,
       height: naturalWidth < naturalHeight ? maxDimension : maxDimension * naturalHeight / naturalWidth,
     }
+  }
+
+  const handleImageLoad = () => {
+    setImageLoaded(true)
+  }
+
+  const handleImageError = () => {
+    console.log('Image failed to load, falling back to thumbnail only')
+    // On error, just keep the thumbnail visible by setting imageLoaded to true
+    // This prevents infinite loading states
+    setImageLoaded(true)
   }
 
   const fetchCurrPhoto = async ({ photoId }) => {
@@ -231,7 +247,7 @@ const PhotosComponent = function () {
       fetchPrevPhoto({ photoId })
     ])
 
-    // Use dimensions from GraphQL instead of manual calculation
+    // Calculate dimensions immediately from GraphQL data to prevent layout shift
     if(results[0]?.photo) {
       const calculatedDimensions = getDimensionsFromPhoto(results[0].photo)
       setDimensions(calculatedDimensions)
@@ -533,7 +549,7 @@ const PhotosComponent = function () {
   
   // const embedded = new URLSearchParams(location.search).get("embedded")
 
-  if (currPhoto && currPhoto?.photo) {
+  if (currPhoto && currPhoto?.photo && dimensions.width && dimensions.height) {
     const safeDescription = currPhoto?.comments?.length > 0
       ? `${currPhoto.comments[0].comment || ''}, ${recognitionsLabels(currPhoto?.recognitions[0], 5)}`.slice(0, 150)
       : recognitionsLabels(currPhoto?.recognitions[0], 10);
@@ -612,6 +628,9 @@ const PhotosComponent = function () {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              width: `${dimensions.width}px`,
+              height: `${dimensions.height}px`,
+              position: "relative",
               // cursor: "pointer",
             }}
           >
@@ -632,27 +651,60 @@ const PhotosComponent = function () {
               />)}
 
             {currPhoto?.photo?.video !== true && (
-              <img
-                width={`${dimensions.width}`}
-                height={`${dimensions.height}`}
-                className='mainImage'
-                src={screenWidth < 700 ? `${currPhoto.photo.thumbUrl}` : `${currPhoto.photo.imgUrl}`}
-                alt={
-                  currPhoto?.comments?.length > 0
-                    ? currPhoto?.comments[0]?.comment
-                    : `wisaw photo ${currPhoto.photo.id}`
-                }
-                style={{
-                  // width: `${currPhoto.width + 100}`,
-                  // height: `${currPhoto.height + 100}`,
-                  width: `${dimensions.width}px`,
-                  height: `${dimensions.height}px`,
-                  backgroundImage: screenWidth < 700 ? `none`: `url("${currPhoto.photo.thumbUrl}")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'center',
-                  backgroundSize: 'cover',
+              <>
+                {/* Thumbnail as base layer - always visible */}
+                <img
+                  width={`${dimensions.width}`}
+                  height={`${dimensions.height}`}
+                  className='thumbnailImage'
+                  src={currPhoto.photo.thumbUrl}
+                  alt={
+                    currPhoto?.comments?.length > 0
+                      ? currPhoto?.comments[0]?.comment
+                      : `wisaw photo ${currPhoto.photo.id}`
+                  }
+                  style={{
+                    width: `${dimensions.width}px`,
+                    height: `${dimensions.height}px`,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    borderRadius: '18px',
+                    objectFit: 'cover',
+                    zIndex: 1,
                   }}
-            />)}
+                />
+
+                {/* Full-size image as overlay - loads progressively */}
+                {screenWidth >= 700 && (
+                  <img
+                    width={`${dimensions.width}`}
+                    height={`${dimensions.height}`}
+                    className='mainImage'
+                    src={currPhoto.photo.imgUrl}
+                    alt={
+                      currPhoto?.comments?.length > 0
+                        ? currPhoto?.comments[0]?.comment
+                        : `wisaw photo ${currPhoto.photo.id}`
+                    }
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                    style={{
+                      width: `${dimensions.width}px`,
+                      height: `${dimensions.height}px`,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      borderRadius: '18px',
+                      objectFit: 'cover',
+                      opacity: imageLoaded ? 1 : 0,
+                      transition: 'opacity 0.5s ease-in-out',
+                      zIndex: 2,
+                    }}
+                  />
+                )}
+              </>
+            )}
           </div>
           <div
             style={{
@@ -710,6 +762,43 @@ const PhotosComponent = function () {
         <div className="content-container">
           {renderNavigationButtons()}
           <NoMatch />
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading state with reserved space if we don't have dimensions yet
+  if (!requestComplete || !currPhoto || !dimensions.width || !dimensions.height) {
+    return (
+      <div className='PhotosComponent'>
+        <div className="content-container" style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '400px' 
+        }}>
+          {/* Reserve space for navigation */}
+          <div style={{ height: '60px', width: '100%', marginBottom: '20px' }}>
+            <div className="loading-spinner" style={{ width: '30px', height: '30px', margin: '0 auto' }}></div>
+          </div>
+          
+          {/* Reserve space for main image */}
+          <div style={{ 
+            width: '300px', 
+            height: '300px', 
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '20px'
+          }}>
+            <div className="loading-spinner"></div>
+          </div>
+          
+          {/* Reserve space for comments/recognition */}
+          <div style={{ height: '100px', width: '100%' }}></div>
         </div>
       </div>
     )
