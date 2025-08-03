@@ -552,9 +552,16 @@ const PhotosComponent = function () {
   if (currPhoto && currPhoto?.photo && dimensions.width && dimensions.height) {
     const safeDescription = currPhoto?.comments?.length > 0
       ? `${currPhoto.comments[0].comment || ''}, ${recognitionsLabels(currPhoto?.recognitions[0], 5)}`.slice(0, 150)
-      : recognitionsLabels(currPhoto?.recognitions[0], 10);
+      : recognitionsLabels(currPhoto?.recognitions[0], 10) || 'Video content from WiSaw';
     
-    const safeTitle = `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3)}`;
+    const safeTitle = `${currPhoto?.photo?.video === true ? '(video)':'(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3) || currPhoto.photo.id}`;
+    
+    // Ensure we have proper fallbacks for structured data
+    const videoTitle = currPhoto?.photo?.video === true 
+      ? (recognitionsLabels(currPhoto?.recognitions[0], 3) || `WiSaw Video ${currPhoto.photo.id}`)
+      : safeTitle;
+    
+    const videoDescription = safeDescription || `Video content shared on WiSaw - ${currPhoto.photo.id}`;
     
     return (
       <div className='PhotosComponent'>
@@ -562,15 +569,15 @@ const PhotosComponent = function () {
         <main className="content-container" role="main" itemScope itemType={currPhoto?.photo?.video === true ? "https://schema.org/VideoObject" : "https://schema.org/ImageObject"}>
           {/* <HelmetProvider> */}
           <Helmet prioritizeSeoTags>
-            <title>{safeTitle}</title>
+            <title>{videoTitle}</title>
             <meta
               property='og:title'
-              content={`${safeTitle} ${currPhoto.photo.id}`}
+              content={`${videoTitle} ${currPhoto.photo.id}`}
             />
             <meta
               name='description'
               property='og:description'
-              content={safeDescription}
+              content={videoDescription}
             />
             <meta
               name='image'
@@ -609,7 +616,7 @@ const PhotosComponent = function () {
               content={
                 currPhoto?.comments?.length > 0 && currPhoto?.comments[0].comment
                   ? currPhoto?.comments[0].comment
-                  : `wisaw ${safeTitle}`
+                  : `wisaw ${videoTitle}`
               }
             />
             <meta
@@ -625,7 +632,7 @@ const PhotosComponent = function () {
             )}
             <meta
               name='twitter:description'
-              content={safeDescription}
+              content={videoDescription}
             />
             <meta
               name='twitter:image'
@@ -638,21 +645,21 @@ const PhotosComponent = function () {
                 {JSON.stringify({
                   "@context": "https://schema.org",
                   "@type": "VideoObject",
-                  "name": safeTitle,
-                  "description": safeDescription,
+                  "name": videoTitle,
+                  "description": videoDescription,
                   "thumbnailUrl": [currPhoto.photo.thumbUrl],
                   "uploadDate": new Date().toISOString(), // You might want to use actual upload date from your data
                   "contentUrl": currPhoto.photo.videoUrl,
                   "embedUrl": `https://wisaw.com/videos/${currPhoto.photo.id}`,
                   "url": `https://wisaw.com/videos/${currPhoto.photo.id}`, // Watch page URL
                   "duration": "PT0M30S", // Default duration, you might want to get actual duration from your video metadata
-                  "width": currPhoto.photo.width || 640,
-                  "height": currPhoto.photo.height || 360,
+                  "width": parseInt(currPhoto.photo.width) || 640,
+                  "height": parseInt(currPhoto.photo.height) || 360,
                   "videoQuality": "HD",
                   "interactionStatistic": {
                     "@type": "InteractionCounter",
                     "interactionType": { "@type": "WatchAction" },
-                    "userInteractionCount": currPhoto.photo.watchersCount || 0
+                    "userInteractionCount": parseInt(currPhoto.photo.watchersCount) || 0
                   },
                   "publisher": {
                     "@type": "Organization",
@@ -669,7 +676,7 @@ const PhotosComponent = function () {
                   },
                   "isAccessibleForFree": true,
                   "isFamilyFriendly": true
-                })}
+                }, null, 2)}
               </script>
             )}
           </Helmet>
@@ -718,7 +725,7 @@ const PhotosComponent = function () {
                       'aria-label': currPhoto?.comments?.length > 0 
                         ? currPhoto?.comments[0]?.comment 
                         : `wisaw video ${currPhoto.photo.id}`,
-                      title: safeTitle
+                      title: videoTitle
                     }
                   }
                 }}
