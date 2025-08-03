@@ -558,7 +558,8 @@ const PhotosComponent = function () {
     
     return (
       <div className='PhotosComponent'>
-        <div className="content-container">
+        {/* Main article/video content wrapper to establish this as a watch page */}
+        <main className="content-container" role="main" itemScope itemType={currPhoto?.photo?.video === true ? "https://schema.org/VideoObject" : "https://schema.org/ImageObject"}>
           {/* <HelmetProvider> */}
           <Helmet prioritizeSeoTags>
             <title>{safeTitle}</title>
@@ -578,8 +579,25 @@ const PhotosComponent = function () {
             />
             <meta
               property='og:url'
-              content={`${currPhoto.photo.thumbUrl}`}
+              content={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos': 'photos'}/${currPhoto.photo.id}`}
             />
+
+            {/* Video-specific Open Graph tags */}
+            {currPhoto?.photo?.video === true && (
+              <>
+                <meta property='og:type' content='video.other' />
+                <meta property='og:video' content={currPhoto.photo.videoUrl} />
+                <meta property='og:video:url' content={currPhoto.photo.videoUrl} />
+                <meta property='og:video:secure_url' content={currPhoto.photo.videoUrl} />
+                <meta property='og:video:type' content='video/mp4' />
+                <meta property='og:video:width' content={currPhoto.photo.width || '640'} />
+                <meta property='og:video:height' content={currPhoto.photo.height || '360'} />
+                <meta property='og:video:image' content={currPhoto.photo.thumbUrl} />
+              </>
+            )}
+            {currPhoto?.photo?.video !== true && (
+              <meta property='og:type' content='article' />
+            )}
 
             <link
               rel='canonical'
@@ -596,13 +614,15 @@ const PhotosComponent = function () {
             />
             <meta
               name='twitter:card'
-              content={`Check out what I saw today:
-              ${currPhoto.comments
-                .slice(0, 3)
-                .map((comment) => comment.comment || '')
-                .filter(Boolean)
-                .join("\n")}`}
+              content={currPhoto?.photo?.video === true ? 'player' : 'summary_large_image'}
             />
+            {currPhoto?.photo?.video === true && (
+              <>
+                <meta name='twitter:player' content={currPhoto.photo.videoUrl} />
+                <meta name='twitter:player:width' content={currPhoto.photo.width || '640'} />
+                <meta name='twitter:player:height' content={currPhoto.photo.height || '360'} />
+              </>
+            )}
             <meta
               name='twitter:description'
               content={safeDescription}
@@ -611,7 +631,47 @@ const PhotosComponent = function () {
               name='twitter:image'
               content={`${currPhoto.photo.thumbUrl}`}
             />
-            <meta property='og:type' content='article' />
+
+            {/* VideoObject structured data for videos */}
+            {currPhoto?.photo?.video === true && (
+              <script type="application/ld+json">
+                {JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "VideoObject",
+                  "name": safeTitle,
+                  "description": safeDescription,
+                  "thumbnailUrl": [currPhoto.photo.thumbUrl],
+                  "uploadDate": new Date().toISOString(), // You might want to use actual upload date from your data
+                  "contentUrl": currPhoto.photo.videoUrl,
+                  "embedUrl": `https://wisaw.com/videos/${currPhoto.photo.id}`,
+                  "url": `https://wisaw.com/videos/${currPhoto.photo.id}`, // Watch page URL
+                  "duration": "PT0M30S", // Default duration, you might want to get actual duration from your video metadata
+                  "width": currPhoto.photo.width || 640,
+                  "height": currPhoto.photo.height || 360,
+                  "videoQuality": "HD",
+                  "interactionStatistic": {
+                    "@type": "InteractionCounter",
+                    "interactionType": { "@type": "WatchAction" },
+                    "userInteractionCount": currPhoto.photo.watchersCount || 0
+                  },
+                  "publisher": {
+                    "@type": "Organization",
+                    "name": "WiSaw",
+                    "url": "https://wisaw.com",
+                    "logo": {
+                      "@type": "ImageObject",
+                      "url": "https://wisaw.com/logo192.png"
+                    }
+                  },
+                  "mainEntityOfPage": {
+                    "@type": "WebPage",
+                    "@id": `https://wisaw.com/videos/${currPhoto.photo.id}`
+                  },
+                  "isAccessibleForFree": true,
+                  "isFamilyFriendly": true
+                })}
+              </script>
+            )}
           </Helmet>
           {/* </HelmetProvider> */}
 
@@ -633,6 +693,10 @@ const PhotosComponent = function () {
               position: "relative",
               // cursor: "pointer",
             }}
+            // Add microdata for video container
+            itemScope={currPhoto?.photo?.video === true}
+            itemType={currPhoto?.photo?.video === true ? "https://schema.org/VideoObject" : undefined}
+            itemProp={currPhoto?.photo?.video === true ? "video" : undefined}
           >
             {currPhoto?.photo?.video === true && (
               <ReactPlayer 
@@ -644,10 +708,20 @@ const PhotosComponent = function () {
                   width: `${dimensions.width}px`,
                   height: `${dimensions.height}px`,
                 }}
-    
-                playing={true}
+                playing={false} // Don't autoplay for better user experience
                 controls={true}
-
+                poster={currPhoto.photo.thumbUrl} // Add poster image
+                config={{
+                  file: {
+                    attributes: {
+                      preload: 'metadata',
+                      'aria-label': currPhoto?.comments?.length > 0 
+                        ? currPhoto?.comments[0]?.comment 
+                        : `wisaw video ${currPhoto.photo.id}`,
+                      title: safeTitle
+                    }
+                  }
+                }}
               />)}
 
             {currPhoto?.photo?.video !== true && (
@@ -750,7 +824,7 @@ const PhotosComponent = function () {
 
             <div style={{ margin: "10px", align: "center" }} />
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     )
