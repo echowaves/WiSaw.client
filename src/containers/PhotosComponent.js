@@ -38,6 +38,7 @@ const PhotosComponent = function () {
 
   const [dimensions, setDimensions] = useState({width: null, height: null})
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false)
 
   const { photoId } = useParams()
 
@@ -51,6 +52,7 @@ const PhotosComponent = function () {
         requestComplete: false,
       })
       setImageLoaded(false)
+      setShowVideoPlayer(false) // Reset video player state
       load({ photoId })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -699,30 +701,89 @@ const PhotosComponent = function () {
             itemProp={currPhoto?.photo?.video === true ? "video" : undefined}
           >
             {currPhoto?.photo?.video === true && (
-              <ReactPlayer 
-                url={currPhoto?.photo?.videoUrl}
-                className='mainImage'
-                width={`${dimensions.width}px`}
-                height={`${dimensions.height}px`}
-                style={{                
-                  width: `${dimensions.width}px`,
-                  height: `${dimensions.height}px`,
-                }}
-                playing={false} // Don't autoplay for better user experience
-                controls={true}
-                poster={currPhoto.photo.thumbUrl} // Add poster image
-                config={{
-                  file: {
-                    attributes: {
-                      preload: 'metadata',
-                      'aria-label': currPhoto?.comments?.length > 0 
-                        ? currPhoto?.comments[0]?.comment 
-                        : `wisaw video ${currPhoto.photo.id}`,
-                      title: finalVideoTitle
-                    }
+              <>
+                {/* Thumbnail as base layer for videos - always visible */}
+                <img
+                  width={`${dimensions.width}`}
+                  height={`${dimensions.height}`}
+                  className='thumbnailImage'
+                  src={currPhoto.photo.thumbUrl}
+                  alt={
+                    currPhoto?.comments?.length > 0
+                      ? currPhoto?.comments[0]?.comment
+                      : `wisaw video ${currPhoto.photo.id}`
                   }
-                }}
-              />)}
+                  style={{
+                    width: `${dimensions.width}px`,
+                    height: `${dimensions.height}px`,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    borderRadius: '18px',
+                    objectFit: 'cover',
+                    zIndex: 1,
+                  }}
+                />
+                
+                {/* Play button overlay to indicate video */}
+                {!showVideoPlayer && (
+                  <div
+                    onClick={() => setShowVideoPlayer(true)}
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 2,
+                      fontSize: '48px',
+                      color: 'white',
+                      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                      borderRadius: '50%',
+                      width: '80px',
+                      height: '80px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ▶
+                  </div>
+                )}
+                
+                {/* Video player - shows when user clicks play */}
+                {showVideoPlayer && (
+                  <ReactPlayer 
+                    url={currPhoto?.photo?.videoUrl}
+                    className='mainImage'
+                    width={`${dimensions.width}px`}
+                    height={`${dimensions.height}px`}
+                    style={{                
+                      width: `${dimensions.width}px`,
+                      height: `${dimensions.height}px`,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      borderRadius: '18px',
+                      zIndex: 3,
+                    }}
+                    playing={true} // Start playing when shown
+                    controls={true}
+                    config={{
+                      file: {
+                        attributes: {
+                          preload: 'metadata',
+                          'aria-label': currPhoto?.comments?.length > 0 
+                            ? currPhoto?.comments[0]?.comment 
+                            : `wisaw video ${currPhoto.photo.id}`,
+                          title: finalVideoTitle
+                        }
+                      }
+                    }}
+                  />
+                )}
+              </>
+            )}
 
             {currPhoto?.photo?.video !== true && (
               <>
