@@ -645,6 +645,15 @@ const PhotosComponent = function () {
               content={`${currPhoto.photo.thumbUrl}`}
             />
 
+            {/* Video-specific meta tags for Google */}
+            {currPhoto?.photo?.video === true && (
+              <>
+                <meta name="robots" content="max-video-preview:30" />
+                <meta property="video:duration" content="30" />
+                <meta property="video:release_date" content={new Date().toISOString()} />
+              </>
+            )}
+
             {/* VideoObject structured data for videos */}
             {currPhoto?.photo?.video === true && (
               <script type="application/ld+json">
@@ -653,7 +662,7 @@ const PhotosComponent = function () {
                   "@type": "VideoObject",
                   "name": finalVideoTitle,
                   "description": finalVideoDescription,
-                  "thumbnailUrl": currPhoto.photo.thumbUrl,
+                  "thumbnailUrl": [currPhoto.photo.thumbUrl], // Must be array format
                   "uploadDate": new Date().toISOString(),
                   "contentUrl": currPhoto.photo.videoUrl,
                   "embedUrl": `https://wisaw.com/videos/${currPhoto.photo.id}`,
@@ -661,6 +670,8 @@ const PhotosComponent = function () {
                   "duration": "PT0M30S",
                   "width": parseInt(currPhoto.photo.width) || 640,
                   "height": parseInt(currPhoto.photo.height) || 360,
+                  "videoQuality": "HD",
+                  "encodingFormat": "video/mp4",
                   "interactionStatistic": {
                     "@type": "InteractionCounter",
                     "interactionType": { "@type": "WatchAction" },
@@ -669,7 +680,15 @@ const PhotosComponent = function () {
                   "publisher": {
                     "@type": "Organization",
                     "name": "WiSaw",
-                    "url": "https://wisaw.com"
+                    "url": "https://wisaw.com",
+                    "logo": {
+                      "@type": "ImageObject", 
+                      "url": "https://wisaw.com/logo192.png"
+                    }
+                  },
+                  "potentialAction": {
+                    "@type": "WatchAction",
+                    "target": `https://wisaw.com/videos/${currPhoto.photo.id}`
                   }
                 })}
               </script>
@@ -722,6 +741,7 @@ const PhotosComponent = function () {
                     borderRadius: '18px',
                     objectFit: 'cover',
                     zIndex: 1,
+                    display: showVideoPlayer ? 'none' : 'block', // Hide when video is playing
                   }}
                 />
                 
@@ -751,37 +771,59 @@ const PhotosComponent = function () {
                   </div>
                 )}
                 
-                {/* Video player - shows when user clicks play */}
-                {showVideoPlayer && (
-                  <ReactPlayer 
-                    url={currPhoto?.photo?.videoUrl}
-                    className='mainImage'
-                    width={`${dimensions.width}px`}
-                    height={`${dimensions.height}px`}
-                    style={{                
-                      width: `${dimensions.width}px`,
-                      height: `${dimensions.height}px`,
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      borderRadius: '18px',
-                      zIndex: 3,
-                    }}
-                    playing={true} // Start playing when shown
-                    controls={true}
-                    config={{
-                      file: {
-                        attributes: {
-                          preload: 'metadata',
-                          'aria-label': currPhoto?.comments?.length > 0 
-                            ? currPhoto?.comments[0]?.comment 
-                            : `wisaw video ${currPhoto.photo.id}`,
-                          title: finalVideoTitle
-                        }
+                {/* Video player - ALWAYS present in DOM for Google to find */}
+                <ReactPlayer 
+                  url={currPhoto?.photo?.videoUrl}
+                  className='mainImage'
+                  width={`${dimensions.width}px`}
+                  height={`${dimensions.height}px`}
+                  style={{                
+                    width: `${dimensions.width}px`,
+                    height: `${dimensions.height}px`,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    borderRadius: '18px',
+                    zIndex: 3,
+                    opacity: showVideoPlayer ? 1 : 0, // Hide visually but keep in DOM
+                    pointerEvents: showVideoPlayer ? 'auto' : 'none', // Disable interaction when hidden
+                  }}
+                  playing={showVideoPlayer} // Only play when user clicks
+                  controls={true}
+                  config={{
+                    file: {
+                      attributes: {
+                        preload: 'metadata',
+                        'aria-label': currPhoto?.comments?.length > 0 
+                          ? currPhoto?.comments[0]?.comment 
+                          : `wisaw video ${currPhoto.photo.id}`,
+                        title: finalVideoTitle
                       }
-                    }}
-                  />
-                )}
+                    }
+                  }}
+                />
+                
+                {/* Alternative: HTML5 video element for better Google detection */}
+                <video
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  poster={currPhoto.photo.thumbUrl}
+                  controls={showVideoPlayer}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: `${dimensions.width}px`,
+                    height: `${dimensions.height}px`,
+                    borderRadius: '18px',
+                    zIndex: 0, // Behind everything else
+                    visibility: 'hidden', // Hidden but present for Google
+                  }}
+                  aria-label={finalVideoTitle}
+                >
+                  <source src={currPhoto.photo.videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </>
             )}
 
