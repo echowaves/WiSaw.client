@@ -451,7 +451,23 @@ a[style*="width: 250px"] div {
   }
 }
 
-/* Masonry container styling for multi-column layout */
+/* Masonry grid styling for react-masonry-css */
+.masonry-grid {
+  display: flex;
+  margin-left: -10px;
+  width: auto;
+}
+
+.masonry-grid-column {
+  padding-left: 10px;
+  background-clip: padding-box;
+}
+
+.masonry-grid-column > div {
+  margin-bottom: 10px;
+}
+
+/* Legacy masonry container styling - kept for compatibility */
 .masonry-container {
   width: 100% !important;
   margin: 0 auto !important;
@@ -470,7 +486,7 @@ a[style*="width: 250px"] div {
   height: 50px;
 }
 
-/* Force Masonry component to use multiple columns */
+/* Legacy Masonry component styles */
 .react-masonry-component {
   width: 100% !important;
   margin: 0 auto !important;

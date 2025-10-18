@@ -2,8 +2,8 @@ import {
   ApolloClient,
   InMemoryCache,
   HttpLink,
-  from,
-} from "@apollo/client"
+  from
+} from '@apollo/client'
 
 // const fetch = require('node-fetch')
 
@@ -19,12 +19,12 @@ const httpLink = new HttpLink({
   uri: API_URI,
   fetch,
   headers: {
-    'X-Api-Key': API_KEY,
-  },
+    'X-Api-Key': API_KEY
+  }
 })
 
 export const gqlClient = new ApolloClient({// eslint-disable-line
   uri: API_URI,
   link: from([httpLink]),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache()
 })

@@ -1,25 +1,25 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { useEffect, useState } from "react"
-import { Helmet } from "react-helmet-async"
+import { useEffect, useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 
-import InfiniteScroll from "react-infinite-scroll-component"
-import Masonry from "react-masonry-component"
+import InfiniteScroll from 'react-infinite-scroll-component'
+import Masonry from 'react-masonry-css'
 import {
   Link,
-  useNavigate,
-} from "react-router-dom"
+  useNavigate
+} from 'react-router-dom'
 
-import Button from "react-bootstrap/Button"
-import Col from "react-bootstrap/Col"
-import Form from "react-bootstrap/Form"
-import Row from "react-bootstrap/Row"
+import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col'
+import Form from 'react-bootstrap/Form'
+import Row from 'react-bootstrap/Row'
 
 // import { Helmet } from "react-helmet-async"
 
 // import ReactGA from 'react-ga'
-import ReactGA from "react-ga4"
+import ReactGA from 'react-ga4'
 
-import "./PhotosComponent.css"
+import './PhotosComponent.css'
 
 // import {
 //   Link,
@@ -28,22 +28,22 @@ import "./PhotosComponent.css"
 // } from "react-router-dom"
 
 // import PropTypes from 'prop-types'
-import { gql } from "@apollo/client"
+import { gql } from '@apollo/client'
 
-import * as CONST from "../consts"
-import { getOptimizedThumbnailDimensions } from "../utils/imageUtils"
+import * as CONST from '../consts'
+import { getOptimizedThumbnailDimensions } from '../utils/imageUtils'
 
 const Home = function () {
   const [photos, setPhotos] = useState([])
   const [pageNumber, setPageNumber] = useState(0)
   const [noMoreData, setNoMoreData] = useState(true)
-  const [searchText, setSearchText] = useState("")
+  const [searchText, setSearchText] = useState('')
   const navigate = useNavigate()
 
   const init = async () => {
     ReactGA.send({
-      hitType: "pageview",
-      page: `/`,
+      hitType: 'pageview',
+      page: '/'
       // title: "Custom Title",
     })
   }
@@ -51,7 +51,6 @@ const Home = function () {
   useEffect(() => {
     retrievePhotos()
     init()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // const embedded = new URLSearchParams(location.search).get("embedded")
@@ -84,8 +83,8 @@ const Home = function () {
         `,
         variables: {
           pageNumber,
-          batch: "0", // Convert to string to prevent potential integer overflow
-        },
+          batch: '0' // Convert to string to prevent potential integer overflow
+        }
       })
 
       // console.log({response})
@@ -96,13 +95,13 @@ const Home = function () {
       return {
         photos: response.data.feedRecent.photos,
         batch: response.data.feedRecent.batch,
-        noMoreData: response.data.feedRecent.noMoreData,
+        noMoreData: response.data.feedRecent.noMoreData
       }
     } catch (err) {
-      console.error("Error retrieving photos:", err.message)
+      console.error('Error retrieving photos:', err.message)
       return {
         photos: [],
-        batch: "0",
+        batch: '0',
         noMoreData: true
       }
     }
@@ -114,7 +113,7 @@ const Home = function () {
 
     if (searchText && searchText.trim()) {
       navigate(`/search/${encodeURIComponent(searchText.trim())}`)
-      setSearchText("")
+      setSearchText('')
     }
   }
   const searchTextHandler = function (event) {
@@ -126,10 +125,10 @@ const Home = function () {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "right",
+          display: 'flex',
+          justifyContent: 'right',
           // alignItems: 'center',
-          paddingBottom: "10px",
+          paddingBottom: '10px'
         }}
       >
         <Form onSubmit={handleSearch}>
@@ -140,7 +139,7 @@ const Home = function () {
                 placeholder='What are you looking for...'
                 value={searchText}
                 onChange={searchTextHandler}
-                aria-label="Search input"
+                aria-label='Search input'
               />
             </Col>
             <Col xs='auto'>
@@ -158,112 +157,122 @@ const Home = function () {
     return (
       <InfiniteScroll
         style={{
-          position: "relative",
-          overflow: 'unset',
+          position: 'relative',
+          overflow: 'unset'
         }}
-        dataLength={photos.length} //This is important field to render the next data
+        dataLength={photos.length} // This is important field to render the next data
         next={retrievePhotos}
         hasMore={!noMoreData}
-        loader={<div aria-label="Loading content">Loading...</div>}
+        loader={<div aria-label='Loading content'>Loading...</div>}
         endMessage={
-          <p style={{ textAlign: "center" }}>
+          <p style={{ textAlign: 'center' }}>
             <b>Yay! You have seen it all</b>
           </p>
         }
-        // below props only if you need pull down functionality
-        // refreshFunction={this.refresh}
-        // pullDownToRefresh
-        // pullDownToRefreshThreshold={50}
-        // pullDownToRefreshContent={
-        //   <h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
-        // }
-        // releaseToRefreshContent={
-        //   <h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
-        // }
+      // below props only if you need pull down functionality
+      // refreshFunction={this.refresh}
+      // pullDownToRefresh
+      // pullDownToRefreshThreshold={50}
+      // pullDownToRefreshContent={
+      //   <h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
+      // }
+      // releaseToRefreshContent={
+      //   <h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
+      // }
       >
-        <Masonry style={{}}>
+        <Masonry
+          breakpointCols={{
+            default: 4,
+            1100: 3,
+            700: 2,
+            500: 1
+          }}
+          className='masonry-grid'
+          columnClassName='masonry-grid-column'
+        >
           {photos.map((photo) => {
             const thumbDimensions = getOptimizedThumbnailDimensions(photo)
-            
+
             return (
-            <div
-              style={{
-                borderRadius: "12px",
-                backgroundColor: "white",
-                margin: "3px",
-                overflow: "hidden",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-              }}
-              key={photo.id}
-            >
-              <Link
-                to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                style={{ width: "244px", display: "block", padding: "3px" }}
+              <div
+                style={{
+                  borderRadius: '12px',
+                  backgroundColor: 'white',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+                key={photo.id}
               >
-              {photo?.lastComment && (<>
-              <div style={{
-                borderRadius: "12px",
-                overflow: "hidden",
-                display: "block",
-                width: "100%",
-                lineHeight: 0
-              }}>
-                <img
-                  src={photo.thumbUrl}
-                  width={thumbDimensions?.width}
-                  height={thumbDimensions?.height}
-                  loading="lazy"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                    objectFit: "cover",
-                    margin: 0,
-                    padding: 0
-                  }}
-                  alt={photo?.lastComment || `Photo ${photo.id}`}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/logo192.png"; // Fallback image
-                  }}
-                />
+                <Link
+                  to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
+                  style={{ width: '100%', display: 'block', padding: '3px' }}
+                >
+                  {photo?.lastComment && (<>
+                    <div style={{
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      display: 'block',
+                      width: '100%',
+                      lineHeight: 0
+                    }}
+                    >
+                      <img
+                        src={photo.thumbUrl}
+                        width={thumbDimensions?.width}
+                        height={thumbDimensions?.height}
+                        loading='lazy'
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          display: 'block',
+                          objectFit: 'cover',
+                          margin: 0,
+                          padding: 0
+                        }}
+                        alt={photo?.lastComment || `Photo ${photo.id}`}
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = '/logo192.png' // Fallback image
+                        }}
+                      />
+                    </div>
+                    <div style={{ width: '100%', paddingBottom: 15 }}>
+                      {/* Truncate the comment to prevent potential XSS */}
+                      {photo?.lastComment.substring(0, 150)}
+                    </div>
+                  </>
+                  )}
+                  {!photo?.lastComment && (
+                    <div
+                      style={{
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        display: 'block',
+                        lineHeight: 0
+                      }}
+                    >
+                      <img
+                        src={photo.thumbUrl}
+                        width={thumbDimensions?.width}
+                        height={thumbDimensions?.height}
+                        loading='lazy'
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          display: 'block',
+                          margin: 0,
+                          padding: 0
+                        }}
+                        alt={`Photo ${photo.id}`}
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = '/logo192.png' // Fallback image
+                        }}
+                      />
+                    </div>
+                  )}
+                </Link>
               </div>
-              <div style={{ width: "100%", paddingBottom: 15 }}>
-                {/* Truncate the comment to prevent potential XSS */}
-                {photo?.lastComment.substring(0, 150)}
-              </div></>
-              )}
-              {!photo?.lastComment && (
-              <div style={{
-                borderRadius: "12px",
-                overflow: "hidden",
-                display: "block",
-                width: "100%",
-                lineHeight: 0
-              }}>
-                <img
-                  src={photo.thumbUrl}
-                  width={thumbDimensions?.width}
-                  height={thumbDimensions?.height}
-                  loading="lazy"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                    objectFit: "cover",
-                    margin: 0,
-                    padding: 0
-                  }}
-                  alt={`Photo ${photo.id}`}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/logo192.png"; // Fallback image
-                  }}
-                />
-              </div>
-              )}
-            </Link>
-            </div>
             )
           })}
         </Masonry>
@@ -274,60 +283,63 @@ const Home = function () {
   return (
     <div
       style={{
-        display: "flex",
-        width: "100%",
-        position: "relative",
-        justifyContent: "center",
+        display: 'flex',
+        width: '100%',
+        position: 'relative',
+        justifyContent: 'center'
         // textAlign: 'center',
         // backgroundColor: '#0666a3'
       }}
     >
-        <Helmet prioritizeSeoTags>
+      <Helmet prioritizeSeoTags>
         <title>Free Stock Photos & Videos -- What I Saw</title>
-        <meta name="description" content="Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras, free pictures no copyright" />    
+        <meta name='description' content='Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras, free pictures no copyright' />
         <link
-            rel='canonical'
-            href={`https://wisaw.com`}
-          />
+          rel='canonical'
+          href='https://wisaw.com'
+        />
         {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://wisaw.com" />
-        <meta property="og:title" content="WiSaw - Free Authentic Stock Photos & Videos" />
-        <meta property="og:description" content="Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide." />
-        <meta property="og:image" content="https://wisaw.com/android-chrome-512x512.png" />
-        
+        <meta property='og:type' content='website' />
+        <meta property='og:url' content='https://wisaw.com' />
+        <meta property='og:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
+        <meta property='og:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
+        <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
+
         {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://wisaw.com" />
-        <meta name="twitter:title" content="WiSaw - Free Authentic Stock Photos & Videos" />
-        <meta name="twitter:description" content="Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide." />
-        <meta name="twitter:image" content="https://wisaw.com/android-chrome-512x512.png" />
-        </Helmet>
+        <meta name='twitter:card' content='summary_large_image' />
+        <meta name='twitter:url' content='https://wisaw.com' />
+        <meta name='twitter:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
+        <meta name='twitter:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
+        <meta name='twitter:image' content='https://wisaw.com/android-chrome-512x512.png' />
+      </Helmet>
 
       <div
         style={{
           // width: '100%',
-          maxWidth: "1120px",
-          width: "90%",
-          position: "relative",
-          alignSelf: "center",
-          justifyContent: "center",
+          maxWidth: '1120px',
+          width: '90%',
+          position: 'relative',
+          alignSelf: 'center',
+          justifyContent: 'center'
         }}
       >
         <h1 style={{
-          fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-          lineHeight: "1.2",
-          marginBottom: "1rem"
-        }}> Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
-        
+          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+          lineHeight: '1.2',
+          marginBottom: '1rem'
+        }}
+        > Unaltered Photos and Videos, Taken with Phone Cameras.
+        </h1>
+
         <h2 style={{
-          fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)",
-          lineHeight: "1.4",
-          fontWeight: "400",
-          marginBottom: "2rem"
-        }}>It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times, 
-          because the goal is to capture shots spontaneously, with minimal preparation—just point and shoot. 
-          As photographers, we often worry too much about getting everything perfect, 
+          fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)',
+          lineHeight: '1.4',
+          fontWeight: '400',
+          marginBottom: '2rem'
+        }}
+        >It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times,
+          because the goal is to capture shots spontaneously, with minimal preparation—just point and shoot.
+          As photographers, we often worry too much about getting everything perfect,
           and in doing so, we miss great opportunities.
         </h2>
         {renderSearchComponent()}

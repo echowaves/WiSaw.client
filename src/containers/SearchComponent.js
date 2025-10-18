@@ -1,32 +1,32 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { lazy, useEffect, useState } from "react"
+import { lazy, useEffect, useState } from 'react'
 import {
   Link,
   useNavigate, useParams
-} from "react-router-dom"
+} from 'react-router-dom'
 
-const Footer = lazy(() => import("./Footer"))
-
-import { Helmet } from "react-helmet-async"
+import { Helmet } from 'react-helmet-async'
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import { Bars } from "react-loader-spinner"
+import { Bars } from 'react-loader-spinner'
 
-import InfiniteScroll from "react-infinite-scroll-component"
+import InfiniteScroll from 'react-infinite-scroll-component'
 
-import Button from "react-bootstrap/Button"
-import Col from "react-bootstrap/Col"
-import Form from "react-bootstrap/Form"
-import Row from "react-bootstrap/Row"
+import Button from 'react-bootstrap/Button'
+import Col from 'react-bootstrap/Col'
+import Form from 'react-bootstrap/Form'
+import Row from 'react-bootstrap/Row'
 
-import "./PhotosComponent.css"
+import './PhotosComponent.css'
 
-import ReactGA from "react-ga4"
+import ReactGA from 'react-ga4'
 
 // import PropTypes from 'prop-types'
-import { gql } from "@apollo/client"
+import { gql } from '@apollo/client'
 // import stringifyObject from 'stringify-object'
-import * as CONST from "../consts"
-import { getSearchGridDimensions } from "../utils/imageUtils"
+import * as CONST from '../consts'
+import { getSearchGridDimensions } from '../utils/imageUtils'
+
+const Footer = lazy(() => import('./Footer'))
 
 const SearchComponent = function () {
   const { searchString } = useParams()
@@ -36,7 +36,7 @@ const SearchComponent = function () {
   const [pageNumber, setPageNumber] = useState(0)
   const [noMoreData, setNoMoreData] = useState(true)
   const [requestComplete, setRequestComplete] = useState(false)
-  const [searchText, setSearchText] = useState("")
+  const [searchText, setSearchText] = useState('')
 
   const handleSearch = function (event) {
     if (event) {
@@ -45,7 +45,7 @@ const SearchComponent = function () {
 
     if (searchText && searchText.trim()) {
       navigate(`/search/${encodeURIComponent(searchText.trim())}`)
-      setSearchText("")
+      setSearchText('')
     }
   }
 
@@ -58,10 +58,10 @@ const SearchComponent = function () {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "right",
+          display: 'flex',
+          justifyContent: 'right',
           // alignItems: 'center',
-          paddingBottom: "10px",
+          paddingBottom: '10px'
         }}
       >
         <Form onSubmit={handleSearch}>
@@ -72,7 +72,7 @@ const SearchComponent = function () {
                 placeholder='What are you looking for...'
                 value={searchText}
                 onChange={searchTextHandler}
-                aria-label="Search input"
+                aria-label='Search input'
               />
             </Col>
             <Col xs='auto'>
@@ -86,11 +86,10 @@ const SearchComponent = function () {
     )
   }
 
-
   useEffect(() => {
     // Update searchText state when URL parameter changes
-    setSearchText(searchString || "")
-    
+    setSearchText(searchString || '')
+
     if (searchString) {
       update({ searchString })
     } else {
@@ -100,22 +99,22 @@ const SearchComponent = function () {
     }
   }, [searchString]) // Watch searchString parameter changes
 
-  const update = async ({ searchString }) => {    
+  const update = async ({ searchString }) => {
     // Set loading state
     setPhotos([])
     setPageNumber(0)
     setNoMoreData(true)
     setRequestComplete(false)
-    
+
     ReactGA.send({
-      hitType: "pageview",
-      page: `/search/${searchString}`,
+      hitType: 'pageview',
+      page: `/search/${searchString}`
       // title: "Custom Title",
     })
 
     if (searchString) {
       try {
-        const sanitizedSearchString = searchString.trim();
+        const sanitizedSearchString = searchString.trim()
         const response = await CONST.gqlClient.query({
           query: gql`
             query feedForTextSearch(
@@ -149,17 +148,17 @@ const SearchComponent = function () {
           `,
           variables: {
             searchTerm: sanitizedSearchString,
-            batch: "0", // Convert to string to avoid potential integer overflow
-            pageNumber: 0,
-          },
+            batch: '0', // Convert to string to avoid potential integer overflow
+            pageNumber: 0
+          }
         })
-        
+
         setPhotos(response.data.feedForTextSearch.photos || [])
         setPageNumber(1)
         setNoMoreData(response.data.feedForTextSearch.noMoreData)
         setRequestComplete(true)
       } catch (err) {
-        console.error("Search error:", err.message) // Use console.error and limit what's logged
+        console.error('Search error:', err.message) // Use console.error and limit what's logged
         setPhotos([])
         setRequestComplete(true)
       }
@@ -170,7 +169,7 @@ const SearchComponent = function () {
     if (!searchString) return
 
     try {
-      const sanitizedSearchString = searchString.trim();
+      const sanitizedSearchString = searchString.trim()
       const response = await CONST.gqlClient.query({
         query: gql`
           query feedForTextSearch(
@@ -204,25 +203,25 @@ const SearchComponent = function () {
         `,
         variables: {
           searchTerm: sanitizedSearchString,
-          batch: "0",
-          pageNumber,
-        },
+          batch: '0',
+          pageNumber
+        }
       })
 
       setPageNumber(pageNumber + 1)
       setNoMoreData(response.data.feedForTextSearch.noMoreData)
       setPhotos([...photos, ...response.data.feedForTextSearch.photos])
-      
+
       return {
         photos: response.data.feedForTextSearch.photos,
         batch: response.data.feedForTextSearch.batch,
-        noMoreData: response.data.feedForTextSearch.noMoreData,
+        noMoreData: response.data.feedForTextSearch.noMoreData
       }
     } catch (err) {
-      console.error("Error retrieving more photos:", err.message)
+      console.error('Error retrieving more photos:', err.message)
       return {
         photos: [],
-        batch: "0",
+        batch: '0',
         noMoreData: true
       }
     }
@@ -232,15 +231,15 @@ const SearchComponent = function () {
     return (
       <InfiniteScroll
         style={{
-          position: "relative",
-          overflow: 'unset',
+          position: 'relative',
+          overflow: 'unset'
         }}
-        dataLength={photos.length} //This is important field to render the next data
+        dataLength={photos.length} // This is important field to render the next data
         next={retrieveMorePhotos}
         hasMore={!noMoreData}
-        loader={<div aria-label="Loading content">Loading...</div>}
+        loader={<div aria-label='Loading content'>Loading...</div>}
         endMessage={
-          <p style={{ textAlign: "center" }}>
+          <p style={{ textAlign: 'center' }}>
             <b>Yay! You have seen it all</b>
           </p>
         }
@@ -261,93 +260,93 @@ const SearchComponent = function () {
         >
           {photos.map((photo) => {
             const thumbDimensions = getSearchGridDimensions(photo)
-            
+
             return (
-            <div
-              style={{
-                borderRadius: "12px",
-                backgroundColor: "white",
-                margin: "3px",
-                overflow: "hidden",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                width: `${thumbDimensions.width + 6}px`, // +6 for padding
-                height: "auto",
-                flexShrink: 0 // Prevent items from shrinking
-              }}
-              key={photo.id}
-            >
-              <Link
-                to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                style={{ 
-                  width: "100%", 
-                  display: "block", 
-                  padding: "3px"
+              <div
+                style={{
+                  borderRadius: '12px',
+                  backgroundColor: 'white',
+                  margin: '3px',
+                  overflow: 'hidden',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  width: `${thumbDimensions.width + 6}px`, // +6 for padding
+                  height: 'auto',
+                  flexShrink: 0 // Prevent items from shrinking
                 }}
+                key={photo.id}
               >
-              {photo?.lastComment && (<>
-              <div style={{
-                borderRadius: "12px",
-                overflow: "hidden",
-                display: "block",
-                width: "100%",
-                lineHeight: 0
-              }}>
-                <img
-                  src={photo.thumbUrl}
-                  width={thumbDimensions.width}
-                  height={thumbDimensions.height}
-                  loading="lazy"
+                <Link
+                  to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
                   style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                    objectFit: "cover",
-                    margin: 0,
-                    padding: 0
+                    width: '100%',
+                    display: 'block',
+                    padding: '3px'
                   }}
-                  alt={photo?.lastComment || `Photo ${photo.id}`}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/logo192.png"; // Fallback image
-                  }}
-                />
+                >
+                  {photo?.lastComment && (<>
+                    <div style={{
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      display: 'block',
+                      width: '100%',
+                      lineHeight: 0
+                    }}
+                    >
+                      <img
+                        src={photo.thumbUrl}
+                        width={thumbDimensions.width}
+                        height={thumbDimensions.height}
+                        loading='lazy'
+                        style={{
+                          width: '100%',
+                          height: 'auto',
+                          display: 'block',
+                          objectFit: 'cover',
+                          margin: 0,
+                          padding: 0
+                        }}
+                        alt={photo?.lastComment || `Photo ${photo.id}`}
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = '/logo192.png' // Fallback image
+                        }}
+                      />
+                    </div>
+                    <div style={{ width: '100%', paddingBottom: 15 }}>
+                      {/* Truncate the comment to prevent potential XSS */}
+                      {photo?.lastComment.substring(0, 150)}
+                    </div>
+                  </>
+                  )}
+                  {!photo?.lastComment && (
+                    <div
+                      style={{
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        display: 'block',
+                        lineHeight: 0
+                      }}
+                    >
+                      <img
+                        src={photo.thumbUrl}
+                        width={thumbDimensions.width}
+                        height={thumbDimensions.height}
+                        loading='lazy'
+                        style={{
+                          display: 'block',
+                          margin: 0,
+                          padding: 0
+                        }}
+                        alt={`Photo ${photo.id}`}
+                        onError={(e) => {
+                          e.target.onerror = null
+                          e.target.src = '/logo192.png' // Fallback image
+                        }}
+                      />
+                    </div>
+                  )}
+                </Link>
               </div>
-              <div style={{ width: "100%", paddingBottom: 15 }}>
-                {/* Truncate the comment to prevent potential XSS */}
-                {photo?.lastComment.substring(0, 150)}
-              </div></>
-              )}
-              {!photo?.lastComment && (
-              <div style={{
-                borderRadius: "12px",
-                overflow: "hidden",
-                display: "block",
-                width: "100%",
-                lineHeight: 0
-              }}>
-                <img
-                  src={photo.thumbUrl}
-                  width={thumbDimensions.width}
-                  height={thumbDimensions.height}
-                  loading="lazy"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    display: "block",
-                    objectFit: "cover",
-                    margin: 0,
-                    padding: 0
-                  }}
-                  alt={`Photo ${photo.id}`}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = "/logo192.png"; // Fallback image
-                  }}
-                />
-              </div>
-              )}
-            </Link>
-            </div>
             )
           })}
         </div>
@@ -359,10 +358,10 @@ const SearchComponent = function () {
     return (
       <div
         style={{
-          display: "flex",
-          width: "100%",
-          position: "relative",
-          justifyContent: "center",
+          display: 'flex',
+          width: '100%',
+          position: 'relative',
+          justifyContent: 'center'
           // textAlign: 'center',
           // backgroundColor: '#0666a3'
         }}
@@ -370,23 +369,25 @@ const SearchComponent = function () {
         <div
           style={{
             // width: '100%',
-            maxWidth: "1120px",
-            width: "90%",
-            position: "relative",
-            alignSelf: "center",
-            justifyContent: "center",
+            maxWidth: '1120px',
+            width: '90%',
+            position: 'relative',
+            alignSelf: 'center',
+            justifyContent: 'center'
           }}
         >
           {searchString && (
             <h1 style={{
-              fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-              lineHeight: "1.2",
-              marginBottom: "1rem"
-            }}>Search results for: {searchString}</h1>
+              fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+              lineHeight: '1.2',
+              marginBottom: '1rem'
+            }}
+            >Search results for: {searchString}
+            </h1>
           )}
-          
+
           {renderSearchComponent()}
-          
+
           {/* Show message when no search string provided */}
           {!searchString && (
             <div style={{ textAlign: 'center', padding: '50px 20px' }}>
@@ -394,7 +395,7 @@ const SearchComponent = function () {
               <p>Enter a search term to find photos and videos</p>
             </div>
           )}
-          
+
           {/* Show "nothing found" only when we have a search string but no results */}
           {searchString && photos?.length === 0 && (
             <div style={{ textAlign: 'center', padding: '50px 20px' }}>
@@ -451,14 +452,14 @@ const SearchComponent = function () {
 
   return (
 
-    <div 
+    <div
       className='crop'
       style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
       }}
-      aria-label="Loading content"
+      aria-label='Loading content'
     >
       <Bars
         height='80'
@@ -467,7 +468,7 @@ const SearchComponent = function () {
         ariaLabel='bars-loading'
         wrapperStyle={{}}
         wrapperClass=''
-        visible={true}
+        visible
       />
     </div>
   )
