@@ -1,20 +1,20 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { lazy, Suspense } from "react"
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 // import logo from './logo.svg'
-import { HelmetProvider } from "react-helmet-async"
-import "./App.css"
-const Home = lazy(() => import("./containers/Home"))
-const PhotosComponent = lazy(() => import("./containers/PhotosComponent"))
-const SearchComponent = lazy(() => import("./containers/SearchComponent"))
-const NoMatch = lazy(() => import("./containers/NoMatch"))
-const Header = lazy(() => import("./containers/Header"))
-const About = lazy(() => import("./containers/About"))
-const Contact = lazy(() => import("./containers/Contact"))
-const Terms = lazy(() => import("./containers/Terms"))
+import { HelmetProvider } from 'react-helmet-async'
+import './App.css'
+const Home = lazy(() => import('./containers/Home'))
+const PhotosComponent = lazy(() => import('./containers/PhotosComponent'))
+const SearchComponent = lazy(() => import('./containers/SearchComponent'))
+const NoMatch = lazy(() => import('./containers/NoMatch'))
+const Header = lazy(() => import('./containers/Header'))
+const About = lazy(() => import('./containers/About'))
+const Contact = lazy(() => import('./containers/Contact'))
+const Terms = lazy(() => import('./containers/Terms'))
 
-function App() {
+function App () {
   return (
     <div className='App'>
       <HelmetProvider>
@@ -48,7 +48,7 @@ function App() {
               <Route path='/terms' element={<Terms />} />
               <Route element={<NoMatch />} />
               {/* default redirect to home page */}
-              <Route path="*" element={<Navigate to="/" />} />
+              <Route path='*' element={<Navigate to='/' />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

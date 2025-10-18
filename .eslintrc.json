@@ -1,0 +1,9 @@
+{
+  "extends": "./node_modules/ts-standard/eslintrc.json",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "react/jsx-closing-tag-location": "off"
+  }
+}
