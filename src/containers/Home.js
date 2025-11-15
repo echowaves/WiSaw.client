@@ -195,52 +195,53 @@ const Home = function () {
 
             return (
               <div
+                className='home-thumb-card'
                 style={{
                   borderRadius: '12px',
                   backgroundColor: 'white',
-                  overflow: 'hidden',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  overflow: 'hidden'
                 }}
                 key={photo.id}
               >
                 <Link
                   to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                  style={{ width: '100%', display: 'block', padding: '3px' }}
+                  style={{ width: '100%', display: 'block' }}
                 >
-                  {photo?.lastComment && (<>
-                    <div style={{
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      display: 'block',
-                      width: '100%',
-                      lineHeight: 0
-                    }}
-                    >
-                      <img
-                        src={photo.thumbUrl}
-                        width={thumbDimensions?.width}
-                        height={thumbDimensions?.height}
-                        loading='lazy'
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                          objectFit: 'cover',
-                          margin: 0,
-                          padding: 0
-                        }}
-                        alt={photo?.lastComment || `Photo ${photo.id}`}
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = '/logo192.png' // Fallback image
-                        }}
-                      />
-                    </div>
-                    <div style={{ width: '100%', paddingBottom: 15 }}>
-                      {/* Truncate the comment to prevent potential XSS */}
-                      {photo?.lastComment.substring(0, 150)}
-                    </div>
-                  </>
+                  {photo?.lastComment && (
+                    <>
+                      <div style={{
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        display: 'block',
+                        width: '100%',
+                        lineHeight: 0
+                      }}
+                      >
+                        <img
+                          src={photo.thumbUrl}
+                          width={thumbDimensions?.width}
+                          height={thumbDimensions?.height}
+                          loading='lazy'
+                          style={{
+                            width: '100%',
+                            height: 'auto',
+                            display: 'block',
+                            objectFit: 'cover',
+                            margin: 0,
+                            padding: 0
+                          }}
+                          alt={photo?.lastComment || `Photo ${photo.id}`}
+                          onError={(e) => {
+                            e.target.onerror = null
+                            e.target.src = '/logo192.png' // Fallback image
+                          }}
+                        />
+                      </div>
+                      <div style={{ width: '100%', paddingBottom: 15 }}>
+                        {/* Truncate the comment to prevent potential XSS */}
+                        {photo?.lastComment.substring(0, 150)}
+                      </div>
+                    </>
                   )}
                   {!photo?.lastComment && (
                     <div

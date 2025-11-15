@@ -760,7 +760,7 @@ const PhotosComponent = function () {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    borderRadius: '18px',
+                    borderRadius: '20px',
                     objectFit: 'cover',
                     zIndex: 1,
                     display: showVideoPlayer ? 'none' : 'block' // Hide when video is playing
@@ -805,7 +805,7 @@ const PhotosComponent = function () {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    borderRadius: '18px',
+                    borderRadius: '20px',
                     zIndex: 3,
                     opacity: showVideoPlayer ? 1 : 0, // Hide visually but keep in DOM
                     pointerEvents: showVideoPlayer ? 'auto' : 'none' // Disable interaction when hidden
@@ -837,7 +837,7 @@ const PhotosComponent = function () {
                     left: 0,
                     width: `${dimensions.width}px`,
                     height: `${dimensions.height}px`,
-                    borderRadius: '18px',
+                    borderRadius: '20px',
                     zIndex: 0, // Behind everything else
                     visibility: 'hidden' // Hidden but present for Google
                   }}
@@ -868,7 +868,7 @@ const PhotosComponent = function () {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    borderRadius: '18px',
+                    borderRadius: '20px',
                     objectFit: 'cover',
                     zIndex: 1
                   }}
@@ -894,7 +894,7 @@ const PhotosComponent = function () {
                       position: 'absolute',
                       top: 0,
                       left: 0,
-                      borderRadius: '18px',
+                      borderRadius: '20px',
                       objectFit: 'cover',
                       opacity: imageLoaded ? 1 : 0,
                       transition: 'opacity 0.5s ease-in-out',
@@ -989,7 +989,7 @@ const PhotosComponent = function () {
             width: '300px',
             height: '300px',
             background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '18px',
+            borderRadius: '20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
