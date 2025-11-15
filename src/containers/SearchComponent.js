@@ -10,6 +10,7 @@ import { Helmet } from 'react-helmet-async'
 import { Bars } from 'react-loader-spinner'
 
 import InfiniteScroll from 'react-infinite-scroll-component'
+import Masonry from 'react-masonry-css'
 
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
@@ -244,19 +245,15 @@ const SearchComponent = function () {
           </p>
         }
       >
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            gap: '10px',
-            width: '100%',
-            // Responsive layout adjustments
-            '@media (max-width: 768px)': {
-              gap: '5px'
-            }
+        <Masonry
+          breakpointCols={{
+            default: 4,
+            1100: 3,
+            700: 2,
+            500: 1
           }}
+          className='masonry-grid'
+          columnClassName='masonry-grid-column'
         >
           {photos.map((photo) => {
             const thumbDimensions = getSearchGridDimensions(photo)
@@ -267,9 +264,7 @@ const SearchComponent = function () {
                 style={{
                   borderRadius: '12px',
                   backgroundColor: 'white',
-                  overflow: 'hidden',
-                  width: `${thumbDimensions.width}px`,
-                  flexShrink: 0
+                  overflow: 'hidden'
                 }}
                 key={photo.id}
               >
@@ -348,7 +343,7 @@ const SearchComponent = function () {
               </div>
             )
           })}
-        </div>
+        </Masonry>
       </InfiniteScroll>
     )
   }
