@@ -263,15 +263,13 @@ const SearchComponent = function () {
 
             return (
               <div
+                className='home-thumb-card'
                 style={{
                   borderRadius: '12px',
                   backgroundColor: 'white',
-                  margin: '3px',
                   overflow: 'hidden',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  width: `${thumbDimensions.width + 6}px`, // +6 for padding
-                  height: 'auto',
-                  flexShrink: 0 // Prevent items from shrinking
+                  width: `${thumbDimensions.width}px`,
+                  flexShrink: 0
                 }}
                 key={photo.id}
               >
@@ -279,44 +277,44 @@ const SearchComponent = function () {
                   to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
                   style={{
                     width: '100%',
-                    display: 'block',
-                    padding: '3px'
+                    display: 'block'
                   }}
                 >
-                  {photo?.lastComment && (<>
-                    <div style={{
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      display: 'block',
-                      width: '100%',
-                      lineHeight: 0
-                    }}
-                    >
-                      <img
-                        src={photo.thumbUrl}
-                        width={thumbDimensions.width}
-                        height={thumbDimensions.height}
-                        loading='lazy'
-                        style={{
-                          width: '100%',
-                          height: 'auto',
-                          display: 'block',
-                          objectFit: 'cover',
-                          margin: 0,
-                          padding: 0
-                        }}
-                        alt={photo?.lastComment || `Photo ${photo.id}`}
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = '/logo192.png' // Fallback image
-                        }}
-                      />
-                    </div>
-                    <div style={{ width: '100%', paddingBottom: 15 }}>
-                      {/* Truncate the comment to prevent potential XSS */}
-                      {photo?.lastComment.substring(0, 150)}
-                    </div>
-                  </>
+                  {photo?.lastComment && (
+                    <>
+                      <div style={{
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        display: 'block',
+                        width: '100%',
+                        lineHeight: 0
+                      }}
+                      >
+                        <img
+                          src={photo.thumbUrl}
+                          width={thumbDimensions.width}
+                          height={thumbDimensions.height}
+                          loading='lazy'
+                          style={{
+                            width: '100%',
+                            height: 'auto',
+                            display: 'block',
+                            objectFit: 'cover',
+                            margin: 0,
+                            padding: 0
+                          }}
+                          alt={photo?.lastComment || `Photo ${photo.id}`}
+                          onError={(e) => {
+                            e.target.onerror = null
+                            e.target.src = '/logo192.png' // Fallback image
+                          }}
+                        />
+                      </div>
+                      <div style={{ width: '100%', paddingBottom: 15 }}>
+                        {/* Truncate the comment to prevent potential XSS */}
+                        {photo?.lastComment.substring(0, 150)}
+                      </div>
+                    </>
                   )}
                   {!photo?.lastComment && (
                     <div
@@ -333,6 +331,7 @@ const SearchComponent = function () {
                         height={thumbDimensions.height}
                         loading='lazy'
                         style={{
+                          width: '100%',
                           display: 'block',
                           margin: 0,
                           padding: 0
