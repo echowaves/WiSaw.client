@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { lazy, useEffect, useState } from 'react'
+import { lazy, useCallback, useEffect, useRef, useState } from 'react'
 import ReactPlayer from 'react-player'
 
 import { Helmet } from 'react-helmet-async'
@@ -38,23 +38,28 @@ const PhotosComponent = function () {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
 
-  const { photoId } = useParams()
+  const preloadedMedia = useRef(new Set())
+  const photoPageCache = useRef(new Map())
+  const inflightPhotoRequests = useRef(new Map())
 
-  useEffect(() => {
-    if (photoId) {
-      // Reset state when navigating to show loading
-      setInternalState({
-        currPhoto: null,
-        nextPhoto: null,
-        prevPhoto: null,
-        requestComplete: false
-      })
-      setImageLoaded(false)
-      setShowVideoPlayer(false) // Reset video player state
-      load({ photoId })
+  const preloadImage = useCallback((url) => {
+    if (!url || typeof window === 'undefined') {
+      return
     }
-  }, [photoId])
 
+    if (preloadedMedia.current.has(url)) {
+      return
+    }
+
+    preloadedMedia.current.add(url)
+
+    const img = new window.Image()
+    img.decoding = 'async'
+    img.src = url
+    img.onerror = () => {
+      preloadedMedia.current.delete(url)
+    }
+  }, [preloadedMedia])
   useEffect(() => {
     if (internalState.requestComplete) {
       ReactGA.send({
@@ -69,6 +74,26 @@ const PhotosComponent = function () {
       setImageLoaded(false)
     }
   }, [internalState])
+
+  useEffect(() => {
+    const candidates = [
+      internalState.currPhoto,
+      internalState.nextPhoto,
+      internalState.prevPhoto
+    ]
+
+    candidates.forEach((entry) => {
+      if (!entry?.photo) {
+        return
+      }
+
+      preloadImage(entry.photo.thumbUrl)
+
+      if (entry.photo.video !== true) {
+        preloadImage(entry.photo.imgUrl)
+      }
+    })
+  }, [internalState.currPhoto, internalState.nextPhoto, internalState.prevPhoto, preloadImage])
 
   /**
    * Get dimensions from GraphQL instead of manual image loading
@@ -100,7 +125,7 @@ const PhotosComponent = function () {
     setImageLoaded(true)
   }
 
-  const fetchCurrPhoto = async ({ photoId }) => {
+  const fetchCurrPhoto = useCallback(async ({ photoId }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -143,9 +168,9 @@ const PhotosComponent = function () {
       console.log({ err }) // eslint-disable-line
     }
     return null
-  }
+  }, [])
 
-  const fetchPrevPhoto = async ({ photoId }) => {
+  const fetchPrevPhoto = useCallback(async ({ photoId }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -189,9 +214,9 @@ const PhotosComponent = function () {
     }
 
     return null
-  }
+  }, [])
 
-  const fetchNextPhoto = async ({ photoId }) => {
+  const fetchNextPhoto = useCallback(async ({ photoId }) => {
     try {
       const response = (
         await CONST.gqlClient.query({
@@ -235,30 +260,91 @@ const PhotosComponent = function () {
     }
 
     return null
-  }
+  }, [])
 
-  const load = async ({ photoId }) => {
-    const results = await Promise.all([
-      fetchCurrPhoto({ photoId }),
-      fetchNextPhoto({ photoId }),
-      fetchPrevPhoto({ photoId })
-    ])
-
-    // Calculate dimensions immediately from GraphQL data to prevent layout shift
-    if (results[0]?.photo) {
-      const calculatedDimensions = getDimensionsFromPhoto(results[0].photo)
-      setDimensions(calculatedDimensions)
-    } else {
-      setDimensions({ width: 300, height: 300 })
+  const buildPhotoPage = useCallback(async (photoId) => {
+    if (!photoId) {
+      return {
+        currPhoto: null,
+        nextPhoto: null,
+        prevPhoto: null,
+        dimensions: { width: 300, height: 300 }
+      }
     }
 
+    if (photoPageCache.current.has(photoId)) {
+      return photoPageCache.current.get(photoId)
+    }
+
+    if (inflightPhotoRequests.current.has(photoId)) {
+      return inflightPhotoRequests.current.get(photoId)
+    }
+
+    const requestPromise = (async () => {
+      const [curr, next, prev] = await Promise.all([
+        fetchCurrPhoto({ photoId }),
+        fetchNextPhoto({ photoId }),
+        fetchPrevPhoto({ photoId })
+      ])
+
+      const pageData = {
+        currPhoto: curr,
+        nextPhoto: next,
+        prevPhoto: prev,
+        dimensions: curr?.photo
+          ? getDimensionsFromPhoto(curr.photo)
+          : { width: 300, height: 300 }
+      }
+
+      photoPageCache.current.set(photoId, pageData)
+      inflightPhotoRequests.current.delete(photoId)
+      return pageData
+    })()
+
+    inflightPhotoRequests.current.set(photoId, requestPromise)
+    return requestPromise
+  }, [fetchCurrPhoto, fetchNextPhoto, fetchPrevPhoto])
+
+  const preloadPhotoPage = useCallback((photoId) => {
+    if (!photoId) {
+      return
+    }
+
+    buildPhotoPage(photoId).catch(() => { })
+  }, [buildPhotoPage])
+
+  const load = useCallback(async ({ photoId }) => {
+    const pageData = await buildPhotoPage(photoId)
+
+    const calculatedDimensions = pageData?.dimensions || { width: 300, height: 300 }
+    setDimensions(calculatedDimensions)
+
     setInternalState({
-      currPhoto: results[0],
-      nextPhoto: results[1],
-      prevPhoto: results[2],
+      currPhoto: pageData?.currPhoto,
+      nextPhoto: pageData?.nextPhoto,
+      prevPhoto: pageData?.prevPhoto,
       requestComplete: true
     })
-  }
+
+    preloadPhotoPage(pageData?.nextPhoto?.photo?.id)
+    preloadPhotoPage(pageData?.prevPhoto?.photo?.id)
+  }, [buildPhotoPage, preloadPhotoPage])
+
+  const { photoId } = useParams()
+
+  useEffect(() => {
+    if (photoId) {
+      setInternalState({
+        currPhoto: null,
+        nextPhoto: null,
+        prevPhoto: null,
+        requestComplete: false
+      })
+      setImageLoaded(false)
+      setShowVideoPlayer(false)
+      load({ photoId })
+    }
+  }, [load, photoId])
 
   const recognitionsLabels = (recognition, lebelsToInclude = 10) => {
     if (!recognition) return ''
@@ -539,7 +625,11 @@ const PhotosComponent = function () {
       }
 
       return (
-        <Link to={prevPhotoLink}>
+        <Link
+          to={prevPhotoLink}
+          onMouseEnter={() => preloadPhotoPage(prevPhoto?.photo?.id)}
+          onFocus={() => preloadPhotoPage(prevPhoto?.photo?.id)}
+        >
           <div style={{ margin: '5px' }} className='button'>
             &lt;&nbsp;prev
           </div>
@@ -553,7 +643,11 @@ const PhotosComponent = function () {
       }
 
       return (
-        <Link to={nextPhotoLink}>
+        <Link
+          to={nextPhotoLink}
+          onMouseEnter={() => preloadPhotoPage(nextPhoto?.photo?.id)}
+          onFocus={() => preloadPhotoPage(nextPhoto?.photo?.id)}
+        >
           <div style={{ margin: '5px' }} className='button'>
             next&nbsp;&gt;
           </div>
