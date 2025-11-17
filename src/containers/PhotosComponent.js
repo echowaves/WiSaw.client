@@ -1,6 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, useCallback, useEffect, useRef, useState } from 'react'
-import ReactPlayer from 'react-player'
 
 import { Helmet } from 'react-helmet-async'
 
@@ -37,6 +36,10 @@ const PhotosComponent = function () {
   const [dimensions, setDimensions] = useState({ width: null, height: null })
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  const [videoError, setVideoError] = useState(null)
+
+  const videoRef = useRef(null)
 
   const preloadedMedia = useRef(new Set())
   const photoPageCache = useRef(new Map())
@@ -95,6 +98,25 @@ const PhotosComponent = function () {
     })
   }, [internalState.currPhoto, internalState.nextPhoto, internalState.prevPhoto, preloadImage])
 
+  useEffect(() => {
+    if (showVideoPlayer) {
+      if (videoRef.current) {
+        const playPromise = videoRef.current.play()
+        if (typeof playPromise?.catch === 'function') {
+          playPromise.catch(() => {
+            setVideoError('Unable to start playback automatically. Please press play to continue.')
+          })
+        }
+      }
+    } else {
+      setVideoReady(false)
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
+    }
+  }, [showVideoPlayer])
+
   /**
    * Get dimensions from GraphQL instead of manual image loading
    */
@@ -123,6 +145,25 @@ const PhotosComponent = function () {
     // On error, just keep the thumbnail visible by setting imageLoaded to true
     // This prevents infinite loading states
     setImageLoaded(true)
+  }
+
+  const handleVideoPlayRequest = () => {
+    setVideoError(null)
+    setVideoReady(false)
+    if (videoRef.current) {
+      videoRef.current.load()
+    }
+    setShowVideoPlayer(true)
+  }
+
+  const handleVideoLoadedData = () => {
+    setVideoReady(true)
+    setVideoError(null)
+  }
+
+  const handleVideoError = () => {
+    setVideoReady(false)
+    setVideoError('This video is unavailable right now.')
   }
 
   const fetchCurrPhoto = useCallback(async ({ photoId }) => {
@@ -334,6 +375,11 @@ const PhotosComponent = function () {
 
   useEffect(() => {
     if (photoId) {
+      if (typeof window !== 'undefined') {
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        })
+      }
       setInternalState({
         currPhoto: null,
         nextPhoto: null,
@@ -342,6 +388,12 @@ const PhotosComponent = function () {
       })
       setImageLoaded(false)
       setShowVideoPlayer(false)
+      setVideoReady(false)
+      setVideoError(null)
+      if (videoRef.current) {
+        videoRef.current.pause()
+        videoRef.current.currentTime = 0
+      }
       load({ photoId })
     }
   }, [load, photoId])
@@ -627,8 +679,8 @@ const PhotosComponent = function () {
       return (
         <Link
           to={prevPhotoLink}
-          onMouseEnter={() => preloadPhotoPage(prevPhoto?.photo?.id)}
-          onFocus={() => preloadPhotoPage(prevPhoto?.photo?.id)}
+          onMouseEnter={() => preloadPhotoPage(prevPhoto?.id)}
+          onFocus={() => preloadPhotoPage(prevPhoto?.id)}
         >
           <div style={{ margin: '5px' }} className='button'>
             &lt;&nbsp;prev
@@ -645,8 +697,8 @@ const PhotosComponent = function () {
       return (
         <Link
           to={nextPhotoLink}
-          onMouseEnter={() => preloadPhotoPage(nextPhoto?.photo?.id)}
-          onFocus={() => preloadPhotoPage(nextPhoto?.photo?.id)}
+          onMouseEnter={() => preloadPhotoPage(nextPhoto?.id)}
+          onFocus={() => preloadPhotoPage(nextPhoto?.id)}
         >
           <div style={{ margin: '5px' }} className='button'>
             next&nbsp;&gt;
@@ -864,13 +916,22 @@ const PhotosComponent = function () {
                 {/* Play button overlay to indicate video */}
                 {!showVideoPlayer && (
                   <div
-                    onClick={() => setShowVideoPlayer(true)}
+                    onClick={handleVideoPlayRequest}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        handleVideoPlayRequest()
+                      }
+                    }}
+                    role='button'
+                    tabIndex={0}
+                    aria-label='Play video'
                     style={{
                       position: 'absolute',
                       top: '50%',
                       left: '50%',
                       transform: 'translate(-50%, -50%)',
-                      zIndex: 2,
+                      zIndex: 4,
                       fontSize: '48px',
                       color: 'white',
                       backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -887,12 +948,48 @@ const PhotosComponent = function () {
                   </div>
                 )}
 
-                {/* Video player - ALWAYS present in DOM for Google to find */}
-                <ReactPlayer
-                  url={currPhoto?.photo?.videoUrl}
+                {showVideoPlayer && !videoReady && !videoError && (
+                  <div
+                    className='loading-spinner'
+                    aria-label='Loading video'
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 5,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                )}
+
+                {videoError && (
+                  <div
+                    role='alert'
+                    style={{
+                      position: 'absolute',
+                      top: '12%',
+                      left: '50%',
+                      transform: 'translate(-50%, 0)',
+                      zIndex: 5,
+                      padding: '16px 20px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                      color: '#ffffff',
+                      maxWidth: '90%',
+                      textAlign: 'center',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    {videoError}
+                  </div>
+                )}
+
+                <video
+                  ref={videoRef}
                   className='mainImage'
-                  width={`${dimensions.width}px`}
-                  height={`${dimensions.height}px`}
+                  width={dimensions.width}
+                  height={dimensions.height}
                   style={{
                     width: `${dimensions.width}px`,
                     height: `${dimensions.height}px`,
@@ -901,41 +998,19 @@ const PhotosComponent = function () {
                     left: 0,
                     borderRadius: '20px',
                     zIndex: 3,
-                    opacity: showVideoPlayer ? 1 : 0, // Hide visually but keep in DOM
-                    pointerEvents: showVideoPlayer ? 'auto' : 'none' // Disable interaction when hidden
+                    opacity: showVideoPlayer ? 1 : 0,
+                    pointerEvents: showVideoPlayer ? 'auto' : 'none',
+                    backgroundColor: 'black'
                   }}
-                  playing={showVideoPlayer} // Only play when user clicks
-                  controls
-                  config={{
-                    file: {
-                      attributes: {
-                        preload: 'metadata',
-                        'aria-label': currPhoto?.comments?.length > 0
-                          ? currPhoto?.comments[0]?.comment
-                          : `wisaw video ${currPhoto.photo.id}`,
-                        title: finalVideoTitle
-                      }
-                    }
-                  }}
-                />
-
-                {/* Alternative: HTML5 video element for better Google detection */}
-                <video
-                  width={dimensions.width}
-                  height={dimensions.height}
                   poster={currPhoto.photo.thumbUrl}
-                  controls={showVideoPlayer}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: `${dimensions.width}px`,
-                    height: `${dimensions.height}px`,
-                    borderRadius: '20px',
-                    zIndex: 0, // Behind everything else
-                    visibility: 'hidden' // Hidden but present for Google
-                  }}
+                  controls
+                  preload='metadata'
+                  playsInline
+                  aria-hidden={!showVideoPlayer}
                   aria-label={finalVideoTitle}
+                  onLoadedData={handleVideoLoadedData}
+                  onPlay={handleVideoLoadedData}
+                  onError={handleVideoError}
                 >
                   <source src={currPhoto.photo.videoUrl} type='video/mp4' />
                   Your browser does not support the video tag.

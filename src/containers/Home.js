@@ -209,13 +209,16 @@ const Home = function () {
                 >
                   {photo?.lastComment && (
                     <>
-                      <div style={{
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        display: 'block',
-                        width: '100%',
-                        lineHeight: 0
-                      }}
+                      <div
+                        className='thumbnail-wrapper'
+                        style={{
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          display: 'block',
+                          width: '100%',
+                          lineHeight: 0,
+                          position: 'relative'
+                        }}
                       >
                         <img
                           src={photo.thumbUrl}
@@ -236,6 +239,11 @@ const Home = function () {
                             e.target.src = '/logo192.png' // Fallback image
                           }}
                         />
+                        {photo?.video === true && (
+                          <div className='video-indicator' role='img' aria-label='Video content'>
+                            ▶
+                          </div>
+                        )}
                       </div>
                       <div style={{ width: '100%', paddingBottom: 15 }}>
                         {/* Truncate the comment to prevent potential XSS */}
@@ -245,11 +253,13 @@ const Home = function () {
                   )}
                   {!photo?.lastComment && (
                     <div
+                      className='thumbnail-wrapper'
                       style={{
                         borderRadius: '12px',
                         overflow: 'hidden',
                         display: 'block',
-                        lineHeight: 0
+                        lineHeight: 0,
+                        position: 'relative'
                       }}
                     >
                       <img
@@ -270,6 +280,11 @@ const Home = function () {
                           e.target.src = '/logo192.png' // Fallback image
                         }}
                       />
+                      {photo?.video === true && (
+                        <div className='video-indicator' role='img' aria-label='Video content'>
+                          ▶
+                        </div>
+                      )}
                     </div>
                   )}
                 </Link>
