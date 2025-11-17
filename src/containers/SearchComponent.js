@@ -25,9 +25,40 @@ import ReactGA from 'react-ga4'
 import { gql } from '@apollo/client'
 // import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
-import { getSearchGridDimensions } from '../utils/imageUtils'
+import { getOptimizedThumbnailDimensions } from '../utils/imageUtils'
 
 const Footer = lazy(() => import('./Footer'))
+
+const FEED_FOR_TEXT_SEARCH = gql`
+  query feedForTextSearch(
+    $searchTerm: String!
+    $pageNumber: Int!
+    $batch: String!
+  ) {
+    feedForTextSearch(
+      searchTerm: $searchTerm
+      pageNumber: $pageNumber
+      batch: $batch
+    ) {
+      photos {
+        id
+        uuid
+        imgUrl
+        thumbUrl
+        videoUrl
+        video
+        commentsCount
+        watchersCount
+        lastComment
+        createdAt
+        width
+        height
+      }
+      batch
+      noMoreData
+    }
+  }
+`
 
 const SearchComponent = function () {
   const { searchString } = useParams()
@@ -38,6 +69,56 @@ const SearchComponent = function () {
   const [noMoreData, setNoMoreData] = useState(true)
   const [requestComplete, setRequestComplete] = useState(false)
   const [searchText, setSearchText] = useState('')
+  const [activeSearchTerm, setActiveSearchTerm] = useState('')
+  const derivePaginationState = (resetFlag, currentPage, currentPhotos) => {
+    if (resetFlag) {
+      return { targetPage: 0, existingPhotos: [] }
+    }
+    return { targetPage: currentPage, existingPhotos: currentPhotos }
+  }
+  const handleSearchFailure = (reset) => {
+    if (reset) {
+      setPhotos([])
+      setPageNumber(0)
+    }
+    setNoMoreData(true)
+    setRequestComplete(true)
+    return {
+      photos: [],
+      batch: '0',
+      noMoreData: true
+    }
+  }
+
+  const runSearchQuery = async (term, page) => {
+    const response = await CONST.gqlClient.query({
+      query: FEED_FOR_TEXT_SEARCH,
+      variables: {
+        searchTerm: term,
+        batch: '0',
+        pageNumber: page
+      }
+    })
+
+    const payload = response?.data?.feedForTextSearch || {}
+    return {
+      photos: payload.photos || [],
+      batch: payload.batch ?? '0'
+    }
+  }
+
+  const applySearchResults = ({ existingPhotos, incomingPhotos, targetPage, batch }) => {
+    const reachedEnd = incomingPhotos.length === 0
+    setPhotos([...existingPhotos, ...incomingPhotos])
+    setPageNumber(targetPage + 1)
+    setNoMoreData(reachedEnd)
+    setRequestComplete(true)
+    return {
+      photos: incomingPhotos,
+      batch,
+      noMoreData: reachedEnd
+    }
+  }
 
   const handleSearch = function (event) {
     if (event) {
@@ -87,158 +168,91 @@ const SearchComponent = function () {
     )
   }
 
+  const renderLoadingIndicator = (label) => (
+    <div className='infinite-scroll-loader' aria-label={label}>
+      <Bars
+        height='40'
+        width='40'
+        color='#00ff94'
+        ariaLabel='spinner-loading-indicator'
+        wrapperStyle={{}}
+        wrapperClass=''
+        visible
+      />
+    </div>
+  )
+
   useEffect(() => {
-    // Update searchText state when URL parameter changes
     setSearchText(searchString || '')
 
-    if (searchString) {
-      update({ searchString })
-    } else {
-      // If no search string, just show the search form
-      setPhotos([])
-      setRequestComplete(true)
-    }
-  }, [searchString]) // Watch searchString parameter changes
+    const sanitizedTerm = (searchString || '').trim()
 
-  const update = async ({ searchString }) => {
-    // Set loading state
+    if (!sanitizedTerm) {
+      setActiveSearchTerm('')
+      setPhotos([])
+      setPageNumber(0)
+      setNoMoreData(true)
+      setRequestComplete(true)
+      return
+    }
+
     setPhotos([])
     setPageNumber(0)
     setNoMoreData(true)
-    setRequestComplete(false)
+    setActiveSearchTerm(sanitizedTerm)
+  }, [searchString])
 
-    ReactGA.send({
-      hitType: 'pageview',
-      page: `/search/${searchString}`
-      // title: "Custom Title",
-    })
+  useEffect(() => {
+    if (!activeSearchTerm) return
 
-    if (searchString) {
-      try {
-        const sanitizedSearchString = searchString.trim()
-        const response = await CONST.gqlClient.query({
-          query: gql`
-            query feedForTextSearch(
-              $searchTerm: String!
-              $pageNumber: Int!
-              $batch: String!
-            ) {
-              feedForTextSearch(
-                searchTerm: $searchTerm
-                pageNumber: $pageNumber
-                batch: $batch
-              ) {
-                photos {
-                  id
-                  uuid
-                  imgUrl
-                  thumbUrl
-                  videoUrl
-                  video
-                  commentsCount
-                  watchersCount
-                  lastComment
-                  createdAt
-                  width
-                  height
-                }
-                batch
-                noMoreData
-              }
-            }
-          `,
-          variables: {
-            searchTerm: sanitizedSearchString,
-            batch: '0', // Convert to string to avoid potential integer overflow
-            pageNumber: 0
-          }
-        })
+    const initSearch = async () => {
+      setRequestComplete(false)
 
-        setPhotos(response.data.feedForTextSearch.photos || [])
-        setPageNumber(1)
-        setNoMoreData(response.data.feedForTextSearch.noMoreData)
-        setRequestComplete(true)
-      } catch (err) {
-        console.error('Search error:', err.message) // Use console.error and limit what's logged
-        setPhotos([])
-        setRequestComplete(true)
-      }
-    }
-  }
-
-  const retrieveMorePhotos = async () => {
-    if (!searchString) return
-
-    try {
-      const sanitizedSearchString = searchString.trim()
-      const response = await CONST.gqlClient.query({
-        query: gql`
-          query feedForTextSearch(
-            $searchTerm: String!
-            $pageNumber: Int!
-            $batch: String!
-          ) {
-            feedForTextSearch(
-              searchTerm: $searchTerm
-              pageNumber: $pageNumber
-              batch: $batch
-            ) {
-              photos {
-                id
-                uuid
-                imgUrl
-                thumbUrl
-                videoUrl
-                video
-                commentsCount
-                watchersCount
-                lastComment
-                createdAt
-                width
-                height
-              }
-              batch
-              noMoreData
-            }
-          }
-        `,
-        variables: {
-          searchTerm: sanitizedSearchString,
-          batch: '0',
-          pageNumber
-        }
+      ReactGA.send({
+        hitType: 'pageview',
+        page: `/search/${activeSearchTerm}`
       })
 
-      setPageNumber(pageNumber + 1)
-      setNoMoreData(response.data.feedForTextSearch.noMoreData)
-      setPhotos([...photos, ...response.data.feedForTextSearch.photos])
+      await retrievePhotos({ reset: true, searchTerm: activeSearchTerm })
+    }
 
-      return {
-        photos: response.data.feedForTextSearch.photos,
-        batch: response.data.feedForTextSearch.batch,
-        noMoreData: response.data.feedForTextSearch.noMoreData
-      }
+    initSearch()
+  }, [activeSearchTerm])
+
+  const retrievePhotos = async ({ reset = false, searchTerm = activeSearchTerm } = {}) => {
+    if (!searchTerm) {
+      setRequestComplete(true)
+      return handleSearchFailure(reset)
+    }
+
+    const { targetPage, existingPhotos } = derivePaginationState(reset, pageNumber, photos)
+
+    try {
+      const { photos: incomingPhotos, batch } = await runSearchQuery(searchTerm, targetPage)
+      return applySearchResults({
+        existingPhotos,
+        incomingPhotos,
+        targetPage,
+        batch
+      })
     } catch (err) {
-      console.error('Error retrieving more photos:', err.message)
-      return {
-        photos: [],
-        batch: '0',
-        noMoreData: true
-      }
+      console.error('Error retrieving search photos:', err.message)
+      return handleSearchFailure(reset)
     }
   }
 
   const renderInfiniteFeed = function () {
     return (
       <InfiniteScroll
+        key={activeSearchTerm || 'search-feed'}
         style={{
           position: 'relative',
           overflow: 'unset'
         }}
         dataLength={photos.length} // This is important field to render the next data
-        next={retrieveMorePhotos}
+        next={() => retrievePhotos()}
         hasMore={!noMoreData}
-        loader={<div aria-label='Loading content'>Loading...</div>}
+        loader={renderLoadingIndicator('Loading more content')}
         endMessage={
           <p style={{ textAlign: 'center' }}>
             <b>Yay! You have seen it all</b>
@@ -256,7 +270,7 @@ const SearchComponent = function () {
           columnClassName='masonry-grid-column'
         >
           {photos.map((photo) => {
-            const thumbDimensions = getSearchGridDimensions(photo)
+            const thumbDimensions = getOptimizedThumbnailDimensions(photo)
 
             return (
               <div
@@ -445,25 +459,8 @@ const SearchComponent = function () {
   }
 
   return (
-
-    <div
-      className='crop'
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}
-      aria-label='Loading content'
-    >
-      <Bars
-        height='80'
-        width='80'
-        color='#4fa94d'
-        ariaLabel='bars-loading'
-        wrapperStyle={{}}
-        wrapperClass=''
-        visible
-      />
+    <div className='initial-loading-container'>
+      {renderLoadingIndicator('Loading content')}
     </div>
   )
 }
