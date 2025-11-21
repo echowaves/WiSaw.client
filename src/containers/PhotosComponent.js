@@ -182,6 +182,7 @@ const PhotosComponent = function () {
                   videoUrl
                   width
                   height
+                  createdAt
                 }
                 comments {
                   comment
@@ -227,6 +228,7 @@ const PhotosComponent = function () {
                   videoUrl
                   width
                   height
+                  createdAt
                 }
                 comments {
                   comment
@@ -273,6 +275,7 @@ const PhotosComponent = function () {
                   videoUrl
                   width
                   height
+                  createdAt
                 }
                 comments {
                   comment
@@ -830,8 +833,8 @@ const PhotosComponent = function () {
                   '@type': 'VideoObject',
                   name: finalVideoTitle,
                   description: finalVideoDescription,
-                  thumbnailUrl: [currPhoto.photo.thumbUrl], // Must be array format
-                  uploadDate: new Date().toISOString(),
+                  thumbnailUrl: [currPhoto.photo.thumbUrl],
+                  uploadDate: currPhoto.photo.createdAt || new Date().toISOString(),
                   contentUrl: currPhoto.photo.videoUrl,
                   embedUrl: `https://wisaw.com/videos/${currPhoto.photo.id}`,
                   url: `https://wisaw.com/videos/${currPhoto.photo.id}`,
