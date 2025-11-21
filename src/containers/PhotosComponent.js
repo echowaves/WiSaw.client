@@ -842,7 +842,7 @@ const PhotosComponent = function () {
                   width: parseInt(currPhoto.photo.width, 10) || 640,
                   height: parseInt(currPhoto.photo.height, 10) || 360,
                   videoQuality: 'HD',
-                  encodingFormat: 'video/mp4',
+                  encodingFormat: currPhoto.photo.videoUrl?.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
                   interactionStatistic: {
                     '@type': 'InteractionCounter',
                     interactionType: { '@type': 'WatchAction' },
