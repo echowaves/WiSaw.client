@@ -419,7 +419,7 @@ const PhotosComponent = function () {
       return (
         <div>
           {labels?.length > 0 && (
-            <div style={{ margin: '5px' }}>
+            <div style={{ margin: '4px 0 8px' }}>
               <h1>
                 {labels.slice(0, 3).map((label) => (
                   <Link
@@ -467,7 +467,7 @@ const PhotosComponent = function () {
       return (
         <div>
           {labels?.length > 0 && (
-            <div style={{ margin: '5px' }}>
+            <div style={{ margin: '4px 0 8px' }}>
               <h2>
                 {labels.slice(3, 6).map((label) => (
                   <Link
@@ -528,24 +528,24 @@ const PhotosComponent = function () {
 
           {textDetections?.length > 0 && (
             <div style={{
-              margin: '20px 0',
-              padding: '25px',
+              margin: '12px 0',
+              padding: '18px',
               background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               backdropFilter: 'blur(15px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)'
             }}
             >
               <div style={{
                 textAlign: 'center',
-                marginBottom: '20px',
-                padding: '10px 0',
+                marginBottom: '12px',
+                padding: '6px 0',
                 borderBottom: '2px solid rgba(0, 255, 148, 0.2)'
               }}
               >
                 <h3 style={{
-                  fontSize: '20px',
+                  fontSize: '18px',
                   fontWeight: '700',
                   margin: '0',
                   background: 'linear-gradient(135deg, #00ff94 0%, #720cf0 100%)',
@@ -562,7 +562,7 @@ const PhotosComponent = function () {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '6px'
               }}
               >
                 {textDetections.map((text) => (
@@ -572,9 +572,9 @@ const PhotosComponent = function () {
                       lineHeight: 1.6,
                       opacity: Math.max(0.6, text.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (text.Confidence / 100) * 200),
-                      padding: '8px 14px',
+                      padding: '6px 12px',
                       background: 'linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%)',
-                      borderRadius: '20px',
+                      borderRadius: '14px',
                       border: '1px solid rgba(0, 255, 148, 0.2)',
                       display: 'inline-block',
                       transition: 'all 0.3s ease',
@@ -590,24 +590,24 @@ const PhotosComponent = function () {
 
           {moderationLabels?.length > 0 && (
             <div style={{
-              margin: '20px 0',
-              padding: '25px',
+              margin: '12px 0',
+              padding: '18px',
               background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '16px',
+              borderRadius: '12px',
               backdropFilter: 'blur(15px)',
               border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)'
             }}
             >
               <div style={{
                 textAlign: 'center',
-                marginBottom: '20px',
-                padding: '10px 0',
+                marginBottom: '12px',
+                padding: '6px 0',
                 borderBottom: '2px solid rgba(255, 94, 77, 0.2)'
               }}
               >
                 <h3 style={{
-                  fontSize: '20px',
+                  fontSize: '18px',
                   fontWeight: '700',
                   margin: '0',
                   background: 'linear-gradient(135deg, #ff5e4d 0%, #d32f2f 100%)',
@@ -624,7 +624,7 @@ const PhotosComponent = function () {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '6px'
               }}
               >
                 {moderationLabels.map((label) => (
@@ -634,9 +634,9 @@ const PhotosComponent = function () {
                       lineHeight: 1.6,
                       opacity: Math.max(0.6, label.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (label.Confidence / 100) * 200),
-                      padding: '8px 14px',
+                      padding: '6px 12px',
                       background: 'linear-gradient(135deg, rgba(255, 94, 77, 0.1) 0%, rgba(211, 47, 47, 0.1) 100%)',
-                      borderRadius: '18px',
+                      borderRadius: '14px',
                       border: '1px solid rgba(255, 94, 77, 0.3)',
                       display: 'inline-block',
                       transition: 'all 0.3s ease',
@@ -685,7 +685,7 @@ const PhotosComponent = function () {
           onMouseEnter={() => preloadPhotoPage(prevPhoto?.id)}
           onFocus={() => preloadPhotoPage(prevPhoto?.id)}
         >
-          <div style={{ margin: '5px' }} className='button'>
+          <div style={{ margin: '4px' }} className='button'>
             &lt;&nbsp;prev
           </div>
         </Link>
@@ -703,7 +703,7 @@ const PhotosComponent = function () {
           onMouseEnter={() => preloadPhotoPage(nextPhoto?.id)}
           onFocus={() => preloadPhotoPage(nextPhoto?.id)}
         >
-          <div style={{ margin: '5px' }} className='button'>
+          <div style={{ margin: '4px' }} className='button'>
             next&nbsp;&gt;
           </div>
         </Link>
@@ -905,7 +905,7 @@ const PhotosComponent = function () {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    borderRadius: '20px',
+                    borderRadius: '18px',
                     objectFit: 'cover',
                     zIndex: 1,
                     display: showVideoPlayer ? 'none' : 'block' // Hide when video is playing
@@ -995,7 +995,7 @@ const PhotosComponent = function () {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    borderRadius: '20px',
+                    borderRadius: '18px',
                     zIndex: 3,
                     opacity: showVideoPlayer ? 1 : 0,
                     pointerEvents: showVideoPlayer ? 'auto' : 'none',
@@ -1036,7 +1036,7 @@ const PhotosComponent = function () {
                     position: 'absolute',
                     top: 0,
                     left: 0,
-                    borderRadius: '20px',
+                    borderRadius: '18px',
                     objectFit: 'cover',
                     zIndex: 1
                   }}
@@ -1062,7 +1062,7 @@ const PhotosComponent = function () {
                       position: 'absolute',
                       top: 0,
                       left: 0,
-                      borderRadius: '20px',
+                      borderRadius: '18px',
                       objectFit: 'cover',
                       opacity: imageLoaded ? 1 : 0,
                       transition: 'opacity 0.5s ease-in-out',
@@ -1115,7 +1115,7 @@ const PhotosComponent = function () {
                 renderRecognitions(currPhoto?.recognitions[0])}
             </div>
 
-            <div style={{ margin: '10px', align: 'center' }} />
+            <div style={{ margin: '6px', align: 'center' }} />
           </div>
         </main>
         <Footer />
@@ -1148,7 +1148,7 @@ const PhotosComponent = function () {
           }}
         >
           {/* Reserve space for navigation */}
-          <div style={{ height: '60px', width: '100%', marginBottom: '20px' }}>
+          <div style={{ height: '60px', width: '100%', marginBottom: '14px' }}>
             <div className='loading-spinner' style={{ width: '30px', height: '30px', margin: '0 auto' }} />
           </div>
 
@@ -1157,11 +1157,11 @@ const PhotosComponent = function () {
             width: '300px',
             height: '300px',
             background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '20px',
+            borderRadius: '16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '20px'
+            marginBottom: '16px'
           }}
           >
             <div className='loading-spinner' />
