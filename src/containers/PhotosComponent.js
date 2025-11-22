@@ -24,8 +24,6 @@ import * as CONST from '../consts'
 const Footer = lazy(() => import('./Footer'))
 
 const PhotosComponent = function () {
-  const screenWidth = window.innerWidth
-
   const [internalState, setInternalState] = useState({
     currPhoto: null,
     nextPhoto: null,
@@ -120,13 +118,20 @@ const PhotosComponent = function () {
   /**
    * Get dimensions from GraphQL instead of manual image loading
    */
-  const getDimensionsFromPhoto = (photo) => {
+  const getDimensionsFromPhoto = useCallback((photo) => {
     if (!photo?.width || !photo?.height) {
       return { width: 300, height: 300 }
     }
 
     const screenWidth = window.innerWidth
-    const maxDimension = screenWidth < 700 ? 300 : 700
+
+    if (screenWidth < 700) {
+      const width = screenWidth - 40
+      const height = (photo.height / photo.width) * width
+      return { width, height }
+    }
+
+    const maxDimension = 700
     const naturalWidth = photo.width
     const naturalHeight = photo.height
 
@@ -134,7 +139,17 @@ const PhotosComponent = function () {
       width: naturalWidth > naturalHeight ? maxDimension : maxDimension * naturalWidth / naturalHeight,
       height: naturalWidth < naturalHeight ? maxDimension : maxDimension * naturalHeight / naturalWidth
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (internalState.currPhoto?.photo) {
+        setDimensions(getDimensionsFromPhoto(internalState.currPhoto.photo))
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [internalState.currPhoto, getDimensionsFromPhoto])
 
   const handleImageLoad = () => {
     setImageLoaded(true)
@@ -347,7 +362,7 @@ const PhotosComponent = function () {
 
     inflightPhotoRequests.current.set(photoId, requestPromise)
     return requestPromise
-  }, [fetchCurrPhoto, fetchNextPhoto, fetchPrevPhoto])
+  }, [fetchCurrPhoto, fetchNextPhoto, fetchPrevPhoto, getDimensionsFromPhoto])
 
   const preloadPhotoPage = useCallback((photoId) => {
     if (!photoId) {
@@ -1043,33 +1058,31 @@ const PhotosComponent = function () {
                 />
 
                 {/* Full-size image as overlay - loads progressively */}
-                {screenWidth >= 700 && (
-                  <img
-                    width={`${dimensions.width}`}
-                    height={`${dimensions.height}`}
-                    className='mainImage'
-                    src={currPhoto.photo.imgUrl}
-                    alt={
-                      currPhoto?.comments?.length > 0
-                        ? currPhoto?.comments[0]?.comment
-                        : `wisaw photo ${currPhoto.photo.id}`
-                    }
-                    onLoad={handleImageLoad}
-                    onError={handleImageError}
-                    style={{
-                      width: `${dimensions.width}px`,
-                      height: `${dimensions.height}px`,
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      borderRadius: '18px',
-                      objectFit: 'cover',
-                      opacity: imageLoaded ? 1 : 0,
-                      transition: 'opacity 0.5s ease-in-out',
-                      zIndex: 2
-                    }}
-                  />
-                )}
+                <img
+                  width={`${dimensions.width}`}
+                  height={`${dimensions.height}`}
+                  className='mainImage'
+                  src={currPhoto.photo.imgUrl}
+                  alt={
+                    currPhoto?.comments?.length > 0
+                      ? currPhoto?.comments[0]?.comment
+                      : `wisaw photo ${currPhoto.photo.id}`
+                  }
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  style={{
+                    width: `${dimensions.width}px`,
+                    height: `${dimensions.height}px`,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    borderRadius: '18px',
+                    objectFit: 'cover',
+                    opacity: imageLoaded ? 1 : 0,
+                    transition: 'opacity 0.5s ease-in-out',
+                    zIndex: 2
+                  }}
+                />
               </>
             )}
           </div>
