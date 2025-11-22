@@ -743,7 +743,7 @@ const PhotosComponent = function () {
     return (
       <div className='PhotosComponent'>
         {/* Main article/video content wrapper to establish this as a watch page */}
-        <main className='content-container' role='main' itemScope itemType={currPhoto?.photo?.video === true ? 'https://schema.org/VideoObject' : 'https://schema.org/ImageObject'}>
+        <main className='content-container' role='main'>
           {/* <HelmetProvider> */}
           <Helmet prioritizeSeoTags>
             <title>{finalVideoTitle}</title>
@@ -885,10 +885,6 @@ const PhotosComponent = function () {
               position: 'relative'
               // cursor: "pointer",
             }}
-            // Add microdata for video container
-            itemScope={currPhoto?.photo?.video === true}
-            itemType={currPhoto?.photo?.video === true ? 'https://schema.org/VideoObject' : undefined}
-            itemProp={currPhoto?.photo?.video === true ? 'video' : undefined}
           >
             {currPhoto?.photo?.video === true && (
               <>
