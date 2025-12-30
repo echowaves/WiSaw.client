@@ -727,8 +727,8 @@ const PhotosComponent = function () {
 
     return (
       <div className='lander'>
-        {renderPrevButton()}
         {renderNextButton()}
+        {renderPrevButton()}
       </div>
     )
   }
