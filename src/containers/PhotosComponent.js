@@ -699,6 +699,12 @@ const PhotosComponent = function () {
           to={prevPhotoLink}
           onMouseEnter={() => preloadPhotoPage(prevPhoto?.id)}
           onFocus={() => preloadPhotoPage(prevPhoto?.id)}
+          style={{
+            position: 'absolute',
+            right: '10px',
+            top: '10px',
+            zIndex: 10
+          }}
         >
           <div style={{ margin: '4px' }} className='button'>
             &lt;&nbsp;prev
@@ -717,6 +723,12 @@ const PhotosComponent = function () {
           to={nextPhotoLink}
           onMouseEnter={() => preloadPhotoPage(nextPhoto?.id)}
           onFocus={() => preloadPhotoPage(nextPhoto?.id)}
+          style={{
+            position: 'absolute',
+            left: '10px',
+            top: '10px',
+            zIndex: 10
+          }}
         >
           <div style={{ margin: '4px' }} className='button'>
             next&nbsp;&gt;
@@ -726,10 +738,10 @@ const PhotosComponent = function () {
     }
 
     return (
-      <div className='lander'>
-        {renderNextButton()}
+      <>
         {renderPrevButton()}
-      </div>
+        {renderNextButton()}
+      </>
     )
   }
 
@@ -758,8 +770,9 @@ const PhotosComponent = function () {
     return (
       <div className='PhotosComponent'>
         {/* Main article/video content wrapper to establish this as a watch page */}
-        <main className='content-container' role='main'>
-          {/* <HelmetProvider> */}
+        <main className='content-container' role='main' style={{ position: 'relative' }}>
+          {/* Navigation buttons in upper corners */}
+          {renderNavigationButtons()}
           <Helmet prioritizeSeoTags>
             <title>{finalVideoTitle}</title>
             <meta
@@ -886,8 +899,6 @@ const PhotosComponent = function () {
             {currPhoto.recognitions &&
               renderRecognitionsH1(currPhoto?.recognitions[0])}
           </div>
-
-          {renderNavigationButtons()}
 
           <div // eslint-disable-line
             className='crop'
