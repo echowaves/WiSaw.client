@@ -1,7 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, useCallback, useEffect, useRef, useState } from 'react'
 
-import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet'
 
 import ReactGA from 'react-ga4'
 
@@ -949,7 +949,6 @@ const PhotosComponent = function () {
               })}
             </script>
           </Helmet>
-          {/* </HelmetProvider> */}
 
           <div className='recognition-tags'>
             {currPhoto.recognitions &&

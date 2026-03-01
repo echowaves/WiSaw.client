@@ -1,7 +1,7 @@
 import React, { lazy } from 'react'
 
 import { useLocation } from 'react-router-dom'
-import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet'
 const Footer = lazy(() => import('./Footer'))
 
 const NoMatch = function () {

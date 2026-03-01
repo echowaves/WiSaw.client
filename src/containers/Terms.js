@@ -1,5 +1,5 @@
 import React, { lazy, useEffect } from 'react'
-import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet'
 import ReactGA from 'react-ga4'
 
 const Footer = lazy(() => import('./Footer'))

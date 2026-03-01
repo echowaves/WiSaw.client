@@ -3,7 +3,6 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 // import logo from './logo.svg'
-import { HelmetProvider } from 'react-helmet-async'
 import './App.css'
 const Home = lazy(() => import('./containers/Home'))
 const PhotosComponent = lazy(() => import('./containers/PhotosComponent'))
@@ -143,55 +142,53 @@ const App = function () {
 
   return (
     <div className='App'>
-      <HelmetProvider>
-        <BrowserRouter>
-          <Suspense fallback={
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              minHeight: '100vh',
-              fontSize: '1.2rem',
-              color: 'var(--accent-light)'
-            }}
-            >
-              Loading...
-            </div>
-          }
+      <BrowserRouter>
+        <Suspense fallback={
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+            fontSize: '1.2rem',
+            color: 'var(--accent-light)'
+          }}
           >
-            <Header themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
-            <Routes>
-              <Route exact path='/' element={<Home />} />
-              <Route
-                exact
-                path='/photos/:photoId'
-                element={<PhotosComponent />}
-              />
-              <Route
-                exact
-                path='/videos/:photoId'
-                element={<PhotosComponent />}
-              />
-              <Route
-                exact
-                path='/search/:searchString'
-                element={<SearchComponent />}
-              />
-              <Route
-                exact
-                path='/search'
-                element={<SearchComponent />}
-              />
-              <Route path='/about' element={<About />} />
-              <Route path='/contact' element={<Contact />} />
-              <Route path='/terms' element={<Terms />} />
-              <Route element={<NoMatch />} />
-              {/* default redirect to home page */}
-              <Route path='*' element={<Navigate to='/' />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </HelmetProvider>
+            Loading...
+          </div>
+        }
+        >
+          <Header themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
+          <Routes>
+            <Route exact path='/' element={<Home />} />
+            <Route
+              exact
+              path='/photos/:photoId'
+              element={<PhotosComponent />}
+            />
+            <Route
+              exact
+              path='/videos/:photoId'
+              element={<PhotosComponent />}
+            />
+            <Route
+              exact
+              path='/search/:searchString'
+              element={<SearchComponent />}
+            />
+            <Route
+              exact
+              path='/search'
+              element={<SearchComponent />}
+            />
+            <Route path='/about' element={<About />} />
+            <Route path='/contact' element={<Contact />} />
+            <Route path='/terms' element={<Terms />} />
+            <Route element={<NoMatch />} />
+            {/* default redirect to home page */}
+            <Route path='*' element={<Navigate to='/' />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
     </div>
   )
 }

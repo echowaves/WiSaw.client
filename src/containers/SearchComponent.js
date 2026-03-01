@@ -5,7 +5,7 @@ import {
   useNavigate, useParams
 } from 'react-router-dom'
 
-import { Helmet } from 'react-helmet-async'
+import { Helmet } from 'react-helmet'
 // import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import { Bars } from 'react-loader-spinner'
 
