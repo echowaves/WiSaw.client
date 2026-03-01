@@ -555,7 +555,7 @@ const PhotosComponent = function () {
                 textAlign: 'center',
                 marginBottom: '12px',
                 padding: '6px 0',
-                borderBottom: '2px solid rgba(108, 99, 255, 0.2)'
+                borderBottom: '2px solid rgba(124, 140, 248, 0.15)'
               }}
               >
                 <h3 style={{
@@ -583,12 +583,12 @@ const PhotosComponent = function () {
                       opacity: Math.max(0.6, text.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (text.Confidence / 100) * 200),
                       padding: '6px 12px',
-                      background: 'rgba(108, 99, 255, 0.1)',
+                      background: 'rgba(124, 140, 248, 0.08)',
                       borderRadius: 'var(--radius-md)',
-                      border: '1px solid rgba(108, 99, 255, 0.2)',
+                      border: '1px solid rgba(124, 140, 248, 0.15)',
                       display: 'inline-block',
                       transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(108, 99, 255, 0.1)',
+                      boxShadow: 'none',
                       color: 'var(--text-secondary)'
                     }}
                   >

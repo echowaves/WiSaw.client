@@ -173,7 +173,7 @@ const SearchComponent = function () {
       <Bars
         height='40'
         width='40'
-        color='#6c63ff'
+        color='#7c8cf8'
         ariaLabel='spinner-loading-indicator'
         wrapperStyle={{}}
         wrapperClass=''
