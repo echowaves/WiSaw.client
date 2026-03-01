@@ -274,7 +274,7 @@ const Home = function () {
                           margin: 0,
                           padding: 0
                         }}
-                        alt={`Photo ${photo.id}`}
+                        alt={photo?.video === true ? 'Free stock video on WiSaw' : 'Free stock photo on WiSaw'}
                         onError={(e) => {
                           e.target.onerror = null
                           e.target.src = '/logo192.png' // Fallback image
@@ -320,6 +320,7 @@ const Home = function () {
         <meta property='og:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
         <meta property='og:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
         <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
+        <meta property='og:site_name' content='WiSaw' />
 
         {/* Twitter */}
         <meta name='twitter:card' content='summary_large_image' />
@@ -327,6 +328,55 @@ const Home = function () {
         <meta name='twitter:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
         <meta name='twitter:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
         <meta name='twitter:image' content='https://wisaw.com/android-chrome-512x512.png' />
+
+        {/* WebSite structured data for Google sitelinks search box */}
+        <script type='application/ld+json'>
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'WiSaw',
+            alternateName: 'What I Saw',
+            url: 'https://wisaw.com',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: 'https://wisaw.com/search/{search_term_string}'
+              },
+              'query-input': 'required name=search_term_string'
+            }
+          })}
+        </script>
+        {/* Organization structured data */}
+        <script type='application/ld+json'>
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'WiSaw',
+            url: 'https://wisaw.com',
+            logo: 'https://wisaw.com/android-chrome-512x512.png',
+            sameAs: [
+              'https://www.facebook.com/echowaves2/',
+              'https://x.com/echowaves',
+              'https://www.linkedin.com/groups/13040336/'
+            ]
+          })}
+        </script>
+        {/* CollectionPage structured data */}
+        <script type='application/ld+json'>
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'Free Stock Photos & Videos',
+            description: 'Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras',
+            url: 'https://wisaw.com',
+            provider: {
+              '@type': 'Organization',
+              name: 'WiSaw',
+              url: 'https://wisaw.com'
+            }
+          })}
+        </script>
       </Helmet>
 
       <div

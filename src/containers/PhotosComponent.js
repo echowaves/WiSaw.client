@@ -793,6 +793,7 @@ const PhotosComponent = function () {
               property='og:url'
               content={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos' : 'photos'}/${currPhoto.photo.id}`}
             />
+            <meta property='og:site_name' content='WiSaw' />
 
             {/* Video-specific Open Graph tags */}
             {currPhoto?.photo?.video === true && (
@@ -892,6 +893,72 @@ const PhotosComponent = function () {
                 })}
               </script>
             )}
+
+            {/* ImageObject structured data for photos */}
+            {currPhoto?.photo?.video !== true && (
+              <script type='application/ld+json'>
+                {JSON.stringify({
+                  '@context': 'https://schema.org',
+                  '@type': 'ImageObject',
+                  name: finalVideoTitle,
+                  description: finalVideoDescription,
+                  contentUrl: currPhoto.photo.imgUrl,
+                  thumbnailUrl: currPhoto.photo.thumbUrl,
+                  url: `https://wisaw.com/photos/${currPhoto.photo.id}`,
+                  datePublished: currPhoto.photo.createdAt || new Date().toISOString(),
+                  width: parseInt(currPhoto.photo.width, 10) || 640,
+                  height: parseInt(currPhoto.photo.height, 10) || 360,
+                  encodingFormat: 'image/webp',
+                  interactionStatistic: {
+                    '@type': 'InteractionCounter',
+                    interactionType: { '@type': 'ViewAction' },
+                    userInteractionCount: parseInt(currPhoto.photo.watchersCount, 10) || 0
+                  },
+                  comment: currPhoto?.comments?.length > 0
+                    ? {
+                        '@type': 'Comment',
+                        text: currPhoto.comments[0].comment
+                      }
+                    : undefined,
+                  publisher: {
+                    '@type': 'Organization',
+                    name: 'WiSaw',
+                    url: 'https://wisaw.com',
+                    logo: {
+                      '@type': 'ImageObject',
+                      url: 'https://wisaw.com/logo192.png'
+                    }
+                  }
+                })}
+              </script>
+            )}
+
+            {/* BreadcrumbList structured data */}
+            <script type='application/ld+json'>
+              {JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                  {
+                    '@type': 'ListItem',
+                    position: 1,
+                    name: 'Home',
+                    item: 'https://wisaw.com'
+                  },
+                  {
+                    '@type': 'ListItem',
+                    position: 2,
+                    name: currPhoto?.photo?.video === true ? 'Videos' : 'Photos',
+                    item: 'https://wisaw.com'
+                  },
+                  {
+                    '@type': 'ListItem',
+                    position: 3,
+                    name: finalVideoTitle
+                  }
+                ]
+              })}
+            </script>
           </Helmet>
           {/* </HelmetProvider> */}
 

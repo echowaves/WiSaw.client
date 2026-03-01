@@ -1,9 +1,14 @@
-import React, { lazy } from 'react'
+import React, { lazy, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
+import ReactGA from 'react-ga4'
 
 const Footer = lazy(() => import('./Footer'))
 
 const About = () => {
+  useEffect(() => {
+    ReactGA.send({ hitType: 'pageview', page: '/about' })
+  }, [])
+
   return (
     <>
       <div className='container' style={{ padding: '20px' }}>
@@ -20,6 +25,7 @@ const About = () => {
           <meta property='og:title' content='About WiSaw - Free Authentic Stock Photos & Videos' />
           <meta property='og:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
           <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
+          <meta property='og:site_name' content='WiSaw' />
 
           {/* Twitter */}
           <meta name='twitter:card' content='summary_large_image' />

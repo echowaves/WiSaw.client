@@ -9,8 +9,11 @@ const NoMatch = function () {
   return (
     <>
       <Helmet>
-        <title>404 - Page Not Found</title>
+        <title>404 - Page Not Found | WiSaw</title>
         <meta name='prerender-status-code' content='404' />
+        <meta name='description' content='The page you are looking for could not be found. Browse free stock photos and videos on WiSaw.' />
+        <meta name='robots' content='noindex, follow' />
+        <link rel='canonical' href='https://wisaw.com' />
       </Helmet>
       <div
         style={{ align: 'center' }}

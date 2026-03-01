@@ -315,7 +315,7 @@ const SearchComponent = function () {
                             margin: 0,
                             padding: 0
                           }}
-                          alt={photo?.lastComment || `Photo ${photo.id}`}
+                          alt={photo?.lastComment || (searchString ? `${searchString} - WiSaw` : 'Free stock photo on WiSaw')}
                           onError={(e) => {
                             e.target.onerror = null
                             e.target.src = '/logo192.png' // Fallback image
@@ -355,7 +355,7 @@ const SearchComponent = function () {
                           margin: 0,
                           padding: 0
                         }}
-                        alt={`Photo ${photo.id}`}
+                        alt={searchString ? `${searchString} - WiSaw` : 'Free stock photo on WiSaw'}
                         onError={(e) => {
                           e.target.onerror = null
                           e.target.src = '/logo192.png' // Fallback image
@@ -447,7 +447,8 @@ const SearchComponent = function () {
               property='og:description'
               content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
             />
-            <meta name='image' property='og:image' content='' />
+            <meta name='image' property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
+            <meta property='og:site_name' content='WiSaw' />
             <meta
               property='og:url'
               content={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}
@@ -458,13 +459,13 @@ const SearchComponent = function () {
             />
             <meta
               name='twitter:card'
-              content={searchString ? `WiSaw: searching for ${searchString}` : 'WiSaw: Search Photos and Videos'}
+              content='summary_large_image'
             />
             <meta
               name='twitter:description'
               content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
             />
-            <meta name='twitter:image' content='' />
+            <meta name='twitter:image' content='https://wisaw.com/android-chrome-512x512.png' />
           </Helmet>
 
           <Footer />

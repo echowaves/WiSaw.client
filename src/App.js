@@ -19,7 +19,20 @@ function App () {
     <div className='App'>
       <HelmetProvider>
         <BrowserRouter>
-          <Suspense>
+          <Suspense fallback={
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '100vh',
+              fontSize: '1.2rem',
+              color: '#4c1d95'
+            }}
+            >
+              Loading...
+            </div>
+          }
+          >
             <Header />
             <Routes>
               <Route exact path='/' element={<Home />} />

@@ -1,9 +1,14 @@
-import React, { lazy } from 'react'
+import React, { lazy, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
+import ReactGA from 'react-ga4'
 
 const Footer = lazy(() => import('./Footer'))
 
 const Terms = () => {
+  useEffect(() => {
+    ReactGA.send({ hitType: 'pageview', page: '/terms' })
+  }, [])
+
   return (
     <>
       <div className='container' style={{ padding: '20px' }}>
@@ -20,6 +25,7 @@ const Terms = () => {
           <meta property='og:title' content='WiSaw Terms and Conditions - Free Stock Photos & Videos' />
           <meta property='og:description' content="Review WiSaw's Terms and Conditions governing the use of our royalty-free stock photos and videos platform, including content usage rights and user responsibilities." />
           <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
+          <meta property='og:site_name' content='WiSaw' />
 
           {/* Twitter */}
           <meta name='twitter:card' content='summary_large_image' />
