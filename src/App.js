@@ -1,6 +1,8 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HelmetProvider } from '@dr.pogodin/react-helmet'
+import ReactGA from 'react-ga4'
 
 // import logo from './logo.svg'
 import './App.css'
@@ -16,6 +18,7 @@ const Terms = lazy(() => import('./containers/Terms'))
 const THEME_STORAGE_KEY = 'wisaw-theme-mode'
 const THEME_COOKIE_KEY = 'wisaw-theme-mode'
 const THEME_MODES = ['light', 'dark', 'system']
+const GA_TRACKING_ID = 'G-J1W2RB0D7R'
 
 const getCookieValue = (cookieName) => {
   if (typeof document === 'undefined') {
@@ -99,6 +102,25 @@ const App = function () {
   const [themeMode, setThemeMode] = useState(getInitialThemeMode)
 
   useEffect(() => {
+    if (window.__wisawGaInitialized) {
+      return
+    }
+
+    ReactGA.initialize([
+      {
+        trackingId: GA_TRACKING_ID,
+        gtagOptions: {
+          send_page_view: false,
+          allow_google_signals: false,
+          allow_ad_personalization_signals: false
+        }
+      }
+    ])
+
+    window.__wisawGaInitialized = true
+  }, [])
+
+  useEffect(() => {
     const rootElement = document.documentElement
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -142,53 +164,55 @@ const App = function () {
 
   return (
     <div className='App'>
-      <BrowserRouter>
-        <Suspense fallback={
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-            fontSize: '1.2rem',
-            color: 'var(--accent-light)'
-          }}
+      <HelmetProvider>
+        <BrowserRouter>
+          <Suspense fallback={
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '100vh',
+              fontSize: '1.2rem',
+              color: 'var(--accent-light)'
+            }}
+            >
+              Loading...
+            </div>
+          }
           >
-            Loading...
-          </div>
-        }
-        >
-          <Header themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
-          <Routes>
-            <Route exact path='/' element={<Home />} />
-            <Route
-              exact
-              path='/photos/:photoId'
-              element={<PhotosComponent />}
-            />
-            <Route
-              exact
-              path='/videos/:photoId'
-              element={<PhotosComponent />}
-            />
-            <Route
-              exact
-              path='/search/:searchString'
-              element={<SearchComponent />}
-            />
-            <Route
-              exact
-              path='/search'
-              element={<SearchComponent />}
-            />
-            <Route path='/about' element={<About />} />
-            <Route path='/contact' element={<Contact />} />
-            <Route path='/terms' element={<Terms />} />
-            <Route element={<NoMatch />} />
-            {/* default redirect to home page */}
-            <Route path='*' element={<Navigate to='/' />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
+            <Header themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
+            <Routes>
+              <Route exact path='/' element={<Home />} />
+              <Route
+                exact
+                path='/photos/:photoId'
+                element={<PhotosComponent />}
+              />
+              <Route
+                exact
+                path='/videos/:photoId'
+                element={<PhotosComponent />}
+              />
+              <Route
+                exact
+                path='/search/:searchString'
+                element={<SearchComponent />}
+              />
+              <Route
+                exact
+                path='/search'
+                element={<SearchComponent />}
+              />
+              <Route path='/about' element={<About />} />
+              <Route path='/contact' element={<Contact />} />
+              <Route path='/terms' element={<Terms />} />
+              <Route element={<NoMatch />} />
+              {/* default redirect to home page */}
+              <Route path='*' element={<Navigate to='/' />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </HelmetProvider>
     </div>
   )
 }

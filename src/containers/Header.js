@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import ReactGA from 'react-ga4'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 
@@ -17,10 +16,6 @@ const Header = function ({ themeMode, onThemeModeChange }) {
     { label: 'Dark', value: 'dark' },
     { label: 'System', value: 'system' }
   ]
-
-  useEffect(() => {
-    ReactGA.initialize('G-J1W2RB0D7R')
-  }, []) // eslint-disable-line
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen)
