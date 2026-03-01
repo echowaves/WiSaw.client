@@ -1,8 +1,4 @@
-runtimes:
-    - java@17.0.10
-    - python@3.11.11
 tools:
     - pmd@6.55.0
-    - lizard@1.17.31
+.31
     - trivy@0.69.1
-    - semgrep@1.16.1
