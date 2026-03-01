@@ -4,7 +4,7 @@
 
 #header {
   width: 100%;
-  background: rgba(17, 17, 19, 0.88);
+  background: var(--header-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
@@ -22,6 +22,69 @@
   max-width: 1200px;
   margin: 0 auto;
   height: 72px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 12px;
+}
+
+.theme-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.theme-dropdown-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+}
+
+.theme-dropdown-select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 8px 34px 8px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease-out), background 0.2s var(--ease-out);
+}
+
+.theme-dropdown-select:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card);
+}
+
+.theme-dropdown-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(124, 140, 248, 0.2);
+}
+
+.theme-dropdown::after {
+  content: '▾';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 /* ---- Logo ---- */
@@ -172,6 +235,21 @@
     z-index: 1001;
   }
 
+  .theme-dropdown {
+    gap: 6px;
+  }
+
+  .theme-dropdown-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+
+  .theme-dropdown-select {
+    padding: 7px 30px 7px 10px;
+    font-size: 0.75rem;
+  }
+
   .hamburger-bar.open:nth-child(1) {
     transform: translateY(8px) rotate(45deg);
   }
@@ -190,7 +268,7 @@
     top: 64px;
     left: 0;
     width: 100%;
-    background: rgba(17, 17, 19, 0.96);
+    background: var(--header-bg);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     flex-direction: column;

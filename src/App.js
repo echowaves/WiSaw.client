@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 // import logo from './logo.svg'
@@ -14,7 +14,113 @@ const About = lazy(() => import('./containers/About'))
 const Contact = lazy(() => import('./containers/Contact'))
 const Terms = lazy(() => import('./containers/Terms'))
 
+const THEME_STORAGE_KEY = 'wisaw-theme-mode'
+const THEME_COOKIE_KEY = 'wisaw-theme-mode'
+const THEME_MODES = ['light', 'dark', 'system']
+
+const getCookieValue = (cookieName) => {
+  const cookiePrefix = `${cookieName}=`
+  const matchedCookie = document.cookie
+    .split(';')
+    .map((cookiePart) => cookiePart.trim())
+    .find((cookiePart) => cookiePart.startsWith(cookiePrefix))
+
+  if (!matchedCookie) {
+    return null
+  }
+
+  return decodeURIComponent(matchedCookie.slice(cookiePrefix.length))
+}
+
+const setCookieValue = (cookieName, cookieValue) => {
+  const oneYearInSeconds = 60 * 60 * 24 * 365
+  document.cookie = `${cookieName}=${encodeURIComponent(cookieValue)}; path=/; max-age=${oneYearInSeconds}; SameSite=Lax`
+}
+
+const getLocalStorageValue = (storageKey) => {
+  try {
+    return window.localStorage.getItem(storageKey)
+  } catch {
+    return null
+  }
+}
+
+const setLocalStorageValue = (storageKey, storageValue) => {
+  try {
+    window.localStorage.setItem(storageKey, storageValue)
+  } catch {
+    return null
+  }
+}
+
+const resolvePersistedThemeMode = () => {
+  const themeFromLocalStorage = getLocalStorageValue(THEME_STORAGE_KEY)
+  if (THEME_MODES.includes(themeFromLocalStorage)) {
+    return themeFromLocalStorage
+  }
+
+  const themeFromCookie = getCookieValue(THEME_COOKIE_KEY)
+  if (THEME_MODES.includes(themeFromCookie)) {
+    return themeFromCookie
+  }
+
+  return null
+}
+
+const getInitialThemeMode = () => {
+  const persistedThemeMode = resolvePersistedThemeMode()
+  if (THEME_MODES.includes(persistedThemeMode)) {
+    return persistedThemeMode
+  }
+
+  return 'system'
+}
+
 const App = function () {
+  const [themeMode, setThemeMode] = useState(getInitialThemeMode)
+
+  useEffect(() => {
+    const rootElement = document.documentElement
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+
+    const applyTheme = () => {
+      const resolvedTheme = themeMode === 'system'
+        ? (mediaQuery.matches ? 'dark' : 'light')
+        : themeMode
+
+      rootElement.setAttribute('data-theme', resolvedTheme)
+      rootElement.setAttribute('data-theme-mode', themeMode)
+      rootElement.style.colorScheme = resolvedTheme
+    }
+
+    applyTheme()
+
+    if (themeMode !== 'system') {
+      return undefined
+    }
+
+    const handleSystemThemeChange = () => {
+      applyTheme()
+    }
+
+    mediaQuery.addEventListener('change', handleSystemThemeChange)
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleSystemThemeChange)
+    }
+  }, [themeMode])
+
+  useEffect(() => {
+    setLocalStorageValue(THEME_STORAGE_KEY, themeMode)
+    setCookieValue(THEME_COOKIE_KEY, themeMode)
+  }, [themeMode])
+
+  const handleThemeModeChange = (nextThemeMode) => {
+    if (THEME_MODES.includes(nextThemeMode)) {
+      setThemeMode(nextThemeMode)
+    }
+  }
+
   return (
     <div className='App'>
       <HelmetProvider>
@@ -33,7 +139,7 @@ const App = function () {
             </div>
           }
           >
-            <Header />
+            <Header themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
             <Routes>
               <Route exact path='/' element={<Home />} />
               <Route

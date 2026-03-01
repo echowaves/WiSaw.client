@@ -3,9 +3,20 @@ import ReactGA from 'react-ga4'
 import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 
-const Header = function () {
+const Header = function ({ themeMode, onThemeModeChange }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
+  const themeIconMap = {
+    light: '☀️',
+    dark: '🌙',
+    system: '◐'
+  }
+
+  const themeOptions = [
+    { label: 'Light', value: 'light' },
+    { label: 'Dark', value: 'dark' },
+    { label: 'System', value: 'system' }
+  ]
 
   useEffect(() => {
     ReactGA.initialize('G-J1W2RB0D7R')
@@ -39,19 +50,6 @@ const Header = function () {
           </Link>
         </div>
 
-        <div
-          className='hamburger-menu' onClick={toggleMenu}
-          onKeyDown={(e) => e.key === 'Enter' && toggleMenu()}
-          tabIndex={0}
-          role='button'
-          aria-label='Menu'
-          aria-expanded={menuOpen}
-        >
-          <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`} />
-          <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`} />
-          <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`} />
-        </div>
-
         <nav className={`nav-menu ${menuOpen ? 'open' : ''}`}>
           <ul>
             <li>
@@ -83,6 +81,40 @@ const Header = function () {
             </li>
           </ul>
         </nav>
+
+        <div className='header-actions'>
+          <div className='theme-dropdown'>
+            <span className='theme-dropdown-icon' aria-hidden='true'>
+              {themeIconMap[themeMode] || '◐'}
+            </span>
+            <select
+              id='theme-mode-select'
+              className='theme-dropdown-select'
+              aria-label='Theme mode'
+              value={themeMode}
+              onChange={(event) => onThemeModeChange(event.target.value)}
+            >
+              {themeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div
+            className='hamburger-menu' onClick={toggleMenu}
+            onKeyDown={(e) => e.key === 'Enter' && toggleMenu()}
+            tabIndex={0}
+            role='button'
+            aria-label='Menu'
+            aria-expanded={menuOpen}
+          >
+            <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`} />
+            <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`} />
+            <div className={`hamburger-bar ${menuOpen ? 'open' : ''}`} />
+          </div>
+        </div>
       </div>
     </header>
   )
