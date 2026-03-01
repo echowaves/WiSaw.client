@@ -916,9 +916,9 @@ const PhotosComponent = function () {
                   },
                   comment: currPhoto?.comments?.length > 0
                     ? {
-                        '@type': 'Comment',
-                        text: currPhoto.comments[0].comment
-                      }
+                      '@type': 'Comment',
+                      text: currPhoto.comments[0].comment
+                    }
                     : undefined,
                   publisher: {
                     '@type': 'Organization',
