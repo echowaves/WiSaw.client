@@ -6,6 +6,16 @@ import App from './App'
 import './index.css'
 import reportWebVitals from './reportWebVitals'
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations()
+    .then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister()
+      })
+    })
+    .catch(() => { })
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'))
 root.render(
   <React.StrictMode>

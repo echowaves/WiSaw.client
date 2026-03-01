@@ -19,6 +19,10 @@ const THEME_COOKIE_KEY = 'wisaw-theme-mode'
 const THEME_MODES = ['light', 'dark', 'system']
 
 const getCookieValue = (cookieName) => {
+  if (typeof document === 'undefined') {
+    return null
+  }
+
   const cookiePrefix = `${cookieName}=`
   const matchedCookie = document.cookie
     .split(';')
@@ -29,15 +33,27 @@ const getCookieValue = (cookieName) => {
     return null
   }
 
-  return decodeURIComponent(matchedCookie.slice(cookiePrefix.length))
+  try {
+    return decodeURIComponent(matchedCookie.slice(cookiePrefix.length))
+  } catch {
+    return null
+  }
 }
 
 const setCookieValue = (cookieName, cookieValue) => {
+  if (typeof document === 'undefined') {
+    return
+  }
+
   const oneYearInSeconds = 60 * 60 * 24 * 365
   document.cookie = `${cookieName}=${encodeURIComponent(cookieValue)}; path=/; max-age=${oneYearInSeconds}; SameSite=Lax`
 }
 
 const getLocalStorageValue = (storageKey) => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
   try {
     return window.localStorage.getItem(storageKey)
   } catch {
@@ -46,6 +62,10 @@ const getLocalStorageValue = (storageKey) => {
 }
 
 const setLocalStorageValue = (storageKey, storageValue) => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
   try {
     window.localStorage.setItem(storageKey, storageValue)
   } catch {
