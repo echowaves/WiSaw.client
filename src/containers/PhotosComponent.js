@@ -39,7 +39,8 @@ const PhotosComponent = function () {
 
   const videoRef = useRef(null)
 
-  const preloadedMedia = useRef(new Set())
+  const loadedMedia = useRef(new Set())
+  const inflightMediaPreloads = useRef(new Map())
   const photoPageCache = useRef(new Map())
   const inflightPhotoRequests = useRef(new Map())
 
@@ -48,19 +49,23 @@ const PhotosComponent = function () {
       return
     }
 
-    if (preloadedMedia.current.has(url)) {
+    if (loadedMedia.current.has(url) || inflightMediaPreloads.current.has(url)) {
       return
     }
 
-    preloadedMedia.current.add(url)
-
     const img = new window.Image()
     img.decoding = 'async'
-    img.src = url
-    img.onerror = () => {
-      preloadedMedia.current.delete(url)
+    // Keep a strong reference so the browser cannot GC mid-download
+    inflightMediaPreloads.current.set(url, img)
+    img.onload = () => {
+      loadedMedia.current.add(url)
+      inflightMediaPreloads.current.delete(url)
     }
-  }, [preloadedMedia])
+    img.onerror = () => {
+      inflightMediaPreloads.current.delete(url)
+    }
+    img.src = url
+  }, [])
   useEffect(() => {
     if (internalState.requestComplete) {
       ReactGA.send({
@@ -70,9 +75,6 @@ const PhotosComponent = function () {
           : `/photos/${internalState?.currPhoto?.photo?.id}`
         // title: "Custom Title",
       })
-
-      // Reset image loading state when photo data changes
-      setImageLoaded(false)
     }
   }, [internalState])
 
@@ -1125,6 +1127,7 @@ const PhotosComponent = function () {
 
                 {/* Full-size image as overlay - loads progressively */}
                 <img
+                  key={currPhoto.photo.id}
                   width={`${dimensions.width}`}
                   height={`${dimensions.height}`}
                   className='mainImage'
