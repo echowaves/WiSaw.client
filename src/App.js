@@ -14,7 +14,7 @@ const About = lazy(() => import('./containers/About'))
 const Contact = lazy(() => import('./containers/Contact'))
 const Terms = lazy(() => import('./containers/Terms'))
 
-function App() {
+function App () {
   return (
     <div className='App'>
       <HelmetProvider>
