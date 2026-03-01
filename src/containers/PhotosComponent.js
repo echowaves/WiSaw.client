@@ -915,10 +915,7 @@ const PhotosComponent = function () {
                     userInteractionCount: parseInt(currPhoto.photo.watchersCount, 10) || 0
                   },
                   comment: currPhoto?.comments?.length > 0
-                    ? {
-                        '@type': 'Comment',
-                        text: currPhoto.comments[0].comment
-                      }
+                    ? { '@type': 'Comment', text: currPhoto.comments[0].comment }
                     : undefined,
                   publisher: {
                     '@type': 'Organization',
