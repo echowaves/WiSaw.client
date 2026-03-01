@@ -16,9 +16,9 @@ const NoMatch = function () {
         <link rel='canonical' href='https://wisaw.com' />
       </Helmet>
       <div
-        style={{ align: 'center' }}
+        style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-primary)' }}
       >
-        <h2>No photo found <code>{location.pathname}</code></h2>
+        <h2>No photo found <code style={{ color: 'var(--accent-light)' }}>{location.pathname}</code></h2>
         <Footer />
       </div>
     </>

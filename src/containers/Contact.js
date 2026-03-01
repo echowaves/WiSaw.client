@@ -11,7 +11,7 @@ const Contact = () => {
 
   return (
     <>
-      <div className='container' style={{ padding: '20px', textAlign: 'left' }}>
+      <div className='container' style={{ padding: '20px', textAlign: 'left', color: 'var(--text-primary)' }}>
         <Helmet prioritizeSeoTags>
           <title>Free Stock Photos & Videos -- What I Saw, contact us</title>
           <meta name='description' content="Get in touch with the WiSaw team. We'd love to hear your feedback, answer questions, or help with any concerns about our free stock photos and videos platform." />

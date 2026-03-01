@@ -26,7 +26,7 @@ const App = function () {
               alignItems: 'center',
               minHeight: '100vh',
               fontSize: '1.2rem',
-              color: '#4c1d95'
+              color: 'var(--accent-light)'
             }}
             >
               Loading...

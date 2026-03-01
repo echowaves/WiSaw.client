@@ -1,211 +1,196 @@
+/* =====================================
+   WiSaw - Footer
+   ===================================== */
+
 .modern-footer {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  margin-top: 60px;
-  position: relative;
-}
-
-.modern-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 255, 148, 0.05) 0%, rgba(114, 12, 240, 0.05) 100%);
-  z-index: -1;
-}
-
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
   padding: 48px 24px 24px;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
 }
 
+/* ---- App promo section ---- */
 .app-promotion {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  text-align: center;
   margin-bottom: 40px;
-  padding: 32px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
 }
 
-.app-promo-text h3 {
+.app-promotion h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 8px 0;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  margin-bottom: 8px;
 }
 
-.app-promo-text p {
-  font-size: 1rem;
-  color: rgba(26, 32, 44, 0.7);
-  margin: 0;
-  line-height: 1.5;
+.app-promotion p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  max-width: 480px;
 }
 
-.app-stores {
+.store-badges {
   display: flex;
-  gap: 16px;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.store-link {
-  display: inline-block;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 12px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.store-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s var(--ease-out);
 }
 
-.store-link:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 12px 40px rgba(0, 255, 148, 0.3);
-  background: rgba(255, 255, 255, 0.2);
+.store-badge:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-1px);
+  color: var(--text-primary);
+  text-decoration: none;
 }
 
-.store-link img {
-  display: block;
-  border-radius: 8px;
+.store-badge img {
+  width: 22px;
+  height: 22px;
 }
 
-.footer-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  margin: 40px 0;
-}
-
+/* ---- Footer links grid ---- */
 .footer-links {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  justify-content: center;
   gap: 32px;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
 }
 
 .footer-section h4 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #1a202c;
-  margin: 0 0 16px 0;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 12px;
 }
 
-.link-group {
+.footer-section .link-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.link-group a {
-  color: rgba(26, 32, 44, 0.7);
+.footer-section .link-group a,
+.footer-links a {
+  color: var(--text-muted);
   text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  padding: 4px 0;
-  border-radius: 6px;
-}
-
-.link-group a:hover {
-  color: #1a202c;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  transform: translateX(4px);
-}
-
-.footer-brand {
-  font-weight: 600 !important;
-}
-
-.hashtag {
-  color: rgba(26, 32, 44, 0.5);
   font-size: 0.9rem;
-  font-weight: 600;
-  font-family: monospace;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
+.footer-section .link-group a:hover,
+.footer-links a:hover {
+  color: var(--accent-light);
+}
+
+.footer-section .hashtag {
+  color: var(--accent-light);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* ---- App stores ---- */
+.app-stores {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.store-link {
+  transition: transform 0.2s var(--ease-out), opacity 0.2s ease;
+  opacity: 0.85;
+}
+
+.store-link:hover {
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+/* ---- Divider ---- */
+.footer-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 24px 0;
+}
+
+/* ---- Bottom ---- */
 .footer-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
 }
 
-.copyright {
-  font-size: 0.9rem;
-  color: rgba(26, 32, 44, 0.6);
+.footer-bottom .copyright {
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }
 
-.brand-text {
-  font-size: 1.25rem;
+.footer-bottom .brand-text {
   font-weight: 700;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--mint) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-size: 1rem;
 }
 
-/* Mobile Responsive */
-@media screen and (max-width: 768px) {
-  .app-promotion {
-    flex-direction: column;
-    text-align: center;
-    gap: 24px;
-    padding: 24px;
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .modern-footer {
+    padding: 32px 16px 20px;
+  }
+
+  .app-promotion h3 {
+    font-size: 1.25rem;
   }
 
   .app-stores {
     flex-direction: column;
     align-items: center;
-    gap: 12px;
   }
 
   .footer-links {
-    grid-template-columns: 1fr;
-    gap: 24px;
-    text-align: center;
+    gap: 20px;
   }
 
   .footer-bottom {
     flex-direction: column;
-    gap: 16px;
+    gap: 8px;
     text-align: center;
-  }
-
-  .footer-content {
-    padding: 32px 16px 20px;
   }
 }
 
-@media screen and (max-width: 480px) {
-  .app-promotion {
-    padding: 20px;
-  }
-
-  .app-promo-text h3 {
-    font-size: 1.25rem;
-  }
-
-  .store-link img {
-    width: 140px;
-    height: auto;
+@media (max-width: 480px) {
+  .footer-links {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
   }
 }

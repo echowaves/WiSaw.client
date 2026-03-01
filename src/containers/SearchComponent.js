@@ -173,7 +173,7 @@ const SearchComponent = function () {
       <Bars
         height='40'
         width='40'
-        color='#00ff94'
+        color='#6c63ff'
         ariaLabel='spinner-loading-indicator'
         wrapperStyle={{}}
         wrapperClass=''
@@ -254,7 +254,7 @@ const SearchComponent = function () {
         hasMore={!noMoreData}
         loader={renderLoadingIndicator('Loading more content')}
         endMessage={
-          <p style={{ textAlign: 'center' }}>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
             <b>Yay! You have seen it all</b>
           </p>
         }
@@ -276,8 +276,7 @@ const SearchComponent = function () {
               <div
                 className='home-thumb-card'
                 style={{
-                  borderRadius: '12px',
-                  backgroundColor: 'white',
+                  borderRadius: 'var(--radius-lg)',
                   overflow: 'hidden'
                 }}
                 key={photo.id}
@@ -294,7 +293,7 @@ const SearchComponent = function () {
                       <div
                         className='thumbnail-wrapper'
                         style={{
-                          borderRadius: '12px',
+                          borderRadius: 'var(--radius-lg)',
                           overflow: 'hidden',
                           display: 'block',
                           width: '100%',
@@ -327,7 +326,7 @@ const SearchComponent = function () {
                           </div>
                         )}
                       </div>
-                      <div style={{ width: '100%', paddingBottom: 15 }}>
+                      <div style={{ width: '100%', paddingBottom: 15, padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
                         {/* Truncate the comment to prevent potential XSS */}
                         {photo?.lastComment.substring(0, 150)}
                       </div>
@@ -337,7 +336,7 @@ const SearchComponent = function () {
                     <div
                       className='thumbnail-wrapper'
                       style={{
-                        borderRadius: '12px',
+                        borderRadius: 'var(--radius-lg)',
                         overflow: 'hidden',
                         display: 'block',
                         lineHeight: 0,
@@ -403,7 +402,8 @@ const SearchComponent = function () {
             <h1 style={{
               fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
               lineHeight: '1.2',
-              marginBottom: '1rem'
+              marginBottom: '1rem',
+              color: 'var(--text-primary)'
             }}
             >Search results for: {searchString}
             </h1>
@@ -413,7 +413,7 @@ const SearchComponent = function () {
 
           {/* Show message when no search string provided */}
           {!searchString && (
-            <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-primary)' }}>
               <h2>Search WiSaw</h2>
               <p>Enter a search term to find photos and videos</p>
             </div>
@@ -421,7 +421,7 @@ const SearchComponent = function () {
 
           {/* Show "nothing found" only when we have a search string but no results */}
           {searchString && photos?.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '50px 20px' }}>
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-secondary)' }}>
               <h2>Nothing found</h2>
               <p>Try adjusting your search terms</p>
             </div>

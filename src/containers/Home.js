@@ -163,9 +163,9 @@ const Home = function () {
         dataLength={photos.length} // This is important field to render the next data
         next={retrievePhotos}
         hasMore={!noMoreData}
-        loader={<div aria-label='Loading content'>Loading...</div>}
+        loader={<div aria-label='Loading content' style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '16px' }}>Loading...</div>}
         endMessage={
-          <p style={{ textAlign: 'center' }}>
+          <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
             <b>Yay! You have seen it all</b>
           </p>
         }
@@ -197,8 +197,7 @@ const Home = function () {
               <div
                 className='home-thumb-card'
                 style={{
-                  borderRadius: '12px',
-                  backgroundColor: 'white',
+                  borderRadius: 'var(--radius-lg)',
                   overflow: 'hidden'
                 }}
                 key={photo.id}
@@ -212,7 +211,7 @@ const Home = function () {
                       <div
                         className='thumbnail-wrapper'
                         style={{
-                          borderRadius: '12px',
+                          borderRadius: 'var(--radius-lg)',
                           overflow: 'hidden',
                           display: 'block',
                           width: '100%',
@@ -245,7 +244,7 @@ const Home = function () {
                           </div>
                         )}
                       </div>
-                      <div style={{ width: '100%', paddingBottom: 15 }}>
+                      <div style={{ width: '100%', paddingBottom: 15, padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
                         {/* Truncate the comment to prevent potential XSS */}
                         {photo?.lastComment.substring(0, 150)}
                       </div>
@@ -255,7 +254,7 @@ const Home = function () {
                     <div
                       className='thumbnail-wrapper'
                       style={{
-                        borderRadius: '12px',
+                        borderRadius: 'var(--radius-lg)',
                         overflow: 'hidden',
                         display: 'block',
                         lineHeight: 0,
@@ -392,7 +391,8 @@ const Home = function () {
         <h1 style={{
           fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
           lineHeight: '1.2',
-          marginBottom: '1rem'
+          marginBottom: '1rem',
+          color: 'var(--text-primary)'
         }}
         > Unaltered Photos and Videos, Taken with Phone Cameras.
         </h1>
@@ -401,7 +401,8 @@ const Home = function () {
           fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)',
           lineHeight: '1.4',
           fontWeight: '400',
-          marginBottom: '2rem'
+          marginBottom: '2rem',
+          color: 'var(--text-secondary)'
         }}
         >It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times,
           because the goal is to capture shots spontaneously, with minimal preparation—just point and shoot.

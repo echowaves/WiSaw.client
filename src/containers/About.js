@@ -11,7 +11,7 @@ const About = () => {
 
   return (
     <>
-      <div className='container' style={{ padding: '20px' }}>
+      <div className='container' style={{ padding: '20px', color: 'var(--text-primary)' }}>
         <Helmet prioritizeSeoTags>
           <title>Free Stock Photos & Videos -- What I Saw, about us</title>
           <meta name='description' content='WiSaw is a platform for authentic, unfiltered stock photos and videos created by real people. Join our community of creators sharing genuine visual content.' />
@@ -73,7 +73,7 @@ const About = () => {
 
         </p>
         <h2 style={{ textAlign: 'left' }}>Contact Us</h2>
-        <p style={{ textAlign: 'left' }}>Have questions, feedback, or just want to say hello? <a href='/contact'>Reach out to us</a>. We&apos;d love to hear from you!</p>
+        <p style={{ textAlign: 'left' }}>Have questions, feedback, or just want to say hello? <a href='/contact' style={{ color: 'var(--accent-light)' }}>Reach out to us</a>. We&apos;d love to hear from you!</p>
 
       </div>
       <Footer />

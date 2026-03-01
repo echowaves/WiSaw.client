@@ -1,24 +1,17 @@
-/* Header.css */
+/* =====================================
+   WiSaw - Header
+   ===================================== */
+
 #header {
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 15, 19, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 1000;
-  transition: all 0.3s ease;
-}
-
-#header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%);
-  z-index: -1;
+  transition: background 0.3s ease;
 }
 
 .header-container {
@@ -28,16 +21,16 @@
   padding: 0 24px;
   max-width: 1200px;
   margin: 0 auto;
-  height: 80px;
+  height: 72px;
 }
 
-/* Logo Section */
+/* ---- Logo ---- */
 .logo-container {
-  transition: transform 0.3s ease;
+  transition: transform 0.25s var(--ease-out);
 }
 
 .logo-container:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .logo-link {
@@ -45,30 +38,27 @@
   align-items: center;
   text-decoration: none;
   gap: 12px;
-  transition: all 0.3s ease;
 }
 
 .logo-icon {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  transition: all 0.25s var(--ease-out);
 }
 
 .logo-icon:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: rotate(5deg) scale(1.05);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
 }
 
 .logo-icon img {
-  border-radius: 12px;
+  border-radius: calc(var(--radius-md) - 2px);
 }
 
 .logo-text-container {
@@ -78,29 +68,25 @@
 }
 
 .logo-title {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 800;
-  color: #1a202c;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
+  background: linear-gradient(135deg, var(--accent-light) 0%, var(--mint) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  line-height: 1;
-  text-shadow: 0 2px 10px rgba(0, 255, 148, 0.3);
+  line-height: 1.1;
 }
 
 .logo-subtitle {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 500;
-  color: rgba(26, 32, 44, 0.7);
-  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
   text-transform: uppercase;
-  margin-top: -2px;
+  margin-top: 1px;
 }
 
-/* Navigation */
+/* ---- Navigation ---- */
 .nav-menu {
   display: flex;
   align-items: center;
@@ -111,7 +97,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  gap: 8px;
+  gap: 6px;
 }
 
 .nav-menu li {
@@ -122,88 +108,65 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
-  color: rgba(26, 32, 44, 0.8);
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 12px 20px;
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  transition: all 0.2s var(--ease-out);
   border: 1px solid transparent;
-  backdrop-filter: blur(10px);
-}
-
-.nav-menu a::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  border-radius: 16px;
-  z-index: -1;
+  background: transparent;
 }
 
 .nav-menu a:hover,
 .nav-menu a.active {
-  color: white;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 255, 148, 0.4);
+  color: var(--text-primary);
+  background: var(--bg-raised);
+  border-color: var(--border);
 }
 
-.nav-menu a:hover::before,
-.nav-menu a.active::before {
-  opacity: 1;
+.nav-menu a.active {
+  color: var(--accent-light);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
 }
 
-/* Hamburger Menu */
+/* ---- Hamburger ---- */
 .hamburger-menu {
   display: none;
   flex-direction: column;
   justify-content: space-between;
-  width: 28px;
-  height: 20px;
+  width: 26px;
+  height: 18px;
   cursor: pointer;
   padding: 4px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  transition: opacity 0.2s ease;
 }
 
 .hamburger-menu:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+  opacity: 0.8;
 }
 
 .hamburger-bar {
   height: 2px;
   width: 100%;
-  background: linear-gradient(135deg, #00ff94 0%, #720cf0 100%);
+  background: var(--accent);
   border-radius: 2px;
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Mobile Responsive Design */
+/* ---- Mobile ---- */
 @media screen and (max-width: 768px) {
   .header-container {
     padding: 0 16px;
-    height: 70px;
+    height: 64px;
   }
 
   .logo-title {
-    font-size: 1.5rem;
-  }
-
-  .logo-subtitle {
-    font-size: 0.7rem;
+    font-size: 1.35rem;
   }
 
   .hamburger-menu {
@@ -212,7 +175,7 @@
   }
 
   .hamburger-bar.open:nth-child(1) {
-    transform: translateY(9px) rotate(45deg);
+    transform: translateY(8px) rotate(45deg);
   }
 
   .hamburger-bar.open:nth-child(2) {
@@ -221,47 +184,36 @@
   }
 
   .hamburger-bar.open:nth-child(3) {
-    transform: translateY(-9px) rotate(-45deg);
+    transform: translateY(-8px) rotate(-45deg);
   }
 
   .nav-menu {
     position: absolute;
-    top: 70px;
+    top: 64px;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(20px);
+    background: rgba(15, 15, 19, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     flex-direction: column;
     align-items: center;
     height: 0;
     overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.35s var(--ease-out);
+    border-bottom: 1px solid var(--border);
     z-index: 1000;
-  }
-
-  .nav-menu::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(0, 255, 148, 0.05) 0%, rgba(114, 12, 240, 0.05) 100%);
-    z-index: -1;
   }
 
   .nav-menu.open {
     height: auto;
-    padding: 20px 0;
+    padding: 16px 0;
   }
 
   .nav-menu ul {
     flex-direction: column;
     width: 100%;
-    gap: 12px;
-    padding: 0 20px;
+    gap: 8px;
+    padding: 0 16px;
   }
 
   .nav-menu li {
@@ -271,17 +223,19 @@
   .nav-menu a {
     width: 100%;
     text-align: center;
-    padding: 16px 24px;
-    font-size: 1rem;
-    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
     justify-content: center;
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
   }
 
   .nav-menu a:hover,
   .nav-menu a.active {
-    transform: scale(1.02);
+    transform: none;
+    background: var(--bg-raised);
+    border-color: var(--accent);
   }
 }
 
@@ -295,22 +249,20 @@
   }
 
   .logo-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 38px;
+    height: 38px;
   }
 
   .logo-icon img {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 34px;
+    height: 34px;
   }
 
   .logo-title {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
   }
 
   .logo-subtitle {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
   }
 }

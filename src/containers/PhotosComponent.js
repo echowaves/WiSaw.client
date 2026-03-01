@@ -545,29 +545,24 @@ const PhotosComponent = function () {
             <div style={{
               margin: '12px 0',
               padding: '18px',
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '12px',
-              backdropFilter: 'blur(15px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)'
+              background: 'var(--bg-raised)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-sm)'
             }}
             >
               <div style={{
                 textAlign: 'center',
                 marginBottom: '12px',
                 padding: '6px 0',
-                borderBottom: '2px solid rgba(0, 255, 148, 0.2)'
+                borderBottom: '2px solid rgba(108, 99, 255, 0.2)'
               }}
               >
                 <h3 style={{
                   fontSize: '18px',
                   fontWeight: '700',
                   margin: '0',
-                  background: 'linear-gradient(135deg, #00ff94 0%, #720cf0 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  textShadow: 'none'
+                  color: 'var(--accent-light)'
                 }}
                 >📝 Recognized Text
                 </h3>
@@ -588,12 +583,13 @@ const PhotosComponent = function () {
                       opacity: Math.max(0.6, text.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (text.Confidence / 100) * 200),
                       padding: '6px 12px',
-                      background: 'linear-gradient(135deg, rgba(0, 255, 148, 0.1) 0%, rgba(114, 12, 240, 0.1) 100%)',
-                      borderRadius: '14px',
-                      border: '1px solid rgba(0, 255, 148, 0.2)',
+                      background: 'rgba(108, 99, 255, 0.1)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid rgba(108, 99, 255, 0.2)',
                       display: 'inline-block',
                       transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(0, 255, 148, 0.1)'
+                      boxShadow: '0 2px 8px rgba(108, 99, 255, 0.1)',
+                      color: 'var(--text-secondary)'
                     }}
                   >
                     &ldquo;{stringifyObject(text.DetectedText).replace(/'/g, '')}&rdquo;
@@ -607,29 +603,24 @@ const PhotosComponent = function () {
             <div style={{
               margin: '12px 0',
               padding: '18px',
-              background: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '12px',
-              backdropFilter: 'blur(15px)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)'
+              background: 'var(--bg-raised)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border)',
+              boxShadow: 'var(--shadow-sm)'
             }}
             >
               <div style={{
                 textAlign: 'center',
                 marginBottom: '12px',
                 padding: '6px 0',
-                borderBottom: '2px solid rgba(255, 94, 77, 0.2)'
+                borderBottom: '2px solid rgba(248, 113, 113, 0.2)'
               }}
               >
                 <h3 style={{
                   fontSize: '18px',
                   fontWeight: '700',
                   margin: '0',
-                  background: 'linear-gradient(135deg, #ff5e4d 0%, #d32f2f 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  textShadow: 'none'
+                  color: '#f87171'
                 }}
                 >⚠️ Content Moderation
                 </h3>
@@ -650,12 +641,13 @@ const PhotosComponent = function () {
                       opacity: Math.max(0.6, label.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (label.Confidence / 100) * 200),
                       padding: '6px 12px',
-                      background: 'linear-gradient(135deg, rgba(255, 94, 77, 0.1) 0%, rgba(211, 47, 47, 0.1) 100%)',
-                      borderRadius: '14px',
-                      border: '1px solid rgba(255, 94, 77, 0.3)',
+                      background: 'rgba(248, 113, 113, 0.1)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid rgba(248, 113, 113, 0.3)',
                       display: 'inline-block',
                       transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(255, 94, 77, 0.1)'
+                      boxShadow: '0 2px 8px rgba(248, 113, 113, 0.1)',
+                      color: '#f87171'
                     }}
                   >
                     {stringifyObject(label.Name).replace(/'/g, '')}
