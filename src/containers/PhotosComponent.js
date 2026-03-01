@@ -1,7 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, useCallback, useEffect, useRef, useState } from 'react'
 
-import { Helmet } from 'react-helmet'
+import { Helmet } from '@dr.pogodin/react-helmet'
 
 import ReactGA from 'react-ga4'
 

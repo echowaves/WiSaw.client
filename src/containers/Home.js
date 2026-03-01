@@ -1,6 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { useEffect, useState } from 'react'
-import { Helmet } from 'react-helmet'
+import { Helmet } from '@dr.pogodin/react-helmet'
 
 import InfiniteScroll from 'react-infinite-scroll-component'
 import Masonry from 'react-masonry-css'
