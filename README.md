@@ -1,4 +1,25 @@
 ## What I Saw today
+
+## Environment Setup (Vite)
+
+This project uses Vite environment variables for API configuration.
+
+1. Create a local env file from the example:
+
+  cp .env.example .env
+
+2. Fill values in `.env`:
+
+  - `VITE_API_URI`
+  - `VITE_API_KEY`
+
+3. Restart the dev server after changing env values.
+
+Notes:
+
+- `.env` is ignored by git and should never be committed.
+- `.env.example` is committed as the template.
+
 No registration, no sign in -- just open the app, start taking photos, and see what's posted by other people nearby today.
 
 This is the most minimalistic social sharing possible, yet, it's probably the most relevant one as well.
