@@ -1,20 +1,32 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Project: WiSaw ("What I Saw") — web client for a photo/video sharing platform.
+  Production URL: https://wisaw.com
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Tech stack:
+  - React 18.3 (Vite build), JavaScript only (no TypeScript in source)
+  - React Router DOM v6 (BrowserRouter, lazy-loaded routes)
+  - Apollo Client 3 + GraphQL against AWS AppSync (X-Api-Key auth)
+  - React Bootstrap 2 + Bootstrap 5, plain CSS (no CSS-in-JS or preprocessors)
+  - react-helmet-async for SEO (OG, Twitter Cards, JSON-LD)
+  - Google Analytics 4 via react-ga4
+  - react-masonry-css for grid layouts, react-infinite-scroll-component for pagination
+
+  Conventions:
+  - Functional components with hooks only (no class components, no Redux)
+  - Apollo direct queries via CONST.gqlClient.query() — not useQuery hooks
+  - StandardJS style (no semicolons, single quotes, 2-space indent)
+  - Default exports for all components
+  - Constants imported as namespace: import * as CONST from '../consts'
+  - Lazy load all route-level components via React.lazy() + Suspense
+  - Glassmorphism design system (backdrop-filter blur, semi-transparent backgrounds, gradient #00ff94→#720cf0)
+  - Light/dark/system theme modes with CSS custom properties (data-theme attribute)
+  - try/catch around all GraphQL queries with console.log/error for errors
+  - ARIA labels, semantic HTML, keyboard support for accessibility
+
+  Domain:
+  - Users upload photos/videos via the native iOS/Android app
+  - The web client is read-only: browse feed, view photo details, search by text
+  - AWS Rekognition provides AI labels, text detection, and moderation metadata
+  - Deep linking supported via apple-app-site-association and app store badges
