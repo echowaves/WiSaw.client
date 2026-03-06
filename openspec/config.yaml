@@ -30,3 +30,8 @@ context: |
   - The web client is read-only: browse feed, view photo details, search by text
   - AWS Rekognition provides AI labels, text detection, and moderation metadata
   - Deep linking supported via apple-app-site-association and app store badges
+
+  Security:
+  - .env files must NEVER be committed to version control
+  - Secrets and sensitive values from .env must NEVER be leaked into versioned files
+  - All secret references in source code must use environment variable access (e.g. import.meta.env.VITE_*), never hardcoded values
