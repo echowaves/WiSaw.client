@@ -32,4 +32,4 @@
 - [x] 5.1 Run `npm run build` and confirm production build succeeds
 - [x] 5.2 Run `npm test` and fix any test failures from jsdom 28 or other version changes
   > Added `window.matchMedia` mock to `setupTests.js` — tests pass
-- [ ] 5.3 Manually verify the app in the browser — confirm feed loads, photo detail works, search works, theme switching works
+- [x] 5.3 Manually verify the app in the browser — confirm feed loads, photo detail works, search works, theme switching works
