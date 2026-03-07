@@ -31,6 +31,11 @@ context: |
   - AWS Rekognition provides AI labels, text detection, and moderation metadata
   - Deep linking supported via apple-app-site-association and app store badges
 
+  tasks:
+    - When adding or updating dependencies, always use exact versions (e.g., "1.2.3" not "^1.2.3" or "~1.2.3"). Use --save-exact with npm install.
+  dependencies:
+    - Do not add any new dependencies to the project unless the user explicitly requests or approves it. Solve problems using existing dependencies and built-in APIs first.
+
   Security:
   - .env files must NEVER be committed to version control
   - Secrets and sensitive values from .env must NEVER be leaked into versioned files
