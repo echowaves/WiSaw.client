@@ -276,7 +276,6 @@ const SearchComponent = function () {
               <div
                 className='home-thumb-card'
                 style={{
-                  borderRadius: 'var(--radius-lg)',
                   overflow: 'hidden'
                 }}
                 key={photo.id}
