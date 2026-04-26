@@ -320,17 +320,17 @@
 /* ---- Masonry grid ---- */
 .masonry-grid {
     display: flex;
-    margin-left: -16px;
+    margin-left: -20px;
     width: auto;
 }
 
 .masonry-grid-column {
-    padding-left: 16px;
+    padding-left: 20px;
     background-clip: padding-box;
 }
 
 .masonry-grid-column>div {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .masonry-grid-column img {

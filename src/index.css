@@ -59,7 +59,7 @@
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
-    --shadow-thumb: 0 4px 6px rgba(0, 0, 0, 0.5);
+    --shadow-thumb: 0 4px 12px rgba(255, 255, 255, 0.2), 0 0 3px rgba(255, 255, 255, 0.3);
     --shadow-glow: 0 0 20px rgba(124, 140, 248, 0.08);
   }
 }
@@ -98,7 +98,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --shadow-thumb: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-thumb: 0 4px 12px rgba(255, 255, 255, 0.2), 0 0 3px rgba(255, 255, 255, 0.3);
   --shadow-glow: 0 0 20px rgba(124, 140, 248, 0.08);
 }
 
