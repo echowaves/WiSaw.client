@@ -695,7 +695,7 @@ const PhotosComponent = function () {
           onFocus={() => preloadPhotoPage(prevPhoto?.id)}
           style={{
             position: 'absolute',
-            right: '10px',
+            left: '10px',
             top: '10px',
             zIndex: 10
           }}
@@ -719,7 +719,7 @@ const PhotosComponent = function () {
           onFocus={() => preloadPhotoPage(nextPhoto?.id)}
           style={{
             position: 'absolute',
-            left: '10px',
+            right: '10px',
             top: '10px',
             zIndex: 10
           }}

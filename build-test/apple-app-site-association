@@ -1,0 +1,26 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "33P3Q88Y8K.com.echowaves"
+        ],
+        "paths": [
+          "/photos/*",
+          "/videos/*",
+          "/friends/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "33P3Q88Y8K.com.echowaves.Wisaw"
+    ]
+  },
+  "appclips": {
+    "apps": [
+      "33P3Q88Y8K.com.echowaves.Wisaw.Clip"
+    ]
+  }
+}
