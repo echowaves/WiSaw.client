@@ -6,6 +6,9 @@ import App from './App'
 import './index.css'
 import reportWebVitals from './reportWebVitals'
 
+// Signals the inline guard in index.html that this bundle actually loaded and ran.
+window.__wisawBooted = true
+
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations()
     .then((registrations) => {

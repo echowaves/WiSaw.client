@@ -37,6 +37,44 @@
   <meta name="twitter:image" content="https://wisaw.com/android-chrome-512x512.png" data-rh="true" />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
+  <!--
+    Stale-deploy guard. Every build ships new hashed bundles under /assets/, so a browser
+    holding an old index.html asks for files that no longer exist; the CDN answers with HTML,
+    the module script is rejected, and React never mounts - leaving only the markup in #root.
+    This runs inline because a failed bundle leaves no JavaScript on the page at all. A reload
+    re-requests index.html bypassing the HTTP cache. Rate limited so it can never loop.
+  -->
+  <script>
+    (function () {
+      if (window.location.port) { return }
+
+      var guardKey = 'wisaw-reload-at'
+      var cooldownMs = 60000
+      var lastReloadAt = 0
+
+      try { lastReloadAt = Number(sessionStorage.getItem(guardKey)) || 0 } catch (err) { /* storage blocked */ }
+
+      var reloadOnce = function () {
+        if (Date.now() - lastReloadAt < cooldownMs) { return }
+        try { sessionStorage.setItem(guardKey, String(Date.now())) } catch (err) { /* storage blocked */ }
+        window.location.reload()
+      }
+
+      // Fires when a module script 404s or is served back a non-JavaScript MIME type.
+      window.addEventListener('error', function (event) {
+        var tagName = event.target && event.target.tagName
+        if (tagName === 'SCRIPT' || tagName === 'LINK') { reloadOnce() }
+      }, true)
+
+      // Safety net for the case where no error event is surfaced at all.
+      window.addEventListener('load', function () {
+        window.setTimeout(function () {
+          if (!window.__wisawBooted) { reloadOnce() }
+        }, 15000)
+      })
+    })()
+  </script>
+
 </head>
 
 <body>

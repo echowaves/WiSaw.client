@@ -157,6 +157,30 @@ src/
 14. **Deep linking support** — the app supports iOS/Android universal links (see `apple-app-site-association` and `_headers`)
 15. **Import constants** as namespace: `import * as CONST from '../consts'`
 
+## Manual Deploy Caching Requirements
+
+Deploys are manual (upload `build/` to the S3 origin, then invalidate CloudFront). Upload
+metadata is the only place cache headers can be set — `public/_headers` is a Netlify feature
+file and has **no effect** on S3/CloudFront. Required per-path metadata:
+
+| Path | `Cache-Control` | Why |
+|------|-----------------|-----|
+| `index.html` | `no-cache, no-store, must-revalidate` | Must always be revalidated |
+| `/assets/*` (hashed bundles) | `public, max-age=31536000, immutable` | Safe to pin forever |
+| `service-worker.js` | `no-cache` | Legacy worker, must not stick |
+
+Two production facts that cause "React never initializes" (the static markup in `#root` shows instead):
+
+1. `index.html` is currently served with `cache-control: max-age=31536000`, so browsers keep a
+   year-old copy pointing at hashed bundles that the next deploy deleted.
+2. Missing objects under `/assets/*` return **HTTP 200 with `content-type: text/html`** (CloudFront
+   custom error → `index.html`), and module scripts refuse to execute HTML — fix the error response
+   so asset misses are real 404s, and leave previous `/assets/*` objects on S3 during a transition.
+
+Client-side mitigation lives in `src/utils/bootstrapGuard.js`, `src/utils/lazyWithRetry.js`,
+`src/containers/AppErrorBoundary.js`, and the inline guard in the root `index.html`. It reloads once
+(never looping) to pick up the current `index.html`; it does not replace the header fix above.
+
 ## Related Instructions
 
 - `.github/instructions/codacy.instructions.md` — Codacy MCP Server integration rules (auto-analyze edited files, security checks on dependency changes)
