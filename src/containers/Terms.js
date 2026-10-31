@@ -38,7 +38,7 @@ const Terms = () => {
         <h1 style={{ textAlign: 'left' }}>Terms and Conditions</h1>
         <p style={{ textAlign: 'left' }}>
 
-          Last Updated: 03-23-2025
+          Last Updated: 10-31-2026
         </p>
         <p style={{ textAlign: 'left' }}>Welcome to WiSaw! By accessing and using our website (wisaw.com), you agree to comply with the following Terms and Conditions. Please read them carefully before using our services.</p>
 
@@ -68,7 +68,20 @@ const Terms = () => {
         </p>
 
         <h2 style={{ textAlign: 'left' }}>
-          4. Limitation of Liability
+          4. Child Safety and CSAM Prevention
+        </h2>
+        <p style={{ textAlign: 'left' }}>
+          WiSaw has zero tolerance for child sexual abuse material (CSAM) or any content that sexually exploits or endangers minors. Uploading, sharing, soliciting, or distributing such content is strictly prohibited and violates these Terms.
+        </p>
+        <ul style={{ textAlign: 'left' }}>
+          <li>We screen uploads using automated detection tools, including industry-standard hash matching, together with human review of flagged content and user reports.</li>
+          <li>We promptly remove violating content, terminate the responsible accounts, and take steps to prevent re-uploads.</li>
+          <li>We report known or apparent CSAM to the National Center for Missing &amp; Exploited Children (NCMEC) via its CyberTipline as required by U.S. law (18 U.S.C. § 2258A), to the appropriate authorities in other jurisdictions, and we cooperate fully with law enforcement investigations.</li>
+          <li>If you suspect CSAM or any child exploitation on WiSaw, report it to us immediately via the contact link below; we treat these reports as urgent.</li>
+        </ul>
+
+        <h2 style={{ textAlign: 'left' }}>
+          5. Limitation of Liability
         </h2>
         <p style={{ textAlign: 'left' }}>
           WiSaw provides content &quot;as is&quot; without warranties of any kind.
@@ -80,21 +93,21 @@ const Terms = () => {
         </p>
 
         <h2 style={{ textAlign: 'left' }}>
-          5. Third-Party Links
+          6. Third-Party Links
         </h2>
         <p style={{ textAlign: 'left' }}>
           WiSaw may contain links to third-party websites. We are not responsible for the content, policies, or practices of any third-party sites.
         </p>
 
         <h2 style={{ textAlign: 'left' }}>
-          6. Changes to Terms
+          7. Changes to Terms
         </h2>
         <p style={{ textAlign: 'left' }}>
           We may update these Terms and Conditions at any time. Your continued use of WiSaw after changes are made constitutes your acceptance of the new terms.
         </p>
 
         <h2 style={{ textAlign: 'left' }}>
-          7. Contact Us
+          8. Contact Us
         </h2>
 
         <p style={{ textAlign: 'left' }}>
