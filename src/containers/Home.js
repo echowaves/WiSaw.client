@@ -29,14 +29,33 @@ import './PhotosComponent.css'
 import { gql } from '@apollo/client'
 
 import * as CONST from '../consts'
-import { getOptimizedThumbnailDimensions } from '../utils/imageUtils'
+import { FEED_BREAKPOINT_COLS, getFeedThumbSize } from '../utils/imageUtils'
 
 const Home = function () {
   const [photos, setPhotos] = useState([])
   const [pageNumber, setPageNumber] = useState(0)
   const [noMoreData, setNoMoreData] = useState(true)
   const [searchText, setSearchText] = useState('')
+  // Re-measure feed card boxes when the viewport changes (rotate/resize),
+  // since their widths are computed from window dimensions at render time.
+  const [, forceRemeasure] = useState(0)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Coalesce bursts of resize events into one render per frame, like react-masonry-css does
+    let frame = 0
+    const onViewportChange = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => forceRemeasure((tick) => tick + 1))
+    }
+    window.addEventListener('resize', onViewportChange)
+    window.addEventListener('orientationchange', onViewportChange)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('resize', onViewportChange)
+      window.removeEventListener('orientationchange', onViewportChange)
+    }
+  }, [])
 
   const init = async () => {
     ReactGA.send({
@@ -179,23 +198,23 @@ const Home = function () {
       // }
       >
         <Masonry
-          breakpointCols={{
-            default: 4,
-            1100: 3,
-            700: 2,
-            500: 1
-          }}
+          breakpointCols={FEED_BREAKPOINT_COLS}
           className='masonry-grid'
           columnClassName='masonry-grid-column'
         >
           {photos.map((photo) => {
-            const thumbDimensions = getOptimizedThumbnailDimensions(photo)
+            const thumb = getFeedThumbSize(photo)
 
             return (
               <div
                 className='home-thumb-card'
                 style={{
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  // Shrink the card to the image so its border hugs the thumb with no side gaps;
+                  // fall back to full-column when the photo's aspect ratio is unknown
+                  width: thumb.width ?? '100%',
+                  maxWidth: '100%',
+                  marginInline: 'auto'
                 }}
                 key={photo.id}
               >
@@ -211,21 +230,23 @@ const Home = function () {
                           borderRadius: 'var(--radius-lg)',
                           overflow: 'hidden',
                           display: 'block',
-                          width: '100%',
                           lineHeight: 0,
                           position: 'relative'
                         }}
                       >
                         <img
                           src={photo.thumbUrl}
-                          width={thumbDimensions?.width}
-                          height={thumbDimensions?.height}
+                          width={thumb.width}
+                          height={thumb.height}
                           loading='lazy'
                           style={{
-                            width: '100%',
+                            // Explicit px width keeps the width/height attrs effective for the
+                            // pre-load box (no CLS); it never exceeds the natural thumb width,
+                            // and maxWidth shrinks to fit if the column math is ever off
+                            width: thumb.width != null ? `${thumb.width}px` : 'auto',
+                            maxWidth: '100%',
                             height: 'auto',
                             display: 'block',
-                            objectFit: 'cover',
                             margin: 0,
                             padding: 0
                           }}
@@ -233,6 +254,7 @@ const Home = function () {
                           onError={(e) => {
                             e.target.onerror = null
                             e.target.src = '/logo192.png' // Fallback image
+                            e.target.style.width = '100%' // Placeholder fills the card, no gutters
                           }}
                         />
                         {photo?.video === true && (
@@ -260,11 +282,15 @@ const Home = function () {
                     >
                       <img
                         src={photo.thumbUrl}
-                        width={thumbDimensions?.width}
-                        height={thumbDimensions?.height}
+                        width={thumb.width}
+                        height={thumb.height}
                         loading='lazy'
                         style={{
-                          width: '100%',
+                          // Explicit px width keeps the width/height attrs effective for the
+                          // pre-load box (no CLS); it never exceeds the natural thumb width,
+                          // and maxWidth shrinks to fit if the column math is ever off
+                          width: thumb.width != null ? `${thumb.width}px` : 'auto',
+                          maxWidth: '100%',
                           height: 'auto',
                           display: 'block',
                           margin: 0,
@@ -274,6 +300,7 @@ const Home = function () {
                         onError={(e) => {
                           e.target.onerror = null
                           e.target.src = '/logo192.png' // Fallback image
+                          e.target.style.width = '100%' // Placeholder fills the card, no gutters
                         }}
                       />
                       {photo?.video === true && (

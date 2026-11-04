@@ -325,6 +325,9 @@
 }
 
 .masonry-grid-column {
+    /* Equal-share columns (basis 0 + grow) so the layout matches getFeedColumnWidth();
+       without this, shrink-wrapped cards leave free space pooled at the right edge */
+    flex: 1 0 0%;
     padding-left: 20px;
     background-clip: padding-box;
 }
