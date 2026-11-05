@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 
 import { Helmet } from '@dr.pogodin/react-helmet'
 
@@ -23,16 +23,78 @@ import * as CONST from '../consts'
 
 const Footer = lazy(() => import('./Footer'))
 
+/**
+ * Display box for the detail media, from the photo's natural dimensions.
+ * Module-level so the initial render can size a bootstrapped page too.
+ */
+const computeDisplayDimensions = (photo) => {
+  if (!photo?.width || !photo?.height) {
+    return { width: 300, height: 300 }
+  }
+
+  const screenWidth = window.innerWidth
+
+  if (screenWidth < 700) {
+    const width = screenWidth - 40
+    const height = (photo.height / photo.width) * width
+    return { width, height }
+  }
+
+  const maxDimension = 700
+  const naturalWidth = photo.width
+  const naturalHeight = photo.height
+
+  return {
+    width: naturalWidth > naturalHeight ? maxDimension : maxDimension * naturalWidth / naturalHeight,
+    height: naturalWidth < naturalHeight ? maxDimension : maxDimension * naturalHeight / naturalWidth
+  }
+}
+
+/**
+ * Build a currPhoto record from the feed record Home/Search passed via router
+ * state. Only trusted when its id matches the route param; comments and
+ * recognitions hydrate from GraphQL shortly after.
+ */
+const bootstrapPhotoFromRouterState = (routerState, photoId) => {
+  const feedPhoto = routerState?.feedPhoto
+  if (!feedPhoto?.id || String(feedPhoto.id) !== String(photoId ?? '')) {
+    return null
+  }
+  return { photo: feedPhoto, comments: [], recognitions: [] }
+}
+
+/** Media-box placeholder for the cold-load skeleton (aspect ratio unknown). */
+const getPlaceholderDimensions = () => {
+  if (typeof window === 'undefined') {
+    return { width: 300, height: 300 }
+  }
+  const side = window.innerWidth < 700 ? window.innerWidth - 40 : 700
+  return { width: side, height: side }
+}
+
 const PhotosComponent = function () {
-  const [internalState, setInternalState] = useState({
-    currPhoto: null,
+  const { photoId } = useParams()
+  const location = useLocation()
+
+  // Feed cards pass their record via router state; when it matches this route
+  // we can paint the real media before any GraphQL response arrives.
+  const bootstrappedPhoto = bootstrapPhotoFromRouterState(location.state, photoId)
+
+  const [internalState, setInternalState] = useState(() => ({
+    currPhoto: bootstrappedPhoto,
     nextPhoto: null,
     prevPhoto: null,
     requestComplete: false
-  })
+  }))
 
-  const [dimensions, setDimensions] = useState({ width: null, height: null })
-  const [imageLoaded, setImageLoaded] = useState(false)
+  const [dimensions, setDimensions] = useState(() =>
+    bootstrappedPhoto
+      ? computeDisplayDimensions(bootstrappedPhoto.photo)
+      : { width: null, height: null }
+  )
+  // A bootstrapped photo is already decoded (the feed card just displayed its
+  // thumbnail), so paint it immediately instead of hiding it behind a spinner.
+  const [imageLoaded, setImageLoaded] = useState(bootstrappedPhoto != null)
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
   const [videoError, setVideoError] = useState(null)
@@ -43,6 +105,9 @@ const PhotosComponent = function () {
   const inflightMediaPreloads = useRef(new Map())
   const photoPageCache = useRef(new Map())
   const inflightPhotoRequests = useRef(new Map())
+  // Latest photoId requested; guards async paints from landing on the wrong page
+  const activePhotoIdRef = useRef(null)
+  const lastPageviewRef = useRef(null)
 
   const preloadImage = useCallback((url) => {
     if (!url || typeof window === 'undefined') {
@@ -68,13 +133,15 @@ const PhotosComponent = function () {
   }, [])
   useEffect(() => {
     if (internalState.requestComplete) {
-      ReactGA.send({
-        hitType: 'pageview',
-        page: internalState?.currPhoto?.photo?.video === true
-          ? `/videos/${internalState?.currPhoto?.photo?.id}`
-          : `/photos/${internalState?.currPhoto?.photo?.id}`
-        // title: "Custom Title",
-      })
+      const page = internalState?.currPhoto?.photo?.video === true
+        ? `/videos/${internalState?.currPhoto?.photo?.id}`
+        : `/photos/${internalState?.currPhoto?.photo?.id}`
+      // Fast paths can set internalState twice for one navigation (bootstrap
+      // then hydrate); never pageview the same page twice in a row.
+      if (page !== lastPageviewRef.current) {
+        lastPageviewRef.current = page
+        ReactGA.send({ hitType: 'pageview', page })
+      }
     }
   }, [internalState])
 
@@ -117,41 +184,15 @@ const PhotosComponent = function () {
     }
   }, [showVideoPlayer])
 
-  /**
-   * Get dimensions from GraphQL instead of manual image loading
-   */
-  const getDimensionsFromPhoto = useCallback((photo) => {
-    if (!photo?.width || !photo?.height) {
-      return { width: 300, height: 300 }
-    }
-
-    const screenWidth = window.innerWidth
-
-    if (screenWidth < 700) {
-      const width = screenWidth - 40
-      const height = (photo.height / photo.width) * width
-      return { width, height }
-    }
-
-    const maxDimension = 700
-    const naturalWidth = photo.width
-    const naturalHeight = photo.height
-
-    return {
-      width: naturalWidth > naturalHeight ? maxDimension : maxDimension * naturalWidth / naturalHeight,
-      height: naturalWidth < naturalHeight ? maxDimension : maxDimension * naturalHeight / naturalWidth
-    }
-  }, [])
-
   useEffect(() => {
     const handleResize = () => {
       if (internalState.currPhoto?.photo) {
-        setDimensions(getDimensionsFromPhoto(internalState.currPhoto.photo))
+        setDimensions(computeDisplayDimensions(internalState.currPhoto.photo))
       }
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [internalState.currPhoto, getDimensionsFromPhoto])
+  }, [internalState.currPhoto])
 
   const handleImageLoad = () => {
     setImageLoaded(true)
@@ -353,7 +394,7 @@ const PhotosComponent = function () {
         nextPhoto: next,
         prevPhoto: prev,
         dimensions: curr?.photo
-          ? getDimensionsFromPhoto(curr.photo)
+          ? computeDisplayDimensions(curr.photo)
           : { width: 300, height: 300 }
       }
 
@@ -364,7 +405,7 @@ const PhotosComponent = function () {
 
     inflightPhotoRequests.current.set(photoId, requestPromise)
     return requestPromise
-  }, [fetchCurrPhoto, fetchNextPhoto, fetchPrevPhoto, getDimensionsFromPhoto])
+  }, [fetchCurrPhoto, fetchNextPhoto, fetchPrevPhoto])
 
   const preloadPhotoPage = useCallback((photoId) => {
     if (!photoId) {
@@ -377,21 +418,33 @@ const PhotosComponent = function () {
   const load = useCallback(async ({ photoId }) => {
     const pageData = await buildPhotoPage(photoId)
 
+    // A faster click may have moved us on; do not paint a stale page over it.
+    if (activePhotoIdRef.current !== photoId) {
+      return
+    }
+
+    if (pageData?.currPhoto == null) {
+      // Failed fetch: keep any content already painted (bootstrapped or
+      // cached); only fall through to NoMatch when nothing valid is on screen.
+      setInternalState((prev) => (prev?.currPhoto != null
+        ? prev
+        : { currPhoto: null, nextPhoto: null, prevPhoto: null, requestComplete: true }))
+      return
+    }
+
     const calculatedDimensions = pageData?.dimensions || { width: 300, height: 300 }
     setDimensions(calculatedDimensions)
 
     setInternalState({
-      currPhoto: pageData?.currPhoto,
-      nextPhoto: pageData?.nextPhoto,
-      prevPhoto: pageData?.prevPhoto,
+      currPhoto: pageData.currPhoto,
+      nextPhoto: pageData.nextPhoto,
+      prevPhoto: pageData.prevPhoto,
       requestComplete: true
     })
 
     preloadPhotoPage(pageData?.nextPhoto?.photo?.id)
     preloadPhotoPage(pageData?.prevPhoto?.photo?.id)
   }, [buildPhotoPage, preloadPhotoPage])
-
-  const { photoId } = useParams()
 
   useEffect(() => {
     if (photoId) {
@@ -400,13 +453,41 @@ const PhotosComponent = function () {
           window.scrollTo({ top: 0, behavior: 'smooth' })
         })
       }
-      setInternalState({
-        currPhoto: null,
-        nextPhoto: null,
-        prevPhoto: null,
-        requestComplete: false
-      })
+
+      activePhotoIdRef.current = photoId
+
+      // Paint immediately when data is already available. Blanking the state
+      // first made even hover-preloaded prev/next navigations flash a skeleton.
+      const cached = photoPageCache.current.get(photoId)
+      const bootstrapped = bootstrapPhotoFromRouterState(location.state, photoId)
       setImageLoaded(false)
+
+      if (cached) {
+        setInternalState({
+          currPhoto: cached.currPhoto,
+          nextPhoto: cached.nextPhoto,
+          prevPhoto: cached.prevPhoto,
+          requestComplete: true
+        })
+        setDimensions(cached.dimensions || computeDisplayDimensions(cached.currPhoto?.photo))
+      } else if (bootstrapped) {
+        setInternalState({
+          currPhoto: bootstrapped,
+          nextPhoto: null,
+          prevPhoto: null,
+          requestComplete: false
+        })
+        setDimensions(computeDisplayDimensions(bootstrapped.photo))
+        setImageLoaded(true)
+      } else {
+        setInternalState({
+          currPhoto: null,
+          nextPhoto: null,
+          prevPhoto: null,
+          requestComplete: false
+        })
+      }
+
       setShowVideoPlayer(false)
       setVideoReady(false)
       setVideoError(null)
@@ -416,7 +497,7 @@ const PhotosComponent = function () {
       }
       load({ photoId })
     }
-  }, [load, photoId])
+  }, [load, photoId, location.state])
 
   const recognitionsLabels = (recognition, lebelsToInclude = 10) => {
     if (!recognition) return ''
@@ -665,8 +746,6 @@ const PhotosComponent = function () {
       return <div />
     }
   }
-
-  const location = useLocation()
 
   const renderNavigationButtons = () => {
     // const { nextPhoto, prevPhoto } = internalState
@@ -952,7 +1031,13 @@ const PhotosComponent = function () {
             </script>
           </Helmet>
 
-          <div className='recognition-tags'>
+          {/* Reserve the label row height while a bootstrapped page hydrates */}
+          <div
+            className='recognition-tags'
+            style={requestComplete
+              ? undefined
+              : { minHeight: 58, boxSizing: 'border-box' }}
+          >
             {currPhoto.recognitions &&
               renderRecognitionsH1(currPhoto?.recognitions[0])}
           </div>
@@ -1200,7 +1285,9 @@ const PhotosComponent = function () {
             <div style={{ margin: '6px', align: 'center' }} />
           </div>
         </main>
-        <Footer />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       </div>
     )
   }
@@ -1216,42 +1303,40 @@ const PhotosComponent = function () {
     )
   }
 
-  // Show loading state with reserved space if we don't have dimensions yet
+  // Cold load (deep link, no cache/router state): mirror the final page so
+  // content fills reserved slots instead of swapping a different layout.
   if (!requestComplete || !currPhoto || !dimensions.width || !dimensions.height) {
+    const placeholder = getPlaceholderDimensions()
     return (
       <div className='PhotosComponent'>
-        <div
-          className='content-container' style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '400px'
-          }}
-        >
-          {/* Reserve space for navigation */}
-          <div style={{ height: '60px', width: '100%', marginBottom: '14px' }}>
-            <div className='loading-spinner' style={{ width: '30px', height: '30px', margin: '0 auto' }} />
-          </div>
+        <main className='content-container' role='main'>
+          {/* Reserve the label row so media does not shift when labels hydrate */}
+          <div
+            className='recognition-tags'
+            style={{ minHeight: 58, boxSizing: 'border-box' }}
+          />
 
-          {/* Reserve space for main image */}
-          <div style={{
-            width: '300px',
-            height: '300px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: '16px'
-          }}
+          {/* Media box at the final max display size (aspect ratio unknown) */}
+          <div
+            className='crop'
+            style={{
+              width: placeholder.width,
+              height: placeholder.height,
+              maxWidth: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
-            <div className='loading-spinner' />
+            <div className='loading-spinner' aria-label='Loading media' />
           </div>
 
-          {/* Reserve space for comments/recognition */}
-          <div style={{ height: '100px', width: '100%' }} />
-        </div>
+          {/* Reserve space for comments/recognition below the media */}
+          <div style={{ height: 100, width: '100%' }} />
+        </main>
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       </div>
     )
   }

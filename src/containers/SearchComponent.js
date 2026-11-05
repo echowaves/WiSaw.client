@@ -282,6 +282,8 @@ const SearchComponent = function () {
               >
                 <Link
                   to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
+                  // Lets the detail page paint at the right size before GraphQL resolves
+                  state={{ feedPhoto: photo }}
                   style={{
                     width: '100%',
                     display: 'block'
