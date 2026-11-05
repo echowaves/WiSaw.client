@@ -11,7 +11,14 @@
   <meta property="og:type" content="website" data-rh="true" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="google-site-verification" content="RQGZzEN0xtT0w38pKeQ1L8u8P6dn7zxfu03jt0LGgF4" />
-  <link rel='canonical' href="https://wisaw.com" data-rh="true" />
+
+  <!--
+    No static canonical link here on purpose. A hardcoded homepage canonical told Google
+    that all ~22k photo/video URLs were duplicates of wisaw.com/, and they were dropped.
+    Each page sets its own canonical at runtime via Helmet, and the Lambda@Edge meta
+    injector (WiSaw.cdk injectMetaTagsLambdaFunction) writes a self-referencing canonical
+    into the prerendered head. src/seo.template.test.js guards this invariant.
+  -->
 
 
   <!--
