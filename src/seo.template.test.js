@@ -34,3 +34,29 @@ describe.each(templates)('%s SEO invariants', (template) => {
     expect(templateHtml).toMatch(/<div id="root">/)
   })
 })
+
+// CloudFront now answers unknown URLs with this file and a real 404 (the distribution used to
+// rewrite every miss to index.html with status 200, which read as near-duplicate content).
+// It must stay standalone: a page that depends on the hashed bundle would break exactly when
+// the bundle is the thing that went missing.
+describe('public/404.html invariants', () => {
+  const notFoundHtml = readFileSync(resolve('public/404.html'), 'utf8')
+
+  it('is excluded from the index', () => {
+    expect(notFoundHtml).toMatch(/name="robots"[^>]*content="noindex, follow/)
+  })
+
+  it('has no title that duplicates a live page', () => {
+    const title = notFoundHtml.match(/<title>([^<]*)<\/title>/i)
+    expect(title?.[1]).toMatch(/not found/i)
+  })
+
+  it('loads no application bundle', () => {
+    expect(notFoundHtml).not.toMatch(/<script[^>]*\bsrc=/i)
+  })
+
+  it('links to crawlable pages instead of dead ends', () => {
+    expect(notFoundHtml).toMatch(/href="\/"/)
+    expect(notFoundHtml).toMatch(/href="\/about"/)
+  })
+})
