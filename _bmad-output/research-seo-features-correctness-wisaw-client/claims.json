@@ -1,0 +1,77 @@
+[
+ {
+  "claim": "Google requires only name, thumbnailUrl, uploadDate on VideoObject",
+  "class": "doc-spec",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "MOV is a Google-processable video file type; stable thumbnail URLs required",
+  "class": "doc-spec",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "Live /videos/<id> serves one valid VideoObject; contentUrl+thumbnail HTTP 200",
+  "class": "live-probe",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "Client VideoObject hardcodes duration PT0M30S; uploadDate fallback is render date",
+  "class": "implementation-fact",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "og:image required by Open Graph; static routes omit it by injector design",
+  "class": "doc-spec",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "/, /about, /contact, /terms serve byte-identical body to JS-free crawlers",
+  "class": "live-probe",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "index.html served cache-control max-age=900 today",
+  "class": "live-probe",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "Misses return true 404 but error doc carries max-age=31536000",
+  "class": "live-probe",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "www/apex + http/https 301 consolidated; self-referencing canonicals; no noindex",
+  "class": "live-probe",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "Apple requires application/json for AASA (doc unreachable)",
+  "class": "doc-spec",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "_headers is inert on S3/CloudFront",
+  "class": "implementation-fact",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "sitemap.xml 21,949 URLs, no lastmod; robots.txt permissive with Sitemap line",
+  "class": "implementation-fact",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "X twitter:card requirements unverified (docs unreachable)",
+  "class": "doc-spec",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "@dr.pogodin/react-helmet@3.1.0 peer react 19 matches installed React 19.2.4",
+  "class": "version-compat",
+  "pub_date": "2026-11"
+ },
+ {
+  "claim": "Google renders all 200-status pages in a second pass; app-shell content indexes late",
+  "class": "doc-spec",
+  "pub_date": "2026-11"
+ }
+]

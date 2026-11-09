@@ -1,0 +1,25 @@
+== probe 2026-11-08T00:33:07Z ==
+--- https://wisaw.com/recon-probe-zq7x9m2k
+HTTP/1.1 200 OK
+HTTP/2 404 
+content-type: text/html
+cache-control: max-age=31536000
+x-cache: Error from cloudfront
+age: 68186
+  body: bytes=    2400 noindex_hits=2 robots_meta=name="robots" content="noindex, follow" / canonical=rel="canonical" href="https://wisaw.com/" /
+--- https://wisaw.com/photos/35e99e0c-03a1-4f30-80d3-405bc1f3df35
+HTTP/1.1 200 OK
+HTTP/2 200 
+content-type: text/html
+x-robots-tag: index, follow
+cache-control: max-age=100
+x-cache: Miss from cloudfront
+  body: bytes=    6355 noindex_hits=0 robots_meta=name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" / canonical=rel="canonical" href="https://wisaw.com/photos/35e99e0c-03a1-4f30-80d3-405bc1f3df35" data-rh="true"
+--- https://wisaw.com/videos/03b51380-054f-485b-80cf-757fdad56d26
+HTTP/1.1 200 OK
+HTTP/2 200 
+content-type: text/html
+cache-control: max-age=100
+x-robots-tag: index, follow
+x-cache: Miss from cloudfront
+  body: bytes=    6708 noindex_hits=0 robots_meta=name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" / canonical=rel="canonical" href="https://wisaw.com/videos/03b51380-054f-485b-80cf-757fdad56d26" data-rh="true"
