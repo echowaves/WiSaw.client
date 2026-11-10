@@ -20,35 +20,14 @@ import stringifyObject from 'stringify-object'
 import NoMatch from './NoMatch.js'
 
 import * as CONST from '../consts'
+import {
+  COLD_BELOW_MEDIA_RESERVE,
+  PLACEHOLDER_LABEL_COUNT,
+  computeDisplayDimensions,
+  getPlaceholderDimensions
+} from '../utils/detailLayout'
 
 const Footer = lazy(() => import('./Footer'))
-
-/**
- * Display box for the detail media, from the photo's natural dimensions.
- * Module-level so the initial render can size a bootstrapped page too.
- */
-const computeDisplayDimensions = (photo) => {
-  if (!photo?.width || !photo?.height) {
-    return { width: 300, height: 300 }
-  }
-
-  const screenWidth = window.innerWidth
-
-  if (screenWidth < 700) {
-    const width = screenWidth - 40
-    const height = (photo.height / photo.width) * width
-    return { width, height }
-  }
-
-  const maxDimension = 700
-  const naturalWidth = photo.width
-  const naturalHeight = photo.height
-
-  return {
-    width: naturalWidth > naturalHeight ? maxDimension : maxDimension * naturalWidth / naturalHeight,
-    height: naturalWidth < naturalHeight ? maxDimension : maxDimension * naturalHeight / naturalWidth
-  }
-}
 
 /**
  * Build a currPhoto record from the feed record Home/Search passed via router
@@ -63,14 +42,63 @@ const bootstrapPhotoFromRouterState = (routerState, photoId) => {
   return { photo: feedPhoto, comments: [], recognitions: [] }
 }
 
-/** Media-box placeholder for the cold-load skeleton (aspect ratio unknown). */
-const getPlaceholderDimensions = () => {
-  if (typeof window === 'undefined') {
-    return { width: 300, height: 300 }
+/** Recognition labels of one record, or null when absent, malformed or unparseable. */
+const parseRecognitionLabels = (recognition) => {
+  if (!recognition?.metaData) return null
+  try {
+    const labels = JSON.parse(recognition.metaData)?.Labels
+    if (!Array.isArray(labels)) return null
+    // Only fully renderable labels count: the same list decides both the row's
+    // content and whether the slot stays transparent, so a half-broken record
+    // cannot crash render nor paint an empty panel.
+    return labels.filter((label) => typeof label?.Name === 'string' && label.Name.length > 0)
+  } catch (err) {
+    console.error('Error parsing recognition metadata:', err.message)
+    return null
   }
-  const side = window.innerWidth < 700 ? window.innerWidth - 40 : 700
-  return { width: side, height: side }
 }
+
+/**
+ * Label row shown while recognitions are still in flight. It mirrors the DOM and
+ * box metrics of renderLabelRow's output (same wrapper divs, same h1, pills with the
+ * same padding/border/margins), so swapping real labels in cannot move the media box
+ * below it — a magic min-height always disagreed with the hydrated height by tens of
+ * pixels and pushed the whole page down on hydration. The pills carry no text: the
+ * row is clamped to one line, so width is irrelevant to its height and a crawler is
+ * never served a heading made of filler words.
+ */
+const RecognitionLabelsSkeleton = () => (
+  <div>
+    <div style={{ margin: '4px 0 8px' }}>
+      <h1 className='recognition-tags-h1 skeleton-pill-row' aria-hidden='true'>
+        {Array.from({ length: PLACEHOLDER_LABEL_COUNT }, (_, i) => (
+          <span key={i} className='skeleton-pill' />
+        ))}
+      </h1>
+    </div>
+  </div>
+)
+
+/**
+ * First-comment row reserved while comments are unknown, sized like the hydrated
+ * `<p className='comment-text' style={{ fontSize: 24, fontWeight: 600 }}>`. It stays
+ * mounted (transparent) once we know a photo has no comments, so the slot height is
+ * the same in every state and cannot move what sits below it. Longer comments only
+ * move content below the fold.
+ */
+const CommentSlotSkeleton = () => (
+  <div className='comments-section comments-section--slot'>
+    <div>
+      <p
+        className='comment-text skeleton-comment'
+        style={{ fontSize: 24, fontWeight: 600 }}
+        aria-hidden='true'
+      >
+        &nbsp;
+      </p>
+    </div>
+  </div>
+)
 
 const PhotosComponent = function () {
   const { photoId } = useParams()
@@ -509,40 +537,27 @@ const PhotosComponent = function () {
     }
   }
 
-  const renderRecognitionsH1 = (recognition) => {
-    if (!recognition) return (<div />)
-    try {
-      const labels = JSON.parse(recognition?.metaData)?.Labels
-
-      return (
-        <div>
-          {labels?.length > 0 && (
-            <div style={{ margin: '4px 0 8px' }}>
-              <h1>
-                {labels.slice(0, 3).map((label) => (
-                  <Link
-                    key={label.Name}
-                    to={`/search/${encodeURIComponent(label.Name)}`}
-                    style={{
-                      opacity: Math.max(0.6, label.Confidence / 100),
-                      fontSize: `${Math.max(0.8, label.Confidence / 100)}em`,
-                      fontWeight: Math.max(400, 400 + (label.Confidence / 100) * 300)
-                    }}
-                  >
-                    {stringifyObject(label.Name).replace(/'/g, '')}
-                  </Link>
-                ))}
-              </h1>
-            </div>
-          )}
-
-        </div>
-      )
-    } catch (err) {
-      console.error('Error rendering recognition data:', err.message)
-      return <div />
-    }
-  }
+  const renderLabelRow = (labels) => (
+    <div>
+      <div style={{ margin: '4px 0 8px' }}>
+        <h1 className='recognition-tags-h1'>
+          {labels.slice(0, PLACEHOLDER_LABEL_COUNT).map((label) => (
+            <Link
+              key={label.Name}
+              to={`/search/${encodeURIComponent(label.Name)}`}
+              style={{
+                opacity: Math.max(0.6, label.Confidence / 100),
+                fontSize: `${Math.max(0.8, label.Confidence / 100)}em`,
+                fontWeight: Math.max(400, 400 + (label.Confidence / 100) * 300)
+              }}
+            >
+              {stringifyObject(label.Name).replace(/'/g, '')}
+            </Link>
+          ))}
+        </h1>
+      </div>
+    </div>
+  )
 
   const renderRecognitions = (recognition) => {
     if (!recognition) return (<div />)
@@ -840,6 +855,12 @@ const PhotosComponent = function () {
     const finalVideoTitle = videoTitle && videoTitle.trim() ? videoTitle.trim() : `WiSaw Video ${currPhoto.photo.id}`
     const finalVideoDescription = videoDescription && videoDescription.trim() ? videoDescription.trim() : `Video content from WiSaw - ID: ${currPhoto.photo.id}`
 
+    // One parse drives both the label row's content and its chrome, so an empty or
+    // corrupt recognition record shows the transparent slot instead of painting an
+    // empty glass panel above the media.
+    const detailLabels = parseRecognitionLabels(currPhoto.recognitions?.[0])
+    const hasDetailLabels = detailLabels?.length > 0
+
     return (
       <div className='PhotosComponent'>
         {/* Main article/video content wrapper to establish this as a watch page */}
@@ -1031,15 +1052,19 @@ const PhotosComponent = function () {
             </script>
           </Helmet>
 
-          {/* Reserve the label row height while a bootstrapped page hydrates */}
+          {/*
+            Label row above the media. Its box is kept in every state - loading,
+            labeled, or confirmed label-free (transparent slot) - because the media
+            panel below it is already painted and would ride any height change.
+          */}
           <div
-            className='recognition-tags'
-            style={requestComplete
-              ? undefined
-              : { minHeight: 58, boxSizing: 'border-box' }}
+            className={hasDetailLabels
+              ? 'recognition-tags'
+              : 'recognition-tags recognition-tags--slot'}
           >
-            {currPhoto.recognitions &&
-              renderRecognitionsH1(currPhoto?.recognitions[0])}
+            {hasDetailLabels
+              ? renderLabelRow(detailLabels)
+              : <RecognitionLabelsSkeleton />}
           </div>
 
           <div // eslint-disable-line
@@ -1247,7 +1272,7 @@ const PhotosComponent = function () {
               justifyContent: 'center'
             }}
           >
-            {currPhoto.comments && currPhoto.comments.length > 0 && (
+            {currPhoto.comments?.length > 0 ? (
               <div className='comments-section'>
                 {currPhoto.comments.map((comment, i) => (
                   <div key={comment.id}>
@@ -1276,7 +1301,7 @@ const PhotosComponent = function () {
                   </div>
                 ))}
               </div>
-            )}
+            ) : <CommentSlotSkeleton />}
             <div className='recognition-tags'>
               {currPhoto.recognitions &&
                 renderRecognitions(currPhoto?.recognitions[0])}
@@ -1310,11 +1335,10 @@ const PhotosComponent = function () {
     return (
       <div className='PhotosComponent'>
         <main className='content-container' role='main'>
-          {/* Reserve the label row so media does not shift when labels hydrate */}
-          <div
-            className='recognition-tags'
-            style={{ minHeight: 58, boxSizing: 'border-box' }}
-          />
+          {/* Exact-height label row: the media box top never moves on hydration */}
+          <div className='recognition-tags recognition-tags--slot'>
+            <RecognitionLabelsSkeleton />
+          </div>
 
           {/* Media box at the final max display size (aspect ratio unknown) */}
           <div
@@ -1331,12 +1355,14 @@ const PhotosComponent = function () {
             <div className='loading-spinner' aria-label='Loading media' />
           </div>
 
-          {/* Reserve space for comments/recognition below the media */}
-          <div style={{ height: 100, width: '100%' }} />
+          {/*
+            Unpainted filler: nothing below the media is painted yet, so the aspect
+            ratio arriving cannot move visible content. The Footer is deliberately
+            absent here for the same reason - rendering it made it ride a ~300px
+            jump when the square placeholder resolved to the real aspect ratio.
+          */}
+          <div style={{ height: COLD_BELOW_MEDIA_RESERVE, width: '100%' }} />
         </main>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
       </div>
     )
   }

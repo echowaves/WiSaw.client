@@ -121,6 +121,9 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* Reserve the classic-scrollbar gutter so a page growing past one viewport
+     (skeleton -> real content) cannot shift every in-flow element sideways. */
+  scrollbar-gutter: stable;
 }
 
 code {

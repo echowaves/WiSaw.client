@@ -145,6 +145,51 @@
     color: #fff;
 }
 
+/* ---- Hydration placeholders (Cumulative Layout Shift) ----
+   These hold the exact box of the content that replaces them, so filling real
+   labels or a comment in cannot move the media panel below. Metrics must stay in
+   sync with `.recognition-tags a` and `.comment-text` above; they are invisible on
+   purpose - an unpainted box can never contribute to CLS. */
+.recognition-tags .skeleton-pill {
+    display: inline-block;
+    width: 5.5em;
+    height: 1.4em; /* one line of hydrated pill text */
+    padding: 5px 14px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xl);
+    margin: 0 4px 6px 0;
+    visibility: hidden;
+}
+
+/* Hydrated pills shrink to 0.8em for low-confidence labels, so the row reserves the
+   box of the largest possible pill (1.4 line-height + 12px padding/border + 6px
+   margin): a shorter hydrated row must not pull the media panel up. */
+.recognition-tags .recognition-tags-h1 {
+    min-height: calc(1.4em + 20px);
+}
+
+/* A slot that turns out to stay empty keeps its height and loses its chrome, so it
+   neither moves what is below it nor shows an empty glass panel. Both selectors are
+   compound on purpose: `.comments-section` and `.recognition-tags` are declared later
+   in this file and would otherwise win the cascade. */
+.recognition-tags.recognition-tags--slot,
+.comments-section.comments-section--slot {
+    background: transparent;
+    border-color: transparent;
+}
+
+/* The placeholder reserves exactly one row: three pill-width spans must not wrap to a
+   second row on narrow screens, or the hydrated single-row label set would shrink the
+   box and lift the media panel up. */
+.recognition-tags .skeleton-pill-row {
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.comments-section .skeleton-comment {
+    visibility: hidden;
+}
+
 /* ---- Comments section ---- */
 .comments-section {
     margin: 18px 0;
