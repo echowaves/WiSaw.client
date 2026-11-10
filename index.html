@@ -144,8 +144,8 @@
     LCP bootstrap (1 of 2): ask the browser for the bytes this route is going to show, before
     the body has even parsed.
 
-    Lambda@Edge injects a full-resolution <img>/<video poster> into <div id="root"> and that
-    element is the Largest Contentful Paint on /photos/:id and /videos/:id: 1.2-3.4 MB of pixels
+    Lambda@Edge injects a full-resolution image (or video poster) into the #root mount point, and
+    that element is the Largest Contentful Paint on /photos/:id and /videos/:id: 1.2-3.4 MB of pixels
     shown at <=700px, while the -thumb.webp variant of the same record is 29-53 KB. The route id
     IS the object name on img.wisaw.com, so the URL can be derived from location.pathname alone -
     no fetch, no React, nothing to do with the ~150 KB of JS that has to download and run first.
@@ -211,10 +211,16 @@
   <!--
     LCP bootstrap (2 of 2): point the media Lambda@Edge already injected at those bytes.
 
-    Placement is load-bearing. The injector rewrites the contents of <div id="root">, so logic
-    living inside that div is destroyed; a classic parser-inserted script just after it survives and
-    still runs before the first paint - nothing can paint the multi-megabyte source in between. Only
-    src/poster attributes change, never structure: h1/img/p/JSON-LD all stay (src/seo.template.test.js).
+    Placement is load-bearing. The injector rewrites the contents of the #root mount point, so logic
+    living inside it is destroyed; a classic parser-inserted script just after it survives and still
+    runs before the first paint - nothing can paint the multi-megabyte source in between. Only
+    src/poster attributes change, never structure: heading, media, caption and JSON-LD all stay
+    (src/seo.template.test.js).
+
+    NEVER write literal markup (a tag name inside angle brackets) in this file's comments: the
+    injector finds the mount point by string search, so a mention of it earlier in the document
+    makes it replace everything in between - including the entry script. Pinned by
+    src/seo.template.test.js.
 
     If anything is unexpected - no plan, a foreign host, another id - the markup is left
     byte-identical and the page behaves exactly as it did before.
