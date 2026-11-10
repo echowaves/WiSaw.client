@@ -169,13 +169,21 @@ file and has **no effect** on S3/CloudFront. Required per-path metadata:
 | `/assets/*` (hashed bundles) | `public, max-age=31536000, immutable` | Safe to pin forever |
 | `service-worker.js` | `no-cache` | Legacy worker, must not stick |
 
-Two production facts that cause "React never initializes" (the static markup in `#root` shows instead):
+Three production facts that cause "React never initializes" (the static markup in `#root` shows instead):
 
-1. `index.html` is currently served with `cache-control: max-age=31536000`, so browsers keep a
-   year-old copy pointing at hashed bundles that the next deploy deleted.
+1. A deploy that applies one `--cache-control` to the whole sync pins `index.html` for a year at the
+   origin, so browsers keep an old copy pointing at hashed bundles the next deploy deleted. CloudFront
+   currently masks this by overriding HTML with `max-age=900` (`100` on deep links) — the origin
+   metadata is still wrong and `service-worker.js` really is served `max-age=31536000` today.
 2. Missing objects under `/assets/*` return **HTTP 200 with `content-type: text/html`** (CloudFront
    custom error → `index.html`), and module scripts refuse to execute HTML — fix the error response
    so asset misses are real 404s, and leave previous `/assets/*` objects on S3 during a transition.
+3. **Never write literal markup in `index.html` comments.** The Lambda@Edge injector locates the mount
+   point by string search and replaces up to the next closing `</div>`, so a second mention of it
+   anywhere — even inside `<!-- -->` — makes it swallow everything between, entry script included. On
+   2026-11-10 that blanked every `/photos/*` page. `src/seo.template.test.js` pins the single-anchor
+   contract and simulates an injection pass against `build/index.html`; `npm run build` runs it via
+   `postbuild`, so chain deploys with `&&`, never `;`.
 
 Client-side mitigation lives in `src/utils/bootstrapGuard.js`, `src/utils/lazyWithRetry.js`,
 `src/containers/AppErrorBoundary.js`, and the inline guard in the root `index.html`. It reloads once

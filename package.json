@@ -5,6 +5,7 @@
   "scripts": {
     "start": "vite",
     "build": "curl https://wisaw.com/sitemap.xml --output ./public/sitemap.xml && vite build",
+    "postbuild": "vitest run src/seo.template.test.js",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "eslint src --ext .js",
