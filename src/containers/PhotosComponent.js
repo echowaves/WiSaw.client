@@ -1087,6 +1087,7 @@ const PhotosComponent = function () {
                   height={`${dimensions.height}`}
                   className='thumbnailImage'
                   src={currPhoto.photo.thumbUrl}
+                  decoding='async'
                   alt={
                     currPhoto?.comments?.length > 0
                       ? currPhoto?.comments[0]?.comment
@@ -1218,6 +1219,7 @@ const PhotosComponent = function () {
                   height={`${dimensions.height}`}
                   className='thumbnailImage'
                   src={currPhoto.photo.thumbUrl}
+                  decoding='async'
                   alt={
                     currPhoto?.comments?.length > 0
                       ? currPhoto?.comments[0]?.comment
@@ -1242,6 +1244,8 @@ const PhotosComponent = function () {
                   height={`${dimensions.height}`}
                   className='mainImage'
                   src={currPhoto.photo.imgUrl}
+                  fetchPriority='high'
+                  decoding='async'
                   alt={
                     currPhoto?.comments?.length > 0
                       ? currPhoto?.comments[0]?.comment

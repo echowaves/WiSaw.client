@@ -130,6 +130,18 @@ describe('detail page empty states (CLS guards)', () => {
     expect(slot.querySelector('.skeleton-comment')).not.toBeNull()
   })
 
+  it('prioritises the media it is about to paint', async () => {
+    hydrateWith()
+    renderAt({ feedPhoto: FEED_PHOTO })
+    await screen.findByText('site footer')
+
+    const full = document.querySelector('.crop img.mainImage')
+    // React renders camelCase fetchPriority as the lowercase fetchpriority attribute.
+    expect(full.getAttribute('fetchpriority')).toBe('high')
+    expect(full.getAttribute('decoding')).toBe('async')
+    expect(document.querySelector('.crop img.thumbnailImage').getAttribute('decoding')).toBe('async')
+  })
+
   it('fills the comments slot in place when a comment arrives', async () => {
     hydrateWith({ comments: [{ id: 'c1', comment: 'great shot' }] })
     renderAt({ feedPhoto: FEED_PHOTO })

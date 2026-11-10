@@ -2,10 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import svgr from 'vite-plugin-svgr'
 
+import { asyncCssPlugin } from './src/build/vite-plugin-async-css'
+
 export default defineConfig({
     plugins: [
         react(),
-        svgr()
+        svgr(),
+        // Registered last so the emitted stylesheet links are already in the HTML it receives.
+        asyncCssPlugin()
     ],
     esbuild: {
         loader: 'jsx',

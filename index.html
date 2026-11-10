@@ -10,6 +10,51 @@
     data-rh="true" />
   <meta property="og:type" content="website" data-rh="true" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!--
+    Critical block: everything needed to paint the first frame in the right colours, so the
+    ~32 KB gz application stylesheet (loaded async by src/build/vite-plugin-async-css.js) is not
+    render-blocking. Mirrors only these rules from src/index.css and must stay tiny;
+    src/lcpBootstrap.template.test.js guards its presence and content.
+  -->
+  <style>
+    html { scrollbar-gutter: stable }
+
+    body {
+      margin: 0;
+      line-height: 1.6;
+      color: #111827;
+      background: #f5f7fb;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body { color: #ececf0; background: #111113 }
+    }
+
+    img { max-width: 100%; height: auto }
+
+    /* Roughly the .content-container column so the edge-injected markup does not sit full-bleed.
+       Scoped to what Lambda@Edge injects and deliberately never applied to #root itself: no
+       stylesheet in this app styles #root, so a rule there would outlive hydration and cap the
+       hydrated page's width (and pad its full-bleed sticky header) on every route. */
+    #root > h1, #root > p, #root > nav {
+      max-width: 1100px;
+      margin: 0 auto 1em;
+      padding: 0 20px;
+    }
+
+    #root > h1 { margin-top: 20px }
+
+    #root > img {
+      display: block;
+      max-width: min(1100px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+  </style>
+
   <meta name="google-site-verification" content="RQGZzEN0xtT0w38pKeQ1L8u8P6dn7zxfu03jt0LGgF4" />
 
   <!--
@@ -22,6 +67,16 @@
 
   <link rel="preconnect" href="https://wisaw.com" />
   <link rel="preconnect" href="https://img.wisaw.com" />
+
+  <!--
+    The detail page fires its first AppSync query as soon as the bundle boots, so warming this
+    connection while the head is still parsing takes DNS + TCP + TLS off the content path.
+    No crossorigin: the GraphQL fetch is a CORS request without credentials.
+  -->
+  <link rel="preconnect"
+    href="https://nkoozahma5hgvexphkrli34klm.appsync-api.us-east-1.amazonaws.com" />
+  <link rel="dns-prefetch"
+    href="https://nkoozahma5hgvexphkrli34klm.appsync-api.us-east-1.amazonaws.com" />
 
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.webp" />
@@ -50,7 +105,7 @@
     This runs inline because a failed bundle leaves no JavaScript on the page at all. A reload
     re-requests index.html bypassing the HTTP cache. Rate limited so it can never loop.
   -->
-  <script>
+  <script data-wisaw-guard="reload">
     (function () {
       if (window.location.port) { return }
 
@@ -66,10 +121,14 @@
         window.location.reload()
       }
 
-      // Fires when a module script 404s or is served back a non-JavaScript MIME type.
+      // Fires when a module script 404s or is served back a non-JavaScript MIME type. Among LINK
+      // elements only the application stylesheet counts: the LCP bootstrap preloads an image URL it
+      // derived from the pathname, and reloading because one such hint missed would cost more than
+      // the miss itself.
       window.addEventListener('error', function (event) {
-        var tagName = event.target && event.target.tagName
-        if (tagName === 'SCRIPT' || tagName === 'LINK') { reloadOnce() }
+        var target = event.target
+        var tagName = target && target.tagName
+        if (tagName === 'SCRIPT' || (tagName === 'LINK' && target.rel === 'stylesheet')) { reloadOnce() }
       }, true)
 
       // Safety net for the case where no error event is surfaced at all.
@@ -78,6 +137,58 @@
           if (!window.__wisawBooted) { reloadOnce() }
         }, 15000)
       })
+    })()
+  </script>
+
+  <!--
+    LCP bootstrap (1 of 2): ask the browser for the bytes this route is going to show, before
+    the body has even parsed.
+
+    Lambda@Edge injects a full-resolution <img>/<video poster> into <div id="root"> and that
+    element is the Largest Contentful Paint on /photos/:id and /videos/:id: 1.2-3.4 MB of pixels
+    shown at <=700px, while the -thumb.webp variant of the same record is 29-53 KB. The route id
+    IS the object name on img.wisaw.com, so the URL can be derived from location.pathname alone -
+    no fetch, no React, nothing to do with the ~150 KB of JS that has to download and run first.
+
+    src/lcpBootstrap.template.test.js runs this script against simulated edge markup.
+  -->
+  <script data-wisaw-lcp="preload">
+    (function () {
+      // Mirrors DETAIL_MOBILE_BREAKPOINT in src/utils/detailLayout.js. A parser-inserted classic
+      // script cannot import, so the literal is duplicated; the template test fails if they drift.
+      var MOBILE_BREAKPOINT = 700
+      var MEDIA_ORIGIN = 'https://img.wisaw.com/'
+      var THUMB_SUFFIX = '-thumb'
+      // Route id is the photo UUID (8-4-4-4-12) and, on the CDN, the object name.
+      var DETAIL_ROUTE = /^\/(photos|videos)\/([0-9a-f]{8}-[0-9a-f-]{27,31})$/i
+
+      try {
+        var match = DETAIL_ROUTE.exec(window.location.pathname)
+        if (!match) { return }
+
+        var kind = match[1].toLowerCase()
+        var id = match[2]
+        var full = MEDIA_ORIGIN + id + '.webp'
+        var thumb = MEDIA_ORIGIN + id + THUMB_SUFFIX + '.webp'
+
+        // Below the breakpoint a photo is displayed at viewport-40 (<=660px) and React paints the
+        // 300px-wide thumb as its base layer anyway, so the thumb is an honest LCP candidate.
+        // Above it nothing smaller than the original exists that is not visibly wrong, so desktop
+        // keeps the full-resolution source. A video's pre-hydration paint is only a poster and
+        // React paints the same thumb base layer at every width, so there the thumb always wins.
+        // Both rules are reversible here and nowhere else.
+        var useThumb = kind === 'videos' || window.innerWidth < MOBILE_BREAKPOINT
+        var href = useThumb ? thumb : full
+
+        window.__wisawLcp = { kind: kind, id: id, full: full, thumb: thumb, href: href, useThumb: useThumb }
+
+        var link = document.createElement('link')
+        link.setAttribute('rel', 'preload')
+        link.setAttribute('as', 'image')
+        link.setAttribute('href', href)
+        link.setAttribute('fetchpriority', 'high')
+        document.head.appendChild(link)
+      } catch (err) { /* an optimisation must never break the page */ }
     })()
   </script>
 
@@ -96,6 +207,46 @@
       goal is to capture shots spontaneously, with minimal preparation—just point and shoot. As photographers, we often
       worry too much about getting everything perfect, and in doing so, we miss great opportunities.</h2>
   </div>
+
+  <!--
+    LCP bootstrap (2 of 2): point the media Lambda@Edge already injected at those bytes.
+
+    Placement is load-bearing. The injector rewrites the contents of <div id="root">, so logic
+    living inside that div is destroyed; a classic parser-inserted script just after it survives and
+    still runs before the first paint - nothing can paint the multi-megabyte source in between. Only
+    src/poster attributes change, never structure: h1/img/p/JSON-LD all stay (src/seo.template.test.js).
+
+    If anything is unexpected - no plan, a foreign host, another id - the markup is left
+    byte-identical and the page behaves exactly as it did before.
+  -->
+  <script data-wisaw-lcp="swap">
+    (function () {
+      try {
+        var plan = window.__wisawLcp
+        if (!plan || !plan.useThumb) { return }
+
+        var root = document.getElementById('root')
+        if (!root) { return }
+
+        // Scheme-insensitive comparison against the route's own full-resolution object, so
+        // https://, http:// and protocol-relative spellings all count as the same source.
+        var wantsSwap = function (value) {
+          if (!value) { return false }
+          return value.replace(/^https?:/i, '') === plan.full.replace(/^https?:/i, '')
+        }
+
+        var media = root.querySelectorAll('img[src], video[poster]')
+        for (var i = 0; i < media.length; i++) {
+          var element = media[i]
+          var attribute = element.tagName === 'VIDEO' ? 'poster' : 'src'
+          if (wantsSwap(element.getAttribute(attribute))) {
+            element.setAttribute(attribute, plan.thumb)
+          }
+        }
+      } catch (err) { /* an optimisation must never break the page */ }
+    })()
+  </script>
+
   <script type="module" src="/src/index.js"></script>
 </body>
 
