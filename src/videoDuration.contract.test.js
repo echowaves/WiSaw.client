@@ -87,3 +87,20 @@ describe.skipIf(!existsSync(SEO_RULES_PATH))('agrees with the backend seoRules',
     expect(utils.buildSeoBody({ entityLabel: 'video', duration: 48 })).toContain('"duration":"PT48S"')
   })
 })
+
+// The API answers with a wrapper ({ photo, comments, recognitions }), so `duration` beside
+// `photo { }` instead of inside it is a schema error that fails the whole query — and the page
+// shows a failed query as a missing photo. Pin the nesting, not just the word.
+describe('the detail-page queries', () => {
+  const source = readFileSync(path.join(HERE, 'containers', 'PhotosComponent.js'), 'utf8')
+  const queries = source.match(/query getPhotoAll(?:Curr|Next|Prev)[\s\S]*?`\s*,/g) ?? []
+
+  it('selects duration inside photo { } in every query', () => {
+    expect(queries.length).toBe(3)
+    for (const query of queries) {
+      const photo = query.match(/photo \{([\s\S]*?)\n\s*\}/)
+      expect(photo, 'no photo selection block').toBeTruthy()
+      expect(photo[1]).toMatch(/^\s*duration$/m)
+    }
+  })
+})
