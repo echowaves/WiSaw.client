@@ -146,3 +146,39 @@ describe('breadcrumbGraph', () => {
     expect(items[1].item).toBe(pageUrl(PHOTO))
   })
 })
+
+describe('the length a video page states', () => {
+  it('takes the seconds from the record, because that is what the first byte said', () => {
+    const record = { ...VIDEO_RECORD, seo: { ...VIDEO_RECORD.seo, duration: 48 } }
+    expect(mediaHead({ ...VIDEO, duration: 90 }, { record }).video.duration).toBe(48)
+  })
+
+  it('falls back to the API column when no record has described this video', () => {
+    // The GraphQL row now carries the same measurement; a video whose record is not written yet
+    // still gets a real length rather than none.
+    expect(mediaHead({ ...VIDEO, duration: 90 }, {}).video.duration).toBe(90)
+  })
+
+  it('says nothing when nobody has measured the file', () => {
+    expect(mediaHead(VIDEO, {}).video.duration).toBeUndefined()
+    expect(mediaGraph(VIDEO, { title: TITLE }).duration).toBeUndefined()
+  })
+
+  it('states the same measurement in seconds for Open Graph and ISO 8601 for the graph', () => {
+    const photo = { ...VIDEO, duration: 3725 }
+    expect(mediaHead(photo, {}).video.duration).toBe(3725)
+    expect(mediaGraph(photo, { title: TITLE }).duration).toBe('PT1H2M5S')
+  })
+
+  it('normalises a length stored in another shape instead of publishing the raw text', () => {
+    // parseInt on "1:02:03" would publish 1 second, which is a wrong fact, not a missing one.
+    const record = { ...VIDEO_RECORD, seo: { ...VIDEO_RECORD.seo, duration: '1:02:03' } }
+    expect(mediaHead(VIDEO, { record }).video.duration).toBe(3723)
+    expect(mediaGraph({ ...VIDEO, duration: 'PT2M5S' }, { title: TITLE }).duration).toBe('PT2M5S')
+  })
+
+  it('keeps a photo page out of the conversation', () => {
+    expect(mediaHead({ ...PHOTO, duration: 48 }, {}).video).toBeUndefined()
+    expect(mediaGraph(PHOTO, { title: TITLE }).duration).toBeUndefined()
+  })
+})

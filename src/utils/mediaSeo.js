@@ -38,6 +38,58 @@ const dimensionPair = function (photo) {
   return { width, height }
 }
 
+// How long the media actually is. Nothing upstream ever told us: the app uploads bytes without a
+// length, and production objects carry no upload-time metadata (WiSaw.cdk evidence
+// /probe-duration-metadata.js), so the number is read out of the stored container by the backend and
+// published here. The rules below mirror seoRules.js in the backend one-for-one - same shapes, same
+// 24-hour ceiling - and src/videoDuration.contract.test.js pins that agreement against the real
+// backend module, because a second copy of a rule is exactly the bug class this project keeps
+// removing. Unknown stays undefined: never 0, so no page can claim a length nobody measured.
+const MAX_DURATION_SECONDS = 86400
+
+function normaliseSeconds (value) {
+  const seconds = Math.floor(Number(value))
+  if (!Number.isFinite(seconds) || seconds <= 0 || seconds > MAX_DURATION_SECONDS) return undefined
+  return seconds
+}
+
+// "PT1H2M3S" -> seconds. Fractional seconds are floored; a designator-free "PT" is rejected.
+function isoToSeconds (text) {
+  const match = text.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:([\d.]+)S)?$/i)
+  if (match == null || (match[1] == null && match[2] == null && match[3] == null)) return undefined
+  const seconds = Number(match[1] ?? 0) * 3600 + Number(match[2] ?? 0) * 60 + Number(match[3] ?? 0)
+  return normaliseSeconds(seconds)
+}
+
+// "9:05" and "1:02:03" - the clock shape players and some uploads use.
+function clockToSeconds (text) {
+  if (!/^\d{1,2}(:[0-5]?\d){1,2}$/.test(text)) return undefined
+  const seconds = text.split(':').reduce((total, part) => total * 60 + Number(part), 0)
+  return normaliseSeconds(seconds)
+}
+
+/** Whole positive seconds from a number, "48", "0:48", "1:02:03" or "PT1M2S"; undefined if none. */
+export function durationSeconds (value) {
+  if (typeof value === 'number') return normaliseSeconds(value)
+  if (typeof value !== 'string') return undefined
+  const text = value.trim()
+  if (/^\d+$/.test(text)) return normaliseSeconds(Number(text))
+  if (/^PT/i.test(text)) return isoToSeconds(text)
+  return clockToSeconds(text)
+}
+
+/** The ISO 8601 form Google's VideoObject wants, or '' when the value is not a real duration. */
+export function iso8601Duration (value) {
+  const seconds = durationSeconds(value)
+  if (seconds == null) return ''
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const rest = seconds % 60
+  if (hours > 0) return `PT${hours}H${minutes}M${rest}S`
+  if (minutes > 0) return `PT${minutes}M${rest}S`
+  return `PT${rest}S`
+}
+
 // The four text slots a media page carries: <title>/og:title, meta description, and the
 // og:image:title / og:image:caption pair Google's image rich results read. They are resolved here,
 // in one priority order, because every one of them must say the same thing the crawler was served:
@@ -121,11 +173,15 @@ function mediaHead (photo, { record = null, served = null, fallback = null, path
 
   if (isVideo) {
     const { width, height } = dimensionPair(photo)
+    // The record's number wins: it is the one the edge put into this URL's first byte. A video the
+    // record has never described can still carry the API column, which holds the same measurement.
+    const fromRecord = isUsableRecord(record, 'video') ? record.seo.duration : undefined
     head.video = {
       url: photo?.videoUrl || undefined,
       width,
       height,
-      posterUrl: photo?.thumbUrl || undefined
+      posterUrl: photo?.thumbUrl || undefined,
+      duration: durationSeconds(fromRecord ?? photo?.duration)
     }
   }
 
@@ -138,7 +194,7 @@ const publisher = {
   url: 'https://wisaw.com'
 }
 
-function mediaGraph (photo, { title = '', description = '', comment = '', pathname = '' } = {}) {
+function mediaGraph (photo, { title = '', description = '', comment = '', duration = null, pathname = '' } = {}) {
   const isVideo = photo?.video === true
   const { width, height } = dimensionPair(photo)
   const interactionCount = positiveInt(photo?.watchersCount)
@@ -168,6 +224,9 @@ function mediaGraph (photo, { title = '', description = '', comment = '', pathna
       '@type': 'VideoObject',
       contentUrl: photo?.videoUrl || undefined,
       embedUrl: pageUrl(photo, pathname),
+      // Google qualifies the rich result on this, so it is published only once some part of the
+      // stack has actually measured the file.
+      duration: iso8601Duration(duration ?? photo?.duration) || undefined,
       uploadDate: photo?.createdAt || undefined,
       width,
       height,

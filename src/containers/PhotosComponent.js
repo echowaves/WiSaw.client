@@ -299,6 +299,7 @@ const PhotosComponent = function () {
                   thumbUrl
                   watchersCount
                   video
+                  duration
                   videoUrl
                   width
                   height
@@ -345,6 +346,7 @@ const PhotosComponent = function () {
                   thumbUrl
                   watchersCount
                   video
+                  duration
                   videoUrl
                   width
                   height
@@ -392,6 +394,7 @@ const PhotosComponent = function () {
                   thumbUrl
                   watchersCount
                   video
+                  duration
                   videoUrl
                   width
                   height
@@ -894,7 +897,7 @@ const PhotosComponent = function () {
     const seo = mediaHead(currPhoto.photo, seoOptions)
     const isVideo = seo.ogType === 'video.other'
     // Structured data describes the same page, so it names and describes it with the same strings.
-    const graphOptions = { title: seo.title, description: seo.description, comment, pathname: location.pathname }
+    const graphOptions = { title: seo.title, description: seo.description, comment, duration: seo.video?.duration, pathname: location.pathname }
     const mediaGraph = mediaGraphOf(currPhoto.photo, graphOptions)
     const breadcrumb = breadcrumbGraph(currPhoto.photo, graphOptions)
     // A short label for the player's own accessibility text; the page title carries the brand.
@@ -944,6 +947,10 @@ const PhotosComponent = function () {
                   <meta property='og:video:height' content={seo.video.height} />
                 )}
                 {seo.video.posterUrl && <meta property='og:video:image' content={seo.video.posterUrl} />}
+                {/* Whole seconds, same as the edge's first byte; absent until something measured. */}
+                {seo.video.duration != null && (
+                  <meta property='og:video:duration' content={seo.video.duration} />
+                )}
               </>
             )}
 
