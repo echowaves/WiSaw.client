@@ -1,6 +1,7 @@
 import React, { lazy, useEffect } from 'react'
 import { Helmet } from '@dr.pogodin/react-helmet'
 import ReactGA from 'react-ga4'
+import { SITE_NAME, ROBOTS_INDEX } from '../utils/seoDefaults'
 
 const Footer = lazy(() => import('./Footer'))
 
@@ -25,7 +26,8 @@ const Terms = () => {
           <meta property='og:title' content='WiSaw Terms and Conditions - Free Stock Photos & Videos' />
           <meta property='og:description' content="Review WiSaw's Terms and Conditions governing the use of our royalty-free stock photos and videos platform, including content usage rights and user responsibilities." />
           <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
-          <meta property='og:site_name' content='WiSaw' />
+          <meta property='og:site_name' content={SITE_NAME} />
+          <meta name='robots' content={ROBOTS_INDEX} />
 
           {/* Twitter */}
           <meta name='twitter:card' content='summary_large_image' />

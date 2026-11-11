@@ -26,6 +26,7 @@ import { gql } from '@apollo/client'
 // import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
 import { getOptimizedThumbnailDimensions } from '../utils/imageUtils'
+import { SITE_NAME, ROBOTS_NOINDEX } from '../utils/seoDefaults'
 
 const Footer = lazy(() => import('./Footer'))
 
@@ -449,7 +450,11 @@ const SearchComponent = function () {
               content={searchString ? `WiSaw: searching for ${searchString}` : 'Search WiSaw for photos and videos'}
             />
             <meta name='image' property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
-            <meta property='og:site_name' content='WiSaw' />
+            <meta property='og:site_name' content={SITE_NAME} />
+            {/* The template's og:type carries data-rh, so a route that does not declare it
+                loses the tag on hydration - same reason every route declares robots. */}
+            <meta property='og:type' content='website' />
+            <meta name='robots' content={ROBOTS_NOINDEX} />
             <meta
               property='og:url'
               content={searchString ? `https://wisaw.com/search/${searchString}` : 'https://wisaw.com/search'}

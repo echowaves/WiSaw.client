@@ -20,6 +20,7 @@ import stringifyObject from 'stringify-object'
 import NoMatch from './NoMatch.js'
 
 import * as CONST from '../consts'
+import { breadcrumbGraph, mediaGraph as mediaGraphOf, mediaHead } from '../utils/mediaSeo'
 import {
   COLD_BELOW_MEDIA_RESERVE,
   PLACEHOLDER_LABEL_COUNT,
@@ -855,6 +856,26 @@ const PhotosComponent = function () {
     const finalVideoTitle = videoTitle && videoTitle.trim() ? videoTitle.trim() : `WiSaw Video ${currPhoto.photo.id}`
     const finalVideoDescription = videoDescription && videoDescription.trim() ? videoDescription.trim() : `Video content from WiSaw - ID: ${currPhoto.photo.id}`
 
+    // One source for what the head says about this page. The edge injector publishes the same
+    // values before any JavaScript runs, so a crawler that renders the page and one that
+    // doesn't agree about it. Anything we do not know (a duration, a capture date) is left out
+    // rather than guessed.
+    // The labels and the newest comment go in as separate facts: the edge publishes them as the
+    // og:image:title / og:image:caption pair, and those tags carry data-rh, so anything the app
+    // does not declare itself is removed the moment it mounts.
+    const seoOptions = {
+      title: finalVideoTitle,
+      description: finalVideoDescription,
+      labels: recognitionsLabels(currPhoto?.recognitions[0], 3),
+      comment: currPhoto?.comments?.[0]?.comment ?? '',
+      // Route-derived so the canonical matches the URL that was asked for.
+      pathname: location.pathname
+    }
+    const seo = mediaHead(currPhoto.photo, seoOptions)
+    const isVideo = seo.ogType === 'video.other'
+    const mediaGraph = mediaGraphOf(currPhoto.photo, seoOptions)
+    const breadcrumb = breadcrumbGraph(currPhoto.photo, seoOptions)
+
     // One parse drives both the label row's content and its chrome, so an empty or
     // corrupt recognition record shows the transparent slot instead of painting an
     // empty glass panel above the media.
@@ -868,187 +889,52 @@ const PhotosComponent = function () {
           {/* Navigation buttons in upper corners */}
           {renderNavigationButtons()}
           <Helmet prioritizeSeoTags>
-            <title>{finalVideoTitle}</title>
-            <meta
-              property='og:title'
-              content={`${finalVideoTitle} ${currPhoto.photo.id}`}
-            />
+            <title>{seo.title}</title>
+            <meta property='og:title' content={seo.ogTitle} />
             <meta
               name='description'
               property='og:description'
-              content={finalVideoDescription}
+              content={seo.description}
             />
-            <meta
-              name='image'
-              property='og:image'
-              content={`${currPhoto.photo.thumbUrl}`}
-            />
-            <meta
-              property='og:url'
-              content={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos' : 'photos'}/${currPhoto.photo.id}`}
-            />
-            <meta property='og:site_name' content='WiSaw' />
+            <meta name='image' property='og:image' content={seo.imageUrl} />
+            <meta property='og:url' content={seo.url} />
+            <meta property='og:site_name' content={seo.siteName} />
+            <meta property='og:type' content={seo.ogType} />
+            <meta name='robots' content={seo.robots} />
 
             {/* Video-specific Open Graph tags */}
-            {currPhoto?.photo?.video === true && (
-              <>
-                <meta property='og:type' content='video.other' />
-                <meta property='og:video' content={currPhoto.photo.videoUrl} />
-                <meta property='og:video:url' content={currPhoto.photo.videoUrl} />
-                <meta property='og:video:secure_url' content={currPhoto.photo.videoUrl} />
-                <meta property='og:video:type' content='video/mp4' />
-                <meta property='og:video:width' content={currPhoto.photo.width || '640'} />
-                <meta property='og:video:height' content={currPhoto.photo.height || '360'} />
-                <meta property='og:video:image' content={currPhoto.photo.thumbUrl} />
-              </>
-            )}
-            {currPhoto?.photo?.video !== true && (
-              <meta property='og:type' content='article' />
-            )}
+            {seo.imageTitle && <meta property='og:image:title' content={seo.imageTitle} />}
+            {seo.imageCaption && <meta property='og:image:caption' content={seo.imageCaption} />}
 
-            <link
-              rel='canonical'
-              href={`https://wisaw.com/${currPhoto.photo.video === true ? 'videos' : 'photos'}/${currPhoto.photo.id}`}
-            />
-
-            <meta
-              name='twitter:title'
-              content={
-                currPhoto?.comments?.length > 0 && currPhoto?.comments[0].comment
-                  ? currPhoto?.comments[0].comment
-                  : `wisaw ${finalVideoTitle}`
-              }
-            />
-            <meta
-              name='twitter:card'
-              content={currPhoto?.photo?.video === true ? 'player' : 'summary_large_image'}
-            />
-            {currPhoto?.photo?.video === true && (
+            {isVideo && seo.video.url && (
               <>
-                <meta name='twitter:player' content={currPhoto.photo.videoUrl} />
-                <meta name='twitter:player:width' content={currPhoto.photo.width || '640'} />
-                <meta name='twitter:player:height' content={currPhoto.photo.height || '360'} />
-              </>
-            )}
-            <meta
-              name='twitter:description'
-              content={finalVideoDescription}
-            />
-            <meta
-              name='twitter:image'
-              content={`${currPhoto.photo.thumbUrl}`}
-            />
-
-            {/* Video-specific meta tags for Google */}
-            {currPhoto?.photo?.video === true && (
-              <>
-                <meta name='robots' content='max-video-preview:30' />
-                <meta property='video:duration' content='30' />
-                <meta property='video:release_date' content={new Date().toISOString()} />
+                <meta property='og:video' content={seo.video.url} />
+                <meta property='og:video:url' content={seo.video.url} />
+                <meta property='og:video:secure_url' content={seo.video.url} />
+                <meta property='og:video:type' content={mediaGraph.encodingFormat} />
+                {seo.video.width != null && (
+                  <meta property='og:video:width' content={seo.video.width} />
+                )}
+                {seo.video.height != null && (
+                  <meta property='og:video:height' content={seo.video.height} />
+                )}
+                {seo.video.posterUrl && <meta property='og:video:image' content={seo.video.posterUrl} />}
               </>
             )}
 
-            {/* VideoObject structured data for videos */}
-            {currPhoto?.photo?.video === true && (
-              <script type='application/ld+json'>
-                {JSON.stringify({
-                  '@context': 'https://schema.org',
-                  '@type': 'VideoObject',
-                  name: finalVideoTitle,
-                  description: finalVideoDescription,
-                  thumbnailUrl: [currPhoto.photo.thumbUrl],
-                  uploadDate: currPhoto.photo.createdAt || new Date().toISOString(),
-                  contentUrl: currPhoto.photo.videoUrl,
-                  embedUrl: `https://wisaw.com/videos/${currPhoto.photo.id}`,
-                  url: `https://wisaw.com/videos/${currPhoto.photo.id}`,
-                  duration: 'PT0M30S',
-                  width: parseInt(currPhoto.photo.width, 10) || 640,
-                  height: parseInt(currPhoto.photo.height, 10) || 360,
-                  videoQuality: 'HD',
-                  encodingFormat: currPhoto.photo.videoUrl?.endsWith('.mov') ? 'video/quicktime' : 'video/mp4',
-                  interactionStatistic: {
-                    '@type': 'InteractionCounter',
-                    interactionType: { '@type': 'WatchAction' },
-                    userInteractionCount: parseInt(currPhoto.photo.watchersCount, 10) || 0
-                  },
-                  publisher: {
-                    '@type': 'Organization',
-                    name: 'WiSaw',
-                    url: 'https://wisaw.com',
-                    logo: {
-                      '@type': 'ImageObject',
-                      url: 'https://wisaw.com/logo192.png'
-                    }
-                  },
-                  potentialAction: {
-                    '@type': 'WatchAction',
-                    target: `https://wisaw.com/videos/${currPhoto.photo.id}`
-                  }
-                })}
-              </script>
-            )}
+            <link rel='canonical' href={seo.url} />
 
-            {/* ImageObject structured data for photos */}
-            {currPhoto?.photo?.video !== true && (
-              <script type='application/ld+json'>
-                {JSON.stringify({
-                  '@context': 'https://schema.org',
-                  '@type': 'ImageObject',
-                  name: finalVideoTitle,
-                  description: finalVideoDescription,
-                  contentUrl: currPhoto.photo.imgUrl,
-                  thumbnailUrl: currPhoto.photo.thumbUrl,
-                  url: `https://wisaw.com/photos/${currPhoto.photo.id}`,
-                  datePublished: currPhoto.photo.createdAt || new Date().toISOString(),
-                  width: parseInt(currPhoto.photo.width, 10) || 640,
-                  height: parseInt(currPhoto.photo.height, 10) || 360,
-                  encodingFormat: 'image/webp',
-                  interactionStatistic: {
-                    '@type': 'InteractionCounter',
-                    interactionType: { '@type': 'ViewAction' },
-                    userInteractionCount: parseInt(currPhoto.photo.watchersCount, 10) || 0
-                  },
-                  comment: currPhoto?.comments?.length > 0
-                    ? { '@type': 'Comment', text: currPhoto.comments[0].comment }
-                    : undefined,
-                  publisher: {
-                    '@type': 'Organization',
-                    name: 'WiSaw',
-                    url: 'https://wisaw.com',
-                    logo: {
-                      '@type': 'ImageObject',
-                      url: 'https://wisaw.com/logo192.png'
-                    }
-                  }
-                })}
-              </script>
-            )}
+            <meta name='twitter:title' content={seo.ogTitle} />
+            <meta name='twitter:card' content={seo.twitterCard} />
+            <meta name='twitter:description' content={seo.description} />
+            <meta name='twitter:image' content={seo.imageUrl} />
 
-            {/* BreadcrumbList structured data */}
+            {/* One structured-data graph per entity, matching what the edge publishes. */}
             <script type='application/ld+json'>
-              {JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'BreadcrumbList',
-                itemListElement: [
-                  {
-                    '@type': 'ListItem',
-                    position: 1,
-                    name: 'Home',
-                    item: 'https://wisaw.com'
-                  },
-                  {
-                    '@type': 'ListItem',
-                    position: 2,
-                    name: currPhoto?.photo?.video === true ? 'Videos' : 'Photos',
-                    item: 'https://wisaw.com'
-                  },
-                  {
-                    '@type': 'ListItem',
-                    position: 3,
-                    name: finalVideoTitle
-                  }
-                ]
-              })}
+              {JSON.stringify(mediaGraph)}
+            </script>
+            <script type='application/ld+json'>
+              {JSON.stringify(breadcrumb)}
             </script>
           </Helmet>
 

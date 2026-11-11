@@ -2,6 +2,7 @@ import React, { lazy } from 'react'
 
 import { useLocation } from 'react-router-dom'
 import { Helmet } from '@dr.pogodin/react-helmet'
+import { ROBOTS_NOINDEX, SITE_NAME } from '../utils/seoDefaults'
 const Footer = lazy(() => import('./Footer'))
 
 const NoMatch = function () {
@@ -12,7 +13,8 @@ const NoMatch = function () {
         <title>404 - Page Not Found | WiSaw</title>
         <meta name='prerender-status-code' content='404' />
         <meta name='description' content='The page you are looking for could not be found. Browse free stock photos and videos on WiSaw.' />
-        <meta name='robots' content='noindex, follow' />
+        <meta name='robots' content={ROBOTS_NOINDEX} />
+        <meta property='og:site_name' content={SITE_NAME} />
         <link rel='canonical' href='https://wisaw.com' />
       </Helmet>
       <div

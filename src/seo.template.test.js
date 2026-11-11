@@ -28,6 +28,20 @@ describe.each(templates)('%s SEO invariants', (template) => {
     expect(templateHtml).toMatch(/name="robots"[^>]*content="index, follow/)
   })
 
+  it('marks every shared head tag as Helmet-owned', () => {
+    // Anything without data-rh is invisible to Helmet: it is never updated and never removed,
+    // so the app adds its own copy beside it and a crawler reads two values for one property.
+    // og:locale stays unmarked on purpose - nothing else writes it, so it cannot duplicate.
+    const shared = ['og:site_name', 'og:title', 'og:image', 'og:url', 'robots', 'twitter:card', 'twitter:title', 'twitter:image', 'twitter:description']
+    for (const name of shared) {
+      const tags = templateHtml.match(new RegExp('<meta[^>]*(?:property|name)=["\']' + name.replace(':', ':') + '["\'][^>]*>', 'gi')) ?? []
+      expect(tags, `${name} present in the template`).not.toHaveLength(0)
+      for (const tag of tags) {
+        expect(tag, `${name} must carry data-rh`).toMatch(/data-rh=/)
+      }
+    }
+  })
+
   it('keeps the root mount point the edge body renderer targets', () => {
     // WiSaw.cdk injectMetaTagsLambdaFunction replaces the contents of <div id="root">;
     // renaming it would silently stop crawler-visible content from rendering.

@@ -30,6 +30,7 @@ import { gql } from '@apollo/client'
 
 import * as CONST from '../consts'
 import { FEED_BREAKPOINT_COLS, getFeedThumbSize } from '../utils/imageUtils'
+import { SITE_NAME, ROBOTS_INDEX } from '../utils/seoDefaults'
 
 const Home = function () {
   const [photos, setPhotos] = useState([])
@@ -345,7 +346,8 @@ const Home = function () {
         <meta property='og:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
         <meta property='og:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
         <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
-        <meta property='og:site_name' content='WiSaw' />
+        <meta property='og:site_name' content={SITE_NAME} />
+        <meta name='robots' content={ROBOTS_INDEX} />
 
         {/* Twitter */}
         <meta name='twitter:card' content='summary_large_image' />

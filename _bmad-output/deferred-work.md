@@ -30,3 +30,11 @@ Log of review findings and observations deliberately not addressed in the curren
 - source_plan: `_bmad-output/plan-photos-detail-lcp.md`
   summary: Set deploy metadata per path — hashed assets `public, max-age=31536000, immutable`, `index.html` and `service-worker.js` `no-cache`.
   evidence: The last deploy applied `max-age=31536000` to every object; `curl -I https://wisaw.com/service-worker.js` still answers `cache-control: max-age=31536000`, so the legacy worker can stick for a year. Document HTML currently survives only because CloudFront overrides it (`max-age=900` on `/`, `max-age=100` on deep links) — the origin metadata is still wrong and will bite if that behaviour or distribution changes.
+
+## 2026-11-10 — seo-head-consistency (cross-repo validation)
+
+Cross-repo findings live in `WiSaw.cdk/_bmad-output/seo-indexing/validation-seo-head-consistency.md`; the backend half is ticketed there as `seo-indexing` items 4-7. These are the client-side halves, deliberately not done here:
+
+- **The client's SEO text builders are redundant once the head matches.** `src/utils/seoText.js` (`buildMediaTitle` / `buildMediaDescription`) re-implements the edge budget rules a third time. Because Helmet replaces tags on mount, the client copy is what a renderer actually sees today — which is why the duplication looks harmless. Under backend ticket 4 (head matches after hydration) it becomes dead weight: delete the builders and render the strings the API returns, so `og:title`/`og:description` are byte-identical to the edge's. Blocked on `WiSaw.cdk` seo-indexing 6.
+
+Resolved in the same pass as backend ticket 4 (2026-11-10): fabricated `video:duration`/`release_date` deleted; breadcrumb JSON-LD corrected to two levels with real `item` URIs; `og:type` settled on `photo` / `video.other` on both sides; `data-rh="true"` added to the template's `og:site_name` and `robots`; `/search/:term` and `/404`-style fallbacks (`NoMatch`) now declare the `noindex, follow` the edge already sends, so every route states its own indexing intent from `src/utils/seoDefaults.js`.
