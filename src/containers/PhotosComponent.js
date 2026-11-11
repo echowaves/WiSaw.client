@@ -30,6 +30,12 @@ import {
   computeDisplayDimensions,
   getPlaceholderDimensions
 } from '../utils/detailLayout'
+import {
+  FULL_MEDIA_WARM_DELAY_MS,
+  hasFirstInputHappened,
+  scheduleAfterWindowLoad,
+  shouldDeferFullMedia
+} from '../utils/mediaUpgrade'
 
 const Footer = lazy(() => import('./Footer'))
 
@@ -127,6 +133,12 @@ const PhotosComponent = function () {
   // A bootstrapped photo is already decoded (the feed card just displayed its
   // thumbnail), so paint it immediately instead of hiding it behind a spinner.
   const [imageLoaded, setImageLoaded] = useState(bootstrappedPhoto != null)
+  // The original is multi-megabyte, so on phones its bytes are warmed in the background and only
+  // painted once the visitor interacts - that paint would otherwise become the LCP candidate. A
+  // visitor who already interacted before this lazy chunk loaded froze LCP too, and nothing else
+  // can tell us about that input, so both gates open at once for them.
+  const [paintFullMedia, setPaintFullMedia] = useState(() => !shouldDeferFullMedia() || hasFirstInputHappened())
+  const [warmFullMedia, setWarmFullMedia] = useState(() => !shouldDeferFullMedia() || hasFirstInputHappened())
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
   const [videoError, setVideoError] = useState(null)
@@ -181,6 +193,41 @@ const PhotosComponent = function () {
     }
   }, [internalState])
 
+  // First input freezes LCP, so from then on the sharp image is free to paint. Opening both gates
+  // together also covers someone who interacts before the background warm was due.
+  useEffect(() => {
+    if (paintFullMedia && warmFullMedia) {
+      return
+    }
+
+    const upgrade = () => {
+      setPaintFullMedia(true)
+      setWarmFullMedia(true)
+      // The overlay is about to mount over a thumbnail that *is* decoded. Claiming the original is
+      // loaded too would raster it inside this input's frame - and this input is what INP measures.
+      setImageLoaded(false)
+    }
+    const options = { once: true, passive: true }
+    window.addEventListener('pointerdown', upgrade, options)
+    window.addEventListener('keydown', upgrade, options)
+    window.addEventListener('wheel', upgrade, options)
+
+    return () => {
+      window.removeEventListener('pointerdown', upgrade)
+      window.removeEventListener('keydown', upgrade)
+      window.removeEventListener('wheel', upgrade)
+    }
+  }, [paintFullMedia, warmFullMedia])
+
+  // The background pull the page asks for: a few seconds after loading finishes, fetch the original
+  // without touching the DOM. The preload effect below is what issues the request.
+  useEffect(() => {
+    if (warmFullMedia) {
+      return
+    }
+    return scheduleAfterWindowLoad(FULL_MEDIA_WARM_DELAY_MS, () => setWarmFullMedia(true))
+  }, [warmFullMedia])
+
   useEffect(() => {
     const candidates = [
       internalState.currPhoto,
@@ -195,7 +242,8 @@ const PhotosComponent = function () {
 
       preloadImage(entry.photo.thumbUrl)
 
-      if (entry.photo.video !== true) {
+      // Below the breakpoint the original waits for the warm gate; above it this is unchanged.
+      if (entry.photo.video !== true && warmFullMedia) {
         preloadImage(entry.photo.imgUrl)
       }
 
@@ -203,7 +251,7 @@ const PhotosComponent = function () {
       // the time a person taps next, the title is already cached and the head never changes shape.
       fetchSeoRecord(entry.photo.id, entry.photo.video === true ? 'video' : 'photo').catch(() => { })
     })
-  }, [internalState.currPhoto, internalState.nextPhoto, internalState.prevPhoto, preloadImage])
+  }, [internalState.currPhoto, internalState.nextPhoto, internalState.prevPhoto, preloadImage, warmFullMedia])
 
   // Which media type this URL claims, the same way the edge derives it from the request path. The
   // record itself says which kind it describes, so a mismatch is treated as "no record".
@@ -250,6 +298,11 @@ const PhotosComponent = function () {
     const handleResize = () => {
       if (internalState.currPhoto?.photo) {
         setDimensions(computeDisplayDimensions(internalState.currPhoto.photo))
+      }
+      // Widening past the breakpoint must not leave a visitor stuck on the small source.
+      if (!shouldDeferFullMedia()) {
+        setPaintFullMedia(true)
+        setWarmFullMedia(true)
       }
     }
     window.addEventListener('resize', handleResize)
@@ -543,7 +596,9 @@ const PhotosComponent = function () {
           requestComplete: false
         })
         setDimensions(computeDisplayDimensions(bootstrapped.photo))
-        setImageLoaded(true)
+        // Above the breakpoint the thumb was already replaced, so stay opaque. Below it this record's
+        // original has never been painted, so let it fade in once decoded instead of rastering now.
+        setImageLoaded(!shouldDeferFullMedia())
       } else {
         setInternalState({
           currPhoto: null,
@@ -1155,35 +1210,38 @@ const PhotosComponent = function () {
                   }}
                 />
 
-                {/* Full-size image as overlay - loads progressively */}
-                <img
-                  key={currPhoto.photo.id}
-                  width={`${dimensions.width}`}
-                  height={`${dimensions.height}`}
-                  className='mainImage'
-                  src={currPhoto.photo.imgUrl}
-                  fetchPriority='high'
-                  decoding='async'
-                  alt={
-                    currPhoto?.comments?.length > 0
-                      ? currPhoto?.comments[0]?.comment
-                      : `wisaw photo ${currPhoto.photo.id}`
-                  }
-                  onLoad={handleImageLoad}
-                  onError={handleImageError}
-                  style={{
-                    width: `${dimensions.width}px`,
-                    height: `${dimensions.height}px`,
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    borderRadius: '18px',
-                    objectFit: 'cover',
-                    opacity: imageLoaded ? 1 : 0,
-                    transition: 'opacity 0.5s ease-in-out',
-                    zIndex: 2
-                  }}
-                />
+                {/* Full-size image as overlay - below the mobile breakpoint it is painted only once
+                    the visitor has interacted, by which time LCP is already finalised */}
+                {paintFullMedia && (
+                  <img
+                    key={currPhoto.photo.id}
+                    width={`${dimensions.width}`}
+                    height={`${dimensions.height}`}
+                    className='mainImage'
+                    src={currPhoto.photo.imgUrl}
+                    fetchPriority='high'
+                    decoding='async'
+                    alt={
+                      currPhoto?.comments?.length > 0
+                        ? currPhoto?.comments[0]?.comment
+                        : `wisaw photo ${currPhoto.photo.id}`
+                    }
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                    style={{
+                      width: `${dimensions.width}px`,
+                      height: `${dimensions.height}px`,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      borderRadius: '18px',
+                      objectFit: 'cover',
+                      opacity: imageLoaded ? 1 : 0,
+                      transition: 'opacity 0.5s ease-in-out',
+                      zIndex: 2
+                    }}
+                  />
+                )}
               </>
             )}
           </div>
