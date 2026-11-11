@@ -7,7 +7,7 @@ import { act, render, screen } from '@testing-library/react'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ROBOTS_INDEX, SITE_NAME, TWITTER_CARD } from './utils/seoDefaults'
+import { LOCALE, ROBOTS_INDEX, SITE_NAME, TWITTER_CARD } from './utils/seoDefaults'
 
 /**
  * The contract that made this bug: `@dr.pogodin/react-helmet` selects head nodes with the
@@ -62,10 +62,11 @@ const EDGE_STRIPPED = [
   /<meta\s(?=[^>]*\bname=["']description["'])[^>]*\/?>\s*/gi,
   /<meta\s(?=[^>]*\bproperty=["']og:description["'])[^>]*\/?>\s*/gi,
   /<meta\s(?=[^>]*\bproperty=["']og:site_name["'])[^>]*\/?>\s*/gi,
+  /<meta\s(?=[^>]*\bproperty=["']og:locale["'])[^>]*\/?>\s*/gi,
   /<meta\s(?=[^>]*\bname=["']robots["'])[^>]*\/?>\s*/gi
 ]
 
-/** A photo page as Lambda@Edge serves it: one tag per property, all marked but og:locale. */
+/** A photo page as Lambda@Edge serves it: one tag per property, every one of them marked. */
 const EDGE_HEAD_TAGS = [
   '<meta name="description" property="og:description" content="A dog on the sand" data-rh="true">',
   `<meta name="robots" content="${ROBOTS_INDEX}" data-rh="true">`,
@@ -75,6 +76,7 @@ const EDGE_HEAD_TAGS = [
   '<meta property="og:title" content="Dog at the beach | WiSaw" data-rh="true">',
   '<meta property="og:url" content="https://wisaw.com/photos/777" data-rh="true">',
   `<meta property="og:site_name" content="${SITE_NAME}" data-rh="true">`,
+  `<meta property="og:locale" content="${LOCALE}" data-rh="true">`,
   '<meta property="og:type" content="photo" data-rh="true">',
   '<meta name="twitter:title" content="Dog at the beach | WiSaw" data-rh="true">',
   `<meta name="twitter:card" content="${TWITTER_CARD}" data-rh="true">`,
@@ -92,6 +94,7 @@ const EDGE_HEAD_PROPERTIES = [
   'meta[property=og:image:caption]',
   'meta[property=og:url]',
   'meta[property=og:site_name]',
+  'meta[property=og:locale]',
   'meta[name=robots]',
   'meta[name=twitter:card]',
   'meta[name=twitter:title]',
@@ -216,9 +219,9 @@ describe('head hydration contract', () => {
       .filter(node => isSeoNode(node) && node.tagName !== 'TITLE' && !node.hasAttribute('data-rh'))
       .map(node => identity(node))
 
-    // og:locale is the one exception by design: nothing re-declares it, so leaving it unmarked
-    // keeps it out of Helmet's reach instead of making it a duplicate.
-    expect(unmarked).toEqual(['meta[property=og:locale]'])
+    // Every SEO tag in the shipped head is marked now that the app declares all of them, so
+    // Helmet can neither strand a stale value nor delete a tag nobody owns.
+    expect(unmarked).toEqual([])
   })
 
   describe.each([
@@ -230,7 +233,7 @@ describe('head hydration contract', () => {
 
       expect(result.seededIdentities.length).toBeGreaterThan(5)
       expect(result.duplicates).toEqual([])
-      expect(result.unmanaged).toEqual(['meta[property=og:locale]'])
+      expect(result.unmanaged).toEqual([])
     })
 
     it('keeps every head property the edge injects alive through hydration', async () => {
@@ -250,9 +253,10 @@ describe('head hydration contract', () => {
       expect(result.graphsInHead).toBe(2)
     })
 
-    it('leaves the unmanaged tag untouched', async () => {
+    it('keeps one locale tag carrying the shared value', async () => {
       const result = await hydrateDetail({ route: '/photos/777', photo: PHOTO_RECORD, withEdgeTags })
-      expect(result.values['meta[property=og:locale]']).toBe('en_US')
+      expect(result.count('meta[property=og:locale]')).toBe(1)
+      expect(result.values['meta[property=og:locale]']).toBe(LOCALE)
     })
   })
 

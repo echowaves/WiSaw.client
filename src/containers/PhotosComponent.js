@@ -21,6 +21,7 @@ import NoMatch from './NoMatch.js'
 
 import * as CONST from '../consts'
 import { breadcrumbGraph, mediaGraph as mediaGraphOf, mediaHead, segmentFromPath, unenrichedText } from '../utils/mediaSeo'
+import { LOCALE } from '../utils/seoDefaults'
 import { fetchSeoRecord, peekSeoRecord } from '../utils/seoRecord'
 import { servedHeadFor } from '../utils/servedHead'
 import {
@@ -922,6 +923,7 @@ const PhotosComponent = function () {
             <meta name='image' property='og:image' content={seo.imageUrl} />
             <meta property='og:url' content={seo.url} />
             <meta property='og:site_name' content={seo.siteName} />
+            <meta property='og:locale' content={LOCALE} />
             <meta property='og:type' content={seo.ogType} />
             <meta name='robots' content={seo.robots} />
 

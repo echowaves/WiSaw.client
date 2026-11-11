@@ -30,7 +30,7 @@ import { gql } from '@apollo/client'
 
 import * as CONST from '../consts'
 import { FEED_BREAKPOINT_COLS, getFeedThumbSize } from '../utils/imageUtils'
-import { SITE_NAME, ROBOTS_INDEX } from '../utils/seoDefaults'
+import RouteSeo from './RouteSeo'
 
 const Home = function () {
   const [photos, setPhotos] = useState([])
@@ -333,29 +333,9 @@ const Home = function () {
         // backgroundColor: '#0666a3'
       }}
     >
-      <Helmet prioritizeSeoTags>
-        <title>Free Stock Photos & Videos -- What I Saw</title>
-        <meta name='description' content='Free Stock Photos and Videos, Royalty Free Stock Images & Copyright Free Pictures, Unaltered, Taken With Phone Cameras, free pictures no copyright' />
-        <link
-          rel='canonical'
-          href='https://wisaw.com'
-        />
-        {/* Open Graph / Facebook */}
-        <meta property='og:type' content='website' />
-        <meta property='og:url' content='https://wisaw.com' />
-        <meta property='og:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
-        <meta property='og:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
-        <meta property='og:image' content='https://wisaw.com/android-chrome-512x512.png' />
-        <meta property='og:site_name' content={SITE_NAME} />
-        <meta name='robots' content={ROBOTS_INDEX} />
+      <RouteSeo pathname='/' />
 
-        {/* Twitter */}
-        <meta name='twitter:card' content='summary_large_image' />
-        <meta name='twitter:url' content='https://wisaw.com' />
-        <meta name='twitter:title' content='WiSaw - Free Authentic Stock Photos & Videos' />
-        <meta name='twitter:description' content='Discover WiSaw, a community-driven platform for authentic, royalty-free stock photos and videos captured by everyday creators worldwide.' />
-        <meta name='twitter:image' content='https://wisaw.com/android-chrome-512x512.png' />
-
+      <Helmet>
         {/* WebSite structured data for Google sitelinks search box */}
         <script type='application/ld+json'>
           {JSON.stringify({
