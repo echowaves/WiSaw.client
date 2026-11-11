@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { breadcrumbGraph, mediaGraph, mediaHead, pageUrl } from './mediaSeo'
+import { breadcrumbGraph, mediaGraph, mediaHead, pageUrl, unenrichedText } from './mediaSeo'
 import { ROBOTS_INDEX, SITE_NAME, TWITTER_CARD } from './seoDefaults'
 
 const PHOTO = {
@@ -23,11 +23,27 @@ const VIDEO = {
 const TITLE = 'Dog, Pet, Beach'
 const DESCRIPTION = 'A golden retriever on the sand'
 
+// What img.wisaw.com/<id>.json carries: the finished strings, composed once by the backend rules.
+const RECORD = {
+  v: 1,
+  seo: { kind: 'photo', title: TITLE, description: DESCRIPTION, imageTitle: 'Dog, Pet, Beach', imageCaption: 'On the sand at dusk' }
+}
+const VIDEO_RECORD = { ...RECORD, seo: { ...RECORD.seo, kind: 'video' } }
+
 describe('mediaHead', () => {
-  it('keeps the id out of every title a person reads', () => {
-    const head = mediaHead(PHOTO, { title: TITLE, description: DESCRIPTION })
+  it('renders the record\'s title verbatim, and keeps the id out of it', () => {
+    const head = mediaHead(PHOTO, { record: RECORD })
+    expect(head.title).toBe(TITLE)
     expect(head.ogTitle).toBe(TITLE)
+    expect(head.description).toBe(DESCRIPTION)
     expect(head.ogTitle).not.toContain(PHOTO.id)
+  })
+
+  it('uses the same string for <title>, og:title and twitter:title', () => {
+    // One source, three slots: this is the equality a crawler checks when it renders the page.
+    const head = mediaHead(VIDEO, { record: VIDEO_RECORD })
+    expect(head.ogTitle).toBe(head.title)
+    expect(head.textSource).toBe('record')
   })
 
   it('uses one Open Graph type pair, photos distinct from videos', () => {
@@ -63,15 +79,36 @@ describe('mediaHead', () => {
 
   it('carries the image title and caption as separate facts', () => {
     // The edge publishes this pair with data-rh, so anything the app does not declare itself is
-    // removed as soon as React mounts - taking Google's image rich-result inputs with it.
-    const head = mediaHead(PHOTO, { labels: 'Dog, Pet, Beach', comment: 'On the sand at dusk' })
+    // removed as soon as React mounts - taking Google's image rich-result inputs with it. They come
+    // from the record rather than being re-derived here, so neither slot can drift from the crawler's
+    // copy of the page.
+    const head = mediaHead(PHOTO, { record: RECORD })
     expect(head.imageTitle).toBe('Dog, Pet, Beach')
     expect(head.imageCaption).toBe('On the sand at dusk')
   })
 
-  it('drops a caption that only repeats the title, and empty values entirely', () => {
-    const echo = mediaHead(PHOTO, { labels: 'Dog, Pet', comment: 'Dog, Pet' })
-    expect(echo.imageCaption).toBeUndefined()
+  it('ignores a record that describes the other kind of media', () => {
+    // A photo's title on a /videos/ URL would be a fabricated fact about the page.
+    const head = mediaHead(VIDEO, { record: RECORD })
+    expect(head.textSource).toBe('fallback')
+    expect(head.title).not.toBe(TITLE)
+  })
+
+  it('prefers the record, then what this URL was served, and only then its own short label', () => {
+    const served = { title: 'Served title · WiSaw', description: 'served description' }
+
+    expect(mediaHead(PHOTO, { record: RECORD, served }).title).toBe(TITLE)
+    expect(mediaHead(PHOTO, { served }).textSource).toBe('served')
+    expect(mediaHead(PHOTO, {}).textSource).toBe('fallback')
+    // Repeating the served bytes is what makes an un-enriched page identical to its first byte.
+    expect(mediaHead(PHOTO, { served }).description).toBe('served description')
+  })
+
+  it('the last-resort label names the media without inventing a sentence', () => {
+    const text = unenrichedText(PHOTO, { labels: 'Dog, Pet', comment: 'Dog, Pet' })
+    expect(text.title).toContain('Dog, Pet')
+    // An echo of the title under another name tells a crawler nothing, so the caption drops.
+    expect(text.imageCaption).toBeUndefined()
     expect(mediaHead({}, {}).imageUrl).toBeUndefined()
   })
 })

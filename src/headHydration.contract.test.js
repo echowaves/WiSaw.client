@@ -33,7 +33,11 @@ vi.mock('./containers/Footer', () => ({ default: () => <footer>site footer</foot
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const TEMPLATE_PATH = path.join(HERE, '..', 'index.html')
-const EDGE_UTILS_PATH = path.join(HERE, '..', '..', 'WiSaw.cdk', 'lambda-fns', 'lambdas', 'injectMetaTagsLambdaFunction', 'utils.js')
+const EDGE_DIR = path.join(HERE, '..', '..', 'WiSaw.cdk', 'lambda-fns', 'lambdas', 'injectMetaTagsLambdaFunction')
+const EDGE_UTILS_PATH = path.join(EDGE_DIR, 'utils.js')
+// The thumbnail suffix lives in one module on each side; the edge copy moved to mediaNaming.js
+// when the sitemap generator started sharing it.
+const EDGE_NAMING_PATH = path.join(EDGE_DIR, 'mediaNaming.js')
 
 const PHOTO_RECORD = {
   id: '777',
@@ -276,7 +280,9 @@ describe('head hydration contract', () => {
     })
 
     it('shares the thumbnail suffix used for social images', () => {
-      expect(edge).toContain('-thumb.webp')
+      const naming = readFileSync(EDGE_NAMING_PATH, 'utf8')
+      expect(naming).toContain("THUMB_SUFFIX = '-thumb'")
+      expect(naming).toContain("IMAGE_EXTENSION = 'webp'")
     })
   })
 })

@@ -20,7 +20,9 @@ import stringifyObject from 'stringify-object'
 import NoMatch from './NoMatch.js'
 
 import * as CONST from '../consts'
-import { breadcrumbGraph, mediaGraph as mediaGraphOf, mediaHead } from '../utils/mediaSeo'
+import { breadcrumbGraph, mediaGraph as mediaGraphOf, mediaHead, segmentFromPath, unenrichedText } from '../utils/mediaSeo'
+import { fetchSeoRecord, peekSeoRecord } from '../utils/seoRecord'
+import { servedHeadFor } from '../utils/servedHead'
 import {
   COLD_BELOW_MEDIA_RESERVE,
   PLACEHOLDER_LABEL_COUNT,
@@ -127,6 +129,10 @@ const PhotosComponent = function () {
   const [showVideoPlayer, setShowVideoPlayer] = useState(false)
   const [videoReady, setVideoReady] = useState(false)
   const [videoError, setVideoError] = useState(null)
+  // The finished head text for this media item, read from its SEO record - the same object
+  // Lambda@Edge used for the page's first byte. Null until it arrives (or when there is none); the
+  // page renders and ranks either way.
+  const [seoRecord, setSeoRecord] = useState(null)
 
   const videoRef = useRef(null)
 
@@ -191,8 +197,34 @@ const PhotosComponent = function () {
       if (entry.photo.video !== true) {
         preloadImage(entry.photo.imgUrl)
       }
+
+      // The head text travels with the media it describes, so warm it for the neighbours too: by
+      // the time a person taps next, the title is already cached and the head never changes shape.
+      fetchSeoRecord(entry.photo.id, entry.photo.video === true ? 'video' : 'photo').catch(() => { })
     })
   }, [internalState.currPhoto, internalState.nextPhoto, internalState.prevPhoto, preloadImage])
+
+  // Which media type this URL claims, the same way the edge derives it from the request path. The
+  // record itself says which kind it describes, so a mismatch is treated as "no record".
+  const seoKind = segmentFromPath(location.pathname) === 'videos' ? 'video' : 'photo'
+
+  useEffect(() => {
+    if (!photoId) {
+      return
+    }
+
+    // Show whatever is already cached straight away (a neighbour preload usually has it), then take
+    // the fetch's answer. A null result is not an error: the head falls back to what the server
+    // injected for this URL.
+    setSeoRecord(peekSeoRecord(photoId, seoKind))
+
+    let active = true
+    fetchSeoRecord(photoId, seoKind)
+      .then((record) => { if (active) setSeoRecord(record) })
+      .catch(() => { if (active) setSeoRecord(null) })
+
+    return () => { active = false }
+  }, [photoId, seoKind])
 
   useEffect(() => {
     if (showVideoPlayer) {
@@ -839,42 +871,33 @@ const PhotosComponent = function () {
   // const embedded = new URLSearchParams(location.search).get("embedded")
 
   if (currPhoto && currPhoto?.photo && dimensions.width && dimensions.height) {
-    const safeDescription = currPhoto?.comments?.length > 0
-      ? `${currPhoto.comments[0].comment || ''}, ${recognitionsLabels(currPhoto?.recognitions[0], 5)}`.slice(0, 150)
-      : recognitionsLabels(currPhoto?.recognitions[0], 10) || 'Video content from WiSaw'
-
-    const safeTitle = `${currPhoto?.photo?.video === true ? '(video)' : '(photo)'} ${recognitionsLabels(currPhoto?.recognitions[0], 3) || currPhoto.photo.id}`
-
-    // Create robust titles and descriptions for structured data
-    const videoTitle = currPhoto?.photo?.video === true
-      ? (recognitionsLabels(currPhoto?.recognitions[0], 3) || `WiSaw Video ${currPhoto.photo.id}`)
-      : safeTitle
-
-    const videoDescription = safeDescription || `Video content shared on WiSaw - ${currPhoto.photo.id}`
-
-    // Ensure minimal required fields for VideoObject
-    const finalVideoTitle = videoTitle && videoTitle.trim() ? videoTitle.trim() : `WiSaw Video ${currPhoto.photo.id}`
-    const finalVideoDescription = videoDescription && videoDescription.trim() ? videoDescription.trim() : `Video content from WiSaw - ID: ${currPhoto.photo.id}`
-
-    // One source for what the head says about this page. The edge injector publishes the same
-    // values before any JavaScript runs, so a crawler that renders the page and one that
-    // doesn't agree about it. Anything we do not know (a duration, a capture date) is left out
-    // rather than guessed.
-    // The labels and the newest comment go in as separate facts: the edge publishes them as the
-    // og:image:title / og:image:caption pair, and those tags carry data-rh, so anything the app
-    // does not declare itself is removed the moment it mounts.
+    // What the head says about this page comes from the media's SEO record - the same finished
+    // strings the edge injector published in the first byte - so a crawler that renders the page and
+    // one that doesn't agree about it, and the title never changes shape when React mounts. Only
+    // when there is no record does the head repeat what this URL was served with; see mediaSeo.js
+    // for that priority order. Anything we do not know (a duration, a capture date) is left out of
+    // structured data rather than guessed.
+    const comment = currPhoto?.comments?.[0]?.comment ?? ''
     const seoOptions = {
-      title: finalVideoTitle,
-      description: finalVideoDescription,
-      labels: recognitionsLabels(currPhoto?.recognitions[0], 3),
-      comment: currPhoto?.comments?.[0]?.comment ?? '',
+      record: seoRecord,
+      // Only this URL's own first byte; after a client-side navigation the snapshot describes the
+      // page that was requested, not the one now mounted.
+      served: servedHeadFor(location.pathname),
+      fallback: unenrichedText(currPhoto.photo, {
+        labels: recognitionsLabels(currPhoto?.recognitions[0], 3),
+        comment
+      }),
       // Route-derived so the canonical matches the URL that was asked for.
       pathname: location.pathname
     }
     const seo = mediaHead(currPhoto.photo, seoOptions)
     const isVideo = seo.ogType === 'video.other'
-    const mediaGraph = mediaGraphOf(currPhoto.photo, seoOptions)
-    const breadcrumb = breadcrumbGraph(currPhoto.photo, seoOptions)
+    // Structured data describes the same page, so it names and describes it with the same strings.
+    const graphOptions = { title: seo.title, description: seo.description, comment, pathname: location.pathname }
+    const mediaGraph = mediaGraphOf(currPhoto.photo, graphOptions)
+    const breadcrumb = breadcrumbGraph(currPhoto.photo, graphOptions)
+    // A short label for the player's own accessibility text; the page title carries the brand.
+    const videoLabel = recognitionsLabels(currPhoto?.recognitions[0], 3) || 'WiSaw video'
 
     // One parse drives both the label row's content and its chrome, so an empty or
     // corrupt recognition record shows the transparent slot instead of painting an
@@ -1086,7 +1109,7 @@ const PhotosComponent = function () {
                   preload='metadata'
                   playsInline
                   aria-hidden={!showVideoPlayer}
-                  aria-label={finalVideoTitle}
+                  aria-label={videoLabel}
                   onLoadedData={handleVideoLoadedData}
                   onPlay={handleVideoLoadedData}
                   onError={handleVideoError}

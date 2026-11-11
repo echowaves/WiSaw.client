@@ -1,4 +1,5 @@
 import { ROBOTS_INDEX, SITE_NAME, TWITTER_CARD } from './seoDefaults'
+import { isUsableRecord } from './seoRecord'
 
 // Everything the head of a photo/video page says about that page, derived in one place. The
 // values here are what the Lambda@Edge injector publishes for the same URL before any
@@ -37,37 +38,85 @@ const dimensionPair = function (photo) {
   return { width, height }
 }
 
-// Google's image rich results read og:image:title and og:image:caption, and they must carry
-// different information: the recognition labels in the title, the newest comment in the caption.
-// The edge publishes this pair with data-rh, so if the app does not declare them too, Helmet
-// treats the edge's copy as an unmanaged tag and removes it the moment React mounts.
-const IMAGE_TITLE_MAX = 100
-const IMAGE_CAPTION_MAX = 512
+// The four text slots a media page carries: <title>/og:title, meta description, and the
+// og:image:title / og:image:caption pair Google's image rich results read. They are resolved here,
+// in one priority order, because every one of them must say the same thing the crawler was served:
+//
+//   1. the media's SEO record (img.wisaw.com/<id>.json), which already holds finished strings
+//      composed by the same rules the edge used to publish its first byte;
+//   2. what the edge injected into THIS document, re-declared unchanged - Helmet drops any injected
+//      tag the app does not claim, so a page whose record has not been written yet still has to say
+//      something, and repeating the served bytes cannot disagree with them;
+//   3. facts held locally, only when neither is available: an SPA navigation to a media item with no
+//      record yet must still show a title rather than a blank tab.
+//
+// Nothing here composes text out of labels any more when a record exists - that second copy of the
+// rules is what made first byte and hydrated head disagree.
 
-function imageText (photo, { labels = '', comment = '' } = {}) {
-  const imageTitle = String(labels ?? '').trim().slice(0, IMAGE_TITLE_MAX)
-  // An echo of the title under another name tells a crawler nothing, so the caption drops.
-  const imageCaption = String(comment ?? '').trim().slice(0, IMAGE_CAPTION_MAX)
+function textFromRecord (record, photo) {
+  const kind = photo?.video === true ? 'video' : 'photo'
+  if (!isUsableRecord(record, kind)) return null
+  const seo = record.seo
   return {
-    imageTitle: imageTitle || undefined,
-    imageCaption: imageCaption && imageCaption !== imageTitle ? imageCaption : undefined
+    title: seo.title,
+    description: typeof seo.description === 'string' ? seo.description : '',
+    imageTitle: seo.imageTitle || undefined,
+    imageCaption: seo.imageCaption || undefined,
+    source: 'record'
   }
 }
 
-function mediaHead (photo, { title = '', description = '', labels = '', comment = '', pathname = '' } = {}) {
+function textFromServed (served) {
+  if (served == null || typeof served.title !== 'string' || served.title === '') return null
+  return {
+    title: served.title,
+    description: typeof served.description === 'string' ? served.description : '',
+    imageTitle: served.imageTitle,
+    imageCaption: served.imageCaption,
+    source: 'served'
+  }
+}
+
+/**
+ * Last resort, and the only place the app still assembles a sentence for the head. It exists because
+ * navigating from the feed mounts a page the edge never rendered for this URL, so there is nothing
+ * served to repeat - but a blank title is worse than an unenriched one.
+ */
+function unenrichedText (photo, { labels = '', comment = '' } = {}) {
+  const kindLabel = photo?.video === true ? 'video' : 'photo'
+  const labelList = String(labels ?? '').trim()
+  const title = `${labelList || photo?.id || ''}`.trim()
+  return {
+    title: title !== '' ? `${title} - Free ${kindLabel} on WiSaw` : `WiSaw ${kindLabel}`,
+    description: String(comment ?? '').trim(),
+    imageTitle: labelList || undefined,
+    // An echo of the title under another name tells a crawler nothing, so the caption drops.
+    imageCaption: (() => {
+      const caption = String(comment ?? '').trim()
+      return caption !== '' && caption !== labelList ? caption : undefined
+    })(),
+    source: 'fallback'
+  }
+}
+
+function mediaHead (photo, { record = null, served = null, fallback = null, pathname = '' } = {}) {
   const isVideo = photo?.video === true
+  const text = textFromRecord(record, photo) ?? textFromServed(served) ?? textFromServed(fallback) ?? unenrichedText(photo, {})
+  const title = text.title
   const head = {
     title,
-    description,
+    description: text.description,
     // The id belongs in the URL, not in the title a person reads in a search result.
     ogTitle: title,
+    imageTitle: text.imageTitle,
+    imageCaption: text.imageCaption,
+    textSource: text.source,
     ogType: isVideo ? 'video.other' : 'photo',
     twitterCard: TWITTER_CARD,
     imageUrl: photo?.thumbUrl || undefined,
     url: pageUrl(photo, pathname),
     siteName: SITE_NAME,
-    robots: ROBOTS_INDEX,
-    ...imageText(photo, { labels, comment })
+    robots: ROBOTS_INDEX
   }
 
   if (isVideo) {
@@ -166,4 +215,4 @@ function breadcrumbGraph (photo, { title = '', pathname = '' } = {}) {
   }
 }
 
-export { breadcrumbGraph, mediaGraph, mediaHead, pageUrl, pathSegment, segmentFromPath }
+export { breadcrumbGraph, mediaGraph, mediaHead, pageUrl, pathSegment, segmentFromPath, unenrichedText }
