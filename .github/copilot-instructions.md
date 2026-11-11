@@ -12,12 +12,13 @@ WiSaw ("What I Saw") is a React 18 single-page application that serves as the we
 - **API**: Apollo Client 3 + GraphQL against AWS AppSync (`@apollo/client`, `graphql`)
 - **UI Library**: React Bootstrap 2 + Bootstrap 5
 - **State Management**: React hooks only (`useState`, `useEffect`, `useCallback`, `useRef`) — no Redux or other state libraries
-- **SEO**: `react-helmet-async` for dynamic `<head>` management (Open Graph, Twitter Cards, JSON-LD structured data)
+- **SEO**: `@dr.pogodin/react-helmet` (v3) for dynamic `<head>` management (Open Graph, Twitter Cards, JSON-LD structured data). It only manages tags carrying `data-rh="true"` and deletes a marked tag the app stops declaring — so every route declares the full set it wants to survive hydration.
 - **Analytics**: Google Analytics 4 via `react-ga4` (tracking ID: `G-J1W2RB0D7R`)
 - **Layout**: `react-masonry-css` for grid layouts, `react-infinite-scroll-component` for pagination
 - **Media**: Native `<video>` element for video playback, `react-player` available as dependency
-- **Linting**: `ts-standard` (StandardJS style with TypeScript ESLint parser)
-- **Build**: CRA default (`react-scripts build`); build script also fetches sitemap from production
+- **Linting**: `eslint` (flat config in `eslint.config.mjs`; `.eslintrc.json` is a leftover and is not read by eslint 9)
+- **Build**: Vite (`vite build`); the build script also fetches the sitemap from production, and `postbuild` runs the edge-injector template contract test — chain deploys with `&&`, never `;`
+- **Tests**: Vitest (`vitest run`, jsdom environment)
 
 ## Project Structure
 
@@ -133,10 +134,10 @@ src/
 
 ## Scripts
 
-- `npm start` — development server
-- `npm run build` — fetches sitemap from production + CRA build
-- `npm test` — Jest test runner
-- `npm run lint` — `ts-standard` linting
+- `npm start` — Vite dev server
+- `npm run build` — fetches sitemap from production + `vite build`, then `postbuild` runs `src/seo.template.test.js`
+- `npm test` — Vitest
+- `npm run lint` — `eslint src --ext .js`
 - `npm run lint:fix` — auto-fix lint issues
 
 ## Key Guidelines for AI
@@ -148,7 +149,7 @@ src/
 5. **Apollo Client direct queries** — use `CONST.gqlClient.query()`, not `useQuery` hooks
 6. **Plain CSS** for styling — avoid CSS-in-JS or preprocessors
 7. **Lazy load** new route-level components
-8. **SEO metadata** via `react-helmet-async` on every page
+8. **SEO metadata** via `@dr.pogodin/react-helmet` on every page
 9. **Google Analytics** tracking via `ReactGA.send()` for page views
 10. **Graceful error handling** — always wrap async/API calls in try/catch
 11. **Maintain the glassmorphism design** — use the established gradient, blur, and transparency patterns
@@ -156,6 +157,7 @@ src/
 13. **No CI/CD pipeline exists** — the project builds locally and deploys static files
 14. **Deep linking support** — the app supports iOS/Android universal links (see `apple-app-site-association` and `_headers`)
 15. **Import constants** as namespace: `import * as CONST from '../consts'`
+16. **Never hand-write static-route SEO copy.** The wording for `/`, `/about`, `/contact`, `/terms` and `/search` lives in the backend route table (`WiSaw.cdk/lambda-fns/lambdas/injectMetaTagsLambdaFunction/static.js`) and reaches this app as the generated `src/utils/staticSeo.generated.js`; render it with `<RouteSeo pathname term />`. Editing the generated file by hand is caught by `WiSaw.cdk/tests/static-route-copy-once.js`.
 
 ## Manual Deploy Caching Requirements
 
