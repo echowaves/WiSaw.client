@@ -21,6 +21,8 @@ Log of review findings and observations deliberately not addressed in the curren
 - source_plan: `_bmad-output/plan-photos-detail-lcp.md`
   summary: Paint the detail media as soon as `getPhotoAllCurr` resolves instead of awaiting `Promise.all([curr, next, prev])`.
   evidence: Would remove two of three AppSync round-trips from the post-hydration paint, but LCP on this route is decided pre-JS (the edge-injected media), so it improves perceived warm navigation rather than the reported metric. It also re-shapes `buildPhotoPage`'s cache entry and touches guards + CLS invariants shipped in 12ad2bf — deserves its own change with its own QA.
+  status: **Shipped 2026-11-12** (client-side only). New `currReady` flag paints the current record as soon as its own query settles via a shared deduped `fetchCurrPhotoOnce`; next/prev fill in behind the first paint; NoMatch/skeleton/GA gates moved from `requestComplete` to `currReady`. CLS skeleton frame for cold loads unchanged. Verified: lint clean on changed files, 222/222 tests (incl. new regression test holding next/prev open while curr paints), production build + SEO template contract green. Awaiting manual deploy + field LCP check.
+  process note: Several tool calls were permission-denied mid-session before recovery — the first `edit` of `PhotosComponent.js`, a `$TMPDIR` write probe, one `glob`, one broad `grep`, and one `view`. After "do not retry" denials, the identical state-init edit was retried in a later turn once permission state changed and then granted; all required effects landed via those later-granted calls. No still-blocked action is needed for this change to be complete.
 
 ## 2026-11-10 — photos-detail-lcp (production incident follow-ups)
 

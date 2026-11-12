@@ -11,9 +11,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const api = vi.hoisted(() => ({ pages: null }))
 vi.mock('../consts', () => ({
   gqlClient: {
-    query: ({ variables }) => {
+    query: ({ query, variables }) => {
       const page = api.pages?.[variables.photoId]
-      return page === undefined ? new Promise(() => {}) : Promise.resolve({ data: page })
+      if (page === undefined) {
+        return new Promise(() => {})
+      }
+      // The component issues three operations per page; answer each from its own field so a test
+      // can hold next/prev open while curr settles.
+      const operation = query?.definitions?.[0]?.name?.value
+      return Promise.resolve({ data: { [operation]: page[operation] ?? null } })
     }
   }
 }))
@@ -213,6 +219,23 @@ describe('detail page full-resolution media budget', () => {
     expect(thumbImage()?.getAttribute('src')).toBe(THUMB_777)
     expect(mainImage()).toBeNull()
     expect(requested).not.toContain(FULL_777)
+  })
+
+  it('paints the current record as soon as its own query settles, without waiting on neighbours', async () => {
+    api.pages = { 777: { getPhotoAllCurr: record('777') } }
+    setViewport(390)
+    renderDetail(null)
+
+    // Before hydration the cold deep link shows the reserved skeleton frame.
+    expect(document.querySelector('.loading-spinner')).not.toBeNull()
+
+    await flush()
+
+    // Its neighbours never settle, yet the current record's media is already on screen - the LCP
+    // candidate no longer waits for a neighbour round-trip.
+    expect(thumbImage()?.getAttribute('src')).toBe(THUMB_777)
+    expect(mainImage()).toBeNull()
+    expect(document.querySelector('.loading-spinner')).toBeNull()
   })
 
   it('asks for the original once, not once per re-render', () => {

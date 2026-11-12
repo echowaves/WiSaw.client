@@ -118,10 +118,13 @@ const PhotosComponent = function () {
   // we can paint the real media before any GraphQL response arrives.
   const bootstrappedPhoto = bootstrapPhotoFromRouterState(location.state, photoId)
 
+  // currReady flips when the current record's own answer is in (or bootstrap/cache painted it);
+  // requestComplete waits for the neighbours too. The LCP paint must not wait for them.
   const [internalState, setInternalState] = useState(() => ({
     currPhoto: bootstrappedPhoto,
     nextPhoto: null,
     prevPhoto: null,
+    currReady: bootstrappedPhoto != null,
     requestComplete: false
   }))
 
@@ -152,6 +155,7 @@ const PhotosComponent = function () {
   const loadedMedia = useRef(new Set())
   const inflightMediaPreloads = useRef(new Map())
   const photoPageCache = useRef(new Map())
+  const inflightCurrRequests = useRef(new Map())
   const inflightPhotoRequests = useRef(new Map())
   // Latest photoId requested; guards async paints from landing on the wrong page
   const activePhotoIdRef = useRef(null)
@@ -180,7 +184,7 @@ const PhotosComponent = function () {
     img.src = url
   }, [])
   useEffect(() => {
-    if (internalState.requestComplete) {
+    if (internalState.currReady && internalState.currPhoto) {
       const page = internalState?.currPhoto?.photo?.video === true
         ? `/videos/${internalState?.currPhoto?.photo?.id}`
         : `/photos/${internalState?.currPhoto?.photo?.id}`
@@ -482,6 +486,22 @@ const PhotosComponent = function () {
     return null
   }, [])
 
+  // The current record is the only thing the page needs to paint, so give its query one shared,
+  // deduped promise: load() paints on it and buildPhotoPage's curr leg reuses it, which keeps a
+  // cold deep link from issuing getPhotoAllCurr twice.
+  const fetchCurrPhotoOnce = useCallback((photoId) => {
+    const existing = inflightCurrRequests.current.get(photoId)
+    if (existing) {
+      return existing
+    }
+
+    const requestPromise = fetchCurrPhoto({ photoId }).finally(() => {
+      inflightCurrRequests.current.delete(photoId)
+    })
+    inflightCurrRequests.current.set(photoId, requestPromise)
+    return requestPromise
+  }, [fetchCurrPhoto])
+
   const buildPhotoPage = useCallback(async (photoId) => {
     if (!photoId) {
       return {
@@ -502,7 +522,7 @@ const PhotosComponent = function () {
 
     const requestPromise = (async () => {
       const [curr, next, prev] = await Promise.all([
-        fetchCurrPhoto({ photoId }),
+        fetchCurrPhotoOnce(photoId),
         fetchNextPhoto({ photoId }),
         fetchPrevPhoto({ photoId })
       ])
@@ -523,46 +543,61 @@ const PhotosComponent = function () {
 
     inflightPhotoRequests.current.set(photoId, requestPromise)
     return requestPromise
-  }, [fetchCurrPhoto, fetchNextPhoto, fetchPrevPhoto])
+  }, [fetchCurrPhotoOnce, fetchNextPhoto, fetchPrevPhoto])
 
   const preloadPhotoPage = useCallback((photoId) => {
     if (!photoId) {
       return
     }
 
-    buildPhotoPage(photoId).catch(() => { })
+    // A cached page is a plain object, not a promise - normalize before attaching the swallow.
+    Promise.resolve(buildPhotoPage(photoId)).catch(() => { })
   }, [buildPhotoPage])
 
-  const load = useCallback(async ({ photoId }) => {
-    const pageData = await buildPhotoPage(photoId)
-
-    // A faster click may have moved us on; do not paint a stale page over it.
-    if (activePhotoIdRef.current !== photoId) {
+  // Paint the moment the current record settles (or keep what is on screen when its fetch failed);
+  // a slow neighbour query must never hold the LCP media hostage.
+  const paintCurrentPhoto = useCallback((curr) => {
+    if (curr == null) {
+      // Failed fetch: keep any content already painted (bootstrapped or cached); only fall
+      // through to NoMatch when nothing valid is on screen.
+      setInternalState((prev) => ({ ...prev, currReady: true }))
       return
     }
 
-    if (pageData?.currPhoto == null) {
-      // Failed fetch: keep any content already painted (bootstrapped or
-      // cached); only fall through to NoMatch when nothing valid is on screen.
-      setInternalState((prev) => (prev?.currPhoto != null
-        ? prev
-        : { currPhoto: null, nextPhoto: null, prevPhoto: null, requestComplete: true }))
-      return
-    }
+    setDimensions(computeDisplayDimensions(curr.photo))
+    setInternalState((prev) => ({ ...prev, currPhoto: curr, currReady: true }))
+  }, [])
 
-    const calculatedDimensions = pageData?.dimensions || { width: 300, height: 300 }
-    setDimensions(calculatedDimensions)
+  const load = useCallback(({ photoId }) => {
+    const cachedPage = photoPageCache.current.get(photoId)
+    const currPromise = cachedPage
+      ? Promise.resolve(cachedPage.currPhoto)
+      : fetchCurrPhotoOnce(photoId)
 
-    setInternalState({
-      currPhoto: pageData.currPhoto,
-      nextPhoto: pageData.nextPhoto,
-      prevPhoto: pageData.prevPhoto,
-      requestComplete: true
+    currPromise.then((curr) => {
+      // A faster click may have moved us on; do not paint a stale page over it.
+      if (activePhotoIdRef.current !== photoId) {
+        return
+      }
+      paintCurrentPhoto(curr)
     })
 
-    preloadPhotoPage(pageData?.nextPhoto?.photo?.id)
-    preloadPhotoPage(pageData?.prevPhoto?.photo?.id)
-  }, [buildPhotoPage, preloadPhotoPage])
+    // Next/prev power the navigation buttons and preloads; they fill in behind the first paint.
+    Promise.resolve(buildPhotoPage(photoId)).then((pageData) => {
+      if (activePhotoIdRef.current !== photoId) {
+        return
+      }
+      setInternalState((prev) => ({
+        currPhoto: pageData.currPhoto ?? prev.currPhoto,
+        nextPhoto: pageData.nextPhoto,
+        prevPhoto: pageData.prevPhoto,
+        currReady: true,
+        requestComplete: true
+      }))
+      preloadPhotoPage(pageData?.nextPhoto?.photo?.id)
+      preloadPhotoPage(pageData?.prevPhoto?.photo?.id)
+    })
+  }, [buildPhotoPage, fetchCurrPhotoOnce, paintCurrentPhoto, preloadPhotoPage])
 
   useEffect(() => {
     if (photoId) {
@@ -585,6 +620,7 @@ const PhotosComponent = function () {
           currPhoto: cached.currPhoto,
           nextPhoto: cached.nextPhoto,
           prevPhoto: cached.prevPhoto,
+          currReady: true,
           requestComplete: true
         })
         setDimensions(cached.dimensions || computeDisplayDimensions(cached.currPhoto?.photo))
@@ -593,6 +629,7 @@ const PhotosComponent = function () {
           currPhoto: bootstrapped,
           nextPhoto: null,
           prevPhoto: null,
+          currReady: true,
           requestComplete: false
         })
         setDimensions(computeDisplayDimensions(bootstrapped.photo))
@@ -604,6 +641,7 @@ const PhotosComponent = function () {
           currPhoto: null,
           nextPhoto: null,
           prevPhoto: null,
+          currReady: false,
           requestComplete: false
         })
       }
@@ -925,7 +963,7 @@ const PhotosComponent = function () {
     )
   }
 
-  const { currPhoto, requestComplete } = internalState
+  const { currPhoto, currReady } = internalState
 
   // const embedded = new URLSearchParams(location.search).get("embedded")
 
@@ -1297,7 +1335,7 @@ const PhotosComponent = function () {
     )
   }
 
-  if (requestComplete === true && (currPhoto === null || currPhoto?.photo === null)) {
+  if (currReady === true && (currPhoto === null || currPhoto?.photo === null)) {
     return (
       <div className='PhotosComponent'>
         <div className='content-container'>
@@ -1310,7 +1348,7 @@ const PhotosComponent = function () {
 
   // Cold load (deep link, no cache/router state): mirror the final page so
   // content fills reserved slots instead of swapping a different layout.
-  if (!requestComplete || !currPhoto || !dimensions.width || !dimensions.height) {
+  if (!currReady || !currPhoto || !dimensions.width || !dimensions.height) {
     const placeholder = getPlaceholderDimensions()
     return (
       <div className='PhotosComponent'>
