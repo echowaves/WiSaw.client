@@ -1,0 +1,36 @@
+{
+  "generation_hash": "d9d9b4f8b2d24b69bf6e",
+  "inputs": {
+    "jinja2_version": "3.1.6",
+    "project_root": "/Users/dmitry/hacks/wisaw/WiSaw.client",
+    "renderer_sha256": "a622fd5d9f633690323bdecf6cc9dc28625ef0d7b9d971fcc3cd101ed271fa19",
+    "resolved_values": {
+      "config.core.output_folder": "/Users/dmitry/hacks/wisaw/WiSaw.client/_bmad-output",
+      "customization.workflow.on_activation": "",
+      "customization.workflow.on_block_activation": "",
+      "customization.workflow.on_block_complete": "",
+      "customization.workflow.on_complete": "",
+      "customization.workflow.persistent_facts": []
+    },
+    "skill_root": "/Users/dmitry/hacks/wisaw/WiSaw.client/.agents/skills/bmad-walkthrough",
+    "source_sha256": {
+      "step-01-orientation.md": "6ba18633dd1f0cb83f9b76c83dd9b4632405372d1bbe3cbc76ddb2dd5532fe9f",
+      "step-02-narrative.md": "adfb54009c18844b5fd733450b5a5199a3ffd2a441308945e71ea57ecb03a7ff",
+      "step-03-walkthrough.md": "32fd4ffab64e1829789f941e37ce830c95257bf6ed5d5a8ae539ec3a564945f9",
+      "templates/log-template.md": "ebf59c7f6a85dfccea6f580e8a35363a0a8641e66067427ec803592d297ae770",
+      "workflow.md": "6500f78846c1c27922932bb800de9f4bdf1c5e440204379371ee7ea2d805f45e"
+    }
+  },
+  "outputs": {
+    "step-01-orientation.md": "fdf8b7bd9725d55f43dbcc52f3fceb55224e45cf1e33d01a39d5487c45e6589e",
+    "step-02-narrative.md": "41f2b1e66feb0a5e3063fe3100fe766c5b54f8522973d084b60cf82a899ea202",
+    "step-03-walkthrough.md": "ef6e6e7dcef093956467175db9e24ae4b49f3ac7817a9d4b0b86db17deb48bea",
+    "templates/log-template.md": "e4992dcf11a8c0c798c8f63c75417a8777f2b2c74c1b38bdaf3f676513f0875d",
+    "workflow.md": "f532fa42e97e099462137eae768c585418874e3b58276165582ead58998f2676"
+  },
+  "project_root": "/Users/dmitry/hacks/wisaw/WiSaw.client",
+  "project_slug": "wisaw-client",
+  "root_hash": "81a2fa0f50d3",
+  "schema_version": 1,
+  "skill": "bmad-walkthrough"
+}
