@@ -8,9 +8,9 @@ import { describe, it, expect } from 'vitest'
 // fetches, so deep pages were dropped from the index. Per-page canonicals belong to
 // Helmet (client) and to the Lambda@Edge injector (WiSaw.cdk), never to this template.
 // Resolved from the repo root (where vitest runs); jsdom makes import.meta.url useless
-// here. index.html is the Vite entry that ships; public/index.html is the legacy CRA
-// template kept for parity — both must stay canonical-free.
-const templates = ['index.html', 'public/index.html']
+// here. index.html is the only page template — the Vite entry that ships — and it must
+// stay canonical-free.
+const templates = ['index.html']
 
 describe.each(templates)('%s SEO invariants', (template) => {
   const templateHtml = readFileSync(resolve(template), 'utf8')
@@ -61,8 +61,8 @@ describe.each(templates)('%s SEO invariants', (template) => {
   })
 })
 
-// The shipped entry, not the legacy CRA copy: this is the file whose bundle has to survive an
-// injection pass, because a swallowed entry script means React never mounts and the page is blank.
+// The shipped entry: this is the file whose bundle has to survive an injection pass, because a
+// swallowed entry script means React never mounts and the page is blank.
 describe('index.html survives an edge injection pass', () => {
   const templateHtml = readFileSync(resolve('index.html'), 'utf8')
 
