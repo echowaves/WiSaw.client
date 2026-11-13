@@ -132,6 +132,51 @@ describe('index.html LCP bootstrap no-op cases', () => {
   })
 })
 
+describe('index.html LCP seed attributes on the plan', () => {
+  // The edge publishes natural dimensions only when its sidecar has both; they are the only size
+  // React can trust before getPhotoAllCurr answers, so the plan must carry exactly what is there.
+  const DIMENSIONED_PHOTO = `<h1>Golden hour</h1><img src="${FULL}" alt="Golden hour" width="4000" height="3000"><p>Shot on a phone.</p>`
+  const DIMENSIONED_VIDEO = `<h1>Harbour at dusk</h1><video preload="none" poster="${FULL}" controls width="1920" height="1080" src="https://img.wisaw.com/${PHOTO_ID}.mp4"></video><p>Handheld.</p>`
+
+  it('copies natural dimensions from the injected img onto the plan', () => {
+    const { window, document } = runBootstrap({ path: `/photos/${PHOTO_ID}`, width: 390, rootHtml: DIMENSIONED_PHOTO })
+
+    expect(window.__wisawLcp.width).toBe(4000)
+    expect(window.__wisawLcp.height).toBe(3000)
+    // Capture must not disturb the swap itself.
+    expect(document.querySelector('#root img').getAttribute('src')).toBe(THUMB)
+  })
+
+  it('captures dimensions on desktop too, where nothing is swapped', () => {
+    const { window, document, untouchedMarkup } = runBootstrap({ path: `/photos/${PHOTO_ID}`, width: 1280, rootHtml: DIMENSIONED_PHOTO })
+
+    expect(window.__wisawLcp.width).toBe(4000)
+    expect(window.__wisawLcp.height).toBe(3000)
+    expect(document.getElementById('root').innerHTML).toBe(untouchedMarkup)
+  })
+
+  it('copies the video object URL and dimensions onto the plan', () => {
+    const { window, document } = runBootstrap({ path: `/videos/${PHOTO_ID}`, width: 390, rootHtml: DIMENSIONED_VIDEO })
+
+    expect(window.__wisawLcp.width).toBe(1920)
+    expect(window.__wisawLcp.height).toBe(1080)
+    expect(window.__wisawLcp.videoSrc).toBe(`https://img.wisaw.com/${PHOTO_ID}.mp4`)
+    // The poster swap still happens alongside the capture.
+    expect(document.querySelector('#root video').getAttribute('poster')).toBe(THUMB)
+  })
+
+  it.each([
+    ['no width or height', `<h1>Golden hour</h1><img src="${FULL}" alt="Golden hour"><p>Shot on a phone.</p>`],
+    ['only a width', `<h1>Golden hour</h1><img src="${FULL}" alt="Golden hour" width="4000"><p>Shot on a phone.</p>`],
+    ['non-numeric dimensions', `<h1>Golden hour</h1><img src="${FULL}" alt="Golden hour" width="wide" height="tall"><p>Shot on a phone.</p>`]
+  ])('leaves the plan without usable dimensions when the edge wrote %s', (_label, rootHtml) => {
+    const { window } = runBootstrap({ path: `/photos/${PHOTO_ID}`, width: 390, rootHtml })
+
+    expect(window.__wisawLcp.width).toBeUndefined()
+    expect(window.__wisawLcp.height).toBeUndefined()
+  })
+})
+
 describe('index.html critical CSS and script placement', () => {
   const styleBlock = templateHtml.match(/<style>([\s\S]*?)<\/style>/i)?.[1] ?? ''
 

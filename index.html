@@ -229,10 +229,31 @@
     (function () {
       try {
         var plan = window.__wisawLcp
-        if (!plan || !plan.useThumb) { return }
+        if (!plan) { return }
 
         var root = document.getElementById('root')
         if (!root) { return }
+
+        // The injected media element is the only place the natural size lives before any GraphQL
+        // answer arrives. Copy it onto the plan so React's first commit can paint this exact box
+        // instead of a skeleton while getPhotoAllCurr round-trips - that round trip is what used to
+        // push LCP past 5 s on mobile. Absent or non-numeric attributes stay off the plan, and the
+        // component then falls back to the skeleton rather than guessing an aspect ratio.
+        var media = root.querySelectorAll('img[src], video[poster]')
+        for (var i = 0; i < media.length; i++) {
+          if (!media[i].hasAttribute('width') || !media[i].hasAttribute('height')) { continue }
+          var width = parseInt(media[i].getAttribute('width'), 10)
+          var height = parseInt(media[i].getAttribute('height'), 10)
+          if (!(width > 0) || !(height > 0)) { continue }
+          plan.width = width
+          plan.height = height
+          if (media[i].tagName === 'VIDEO') {
+            plan.videoSrc = media[i].getAttribute('src') || ''
+          }
+          break
+        }
+
+        if (!plan.useThumb) { return }
 
         // Scheme-insensitive comparison against the route's own full-resolution object, so
         // https://, http:// and protocol-relative spellings all count as the same source.
@@ -241,9 +262,8 @@
           return value.replace(/^https?:/i, '') === plan.full.replace(/^https?:/i, '')
         }
 
-        var media = root.querySelectorAll('img[src], video[poster]')
-        for (var i = 0; i < media.length; i++) {
-          var element = media[i]
+        for (var j = 0; j < media.length; j++) {
+          var element = media[j]
           var attribute = element.tagName === 'VIDEO' ? 'poster' : 'src'
           if (wantsSwap(element.getAttribute(attribute))) {
             element.setAttribute(attribute, plan.thumb)

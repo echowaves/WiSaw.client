@@ -97,8 +97,23 @@ describe('detail page full-resolution media budget', () => {
   })
 
   afterEach(() => {
+    delete window.__wisawLcp
     vi.useRealTimers()
     vi.restoreAllMocks()
+  })
+
+  // The inline LCP scripts in index.html publish this plan before React runs; the shape is pinned
+  // by src/lcpBootstrap.template.test.js. Dimensions are what make a seed paintable at all.
+  const edgePlan = (overrides = {}) => ({
+    kind: 'photos',
+    id: '777',
+    full: FULL_777,
+    thumb: THUMB_777,
+    href: THUMB_777,
+    useThumb: true,
+    width: 2250,
+    height: 3000,
+    ...overrides
   })
 
   it('paints only the thumbnail on a cold mobile link, and asks for no original', () => {
@@ -219,6 +234,69 @@ describe('detail page full-resolution media budget', () => {
     expect(thumbImage()?.getAttribute('src')).toBe(THUMB_777)
     expect(mainImage()).toBeNull()
     expect(requested).not.toContain(FULL_777)
+  })
+
+  it('paints the thumbnail on a cold deep link from the edge seed, before any GraphQL settles', async () => {
+    api.pages = { 777: { getPhotoAllCurr: record('777'), getPhotoAllNext: null, getPhotoAllPrev: null } }
+    window.__wisawLcp = edgePlan()
+    setViewport(390)
+    renderDetail(null)
+
+    // Asserted synchronously: the mocked queries settle on microtasks, so this is the first
+    // commit. It already shows the media box at its real aspect ratio - no skeleton, and the
+    // thumb (the bytes the inline preload script asked for) is what fills it.
+    expect(document.querySelector('.loading-spinner')).toBeNull()
+    const thumb = thumbImage()
+    expect(thumb?.getAttribute('src')).toBe(THUMB_777)
+    expect(thumb?.style.width).toBe(`${390 - 40}px`)
+    expect(mainImage()).toBeNull()
+    expect(requested).not.toContain(FULL_777)
+
+    // The real record still hydrates over the seed: comments arrive, media stays put.
+    await flush()
+    expect(screen.getByText('comment 777')).toBeTruthy()
+    expect(thumbImage()?.getAttribute('src')).toBe(THUMB_777)
+  })
+
+  it('keeps the skeleton when the edge seed has no dimensions to size the box from', () => {
+    api.pages = null
+    window.__wisawLcp = edgePlan({ width: undefined, height: undefined })
+    setViewport(390)
+    renderDetail(null)
+
+    expect(document.querySelector('.loading-spinner')).not.toBeNull()
+    expect(thumbImage()).toBeNull()
+  })
+
+  it('ignores an edge seed for another route kind', () => {
+    api.pages = null
+    window.__wisawLcp = edgePlan({ kind: 'videos', videoSrc: `https://img.wisaw.com/777.mp4` })
+    setViewport(390)
+    renderDetail(null)
+
+    // /photos/777 must not paint a video page from a /videos plan.
+    expect(document.querySelector('.loading-spinner')).not.toBeNull()
+  })
+
+  it('paints the video poster from the edge seed on a cold video deep link', async () => {
+    api.pages = null
+    window.__wisawLcp = edgePlan({ kind: 'videos', videoSrc: 'https://img.wisaw.com/777.mp4' })
+    setViewport(390)
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={[{ pathname: '/videos/777', state: null }]}>
+          <Routes>
+            <Route path='/videos/:photoId' element={<PhotosComponent />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
+    )
+
+    expect(document.querySelector('.loading-spinner')).toBeNull()
+    expect(thumbImage()?.getAttribute('src')).toBe(THUMB_777)
+    // The real object URL seeds the player source so playback works before hydration too.
+    expect(document.querySelector('.mainImage source')?.getAttribute('src'))
+      .toBe('https://img.wisaw.com/777.mp4')
   })
 
   it('paints the current record as soon as its own query settles, without waiting on neighbours', async () => {

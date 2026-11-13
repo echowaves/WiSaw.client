@@ -36,6 +36,7 @@ import {
   scheduleAfterWindowLoad,
   shouldDeferFullMedia
 } from '../utils/mediaUpgrade'
+import { edgeSeededPhoto } from '../utils/edgeSeed'
 
 const Footer = lazy(() => import('./Footer'))
 
@@ -118,23 +119,36 @@ const PhotosComponent = function () {
   // we can paint the real media before any GraphQL response arrives.
   const bootstrappedPhoto = bootstrapPhotoFromRouterState(location.state, photoId)
 
+  // Deep links get nothing from the feed, but Lambda@Edge already painted this page's media into
+  // the mount point (and the inline scripts recorded its size on window.__wisawLcp). Seeding from
+  // that keeps React's first commit painting the same box instead of a skeleton - the edge copy is
+  // preloaded and usually already decoded, so LCP lands there rather than after getPhotoAllCurr.
+  const routeKind = segmentFromPath(location.pathname)
+  const edgeSeeded = edgeSeededPhoto(photoId, routeKind)
+
   // currReady flips when the current record's own answer is in (or bootstrap/cache painted it);
   // requestComplete waits for the neighbours too. The LCP paint must not wait for them.
   const [internalState, setInternalState] = useState(() => ({
-    currPhoto: bootstrappedPhoto,
+    currPhoto: bootstrappedPhoto ?? edgeSeeded,
     nextPhoto: null,
     prevPhoto: null,
-    currReady: bootstrappedPhoto != null,
+    currReady: bootstrappedPhoto != null || edgeSeeded != null,
     requestComplete: false
   }))
 
-  const [dimensions, setDimensions] = useState(() =>
-    bootstrappedPhoto
-      ? computeDisplayDimensions(bootstrappedPhoto.photo)
-      : { width: null, height: null }
-  )
+  const [dimensions, setDimensions] = useState(() => {
+    if (bootstrappedPhoto) {
+      return computeDisplayDimensions(bootstrappedPhoto.photo)
+    }
+    if (edgeSeeded) {
+      return computeDisplayDimensions(edgeSeeded.photo)
+    }
+    return { width: null, height: null }
+  })
   // A bootstrapped photo is already decoded (the feed card just displayed its
-  // thumbnail), so paint it immediately instead of hiding it behind a spinner.
+  // thumbnail), so paint it immediately instead of hiding it behind a spinner. An edge-seeded one
+  // was painted by the browser before React existed, but this element is a fresh node - start it
+  // hidden and let its own load event fade it in (it is preloaded, so that is usually instant).
   const [imageLoaded, setImageLoaded] = useState(bootstrappedPhoto != null)
   // The original is multi-megabyte, so on phones its bytes are warmed in the background and only
   // painted once the visitor interacts - that paint would otherwise become the LCP candidate. A
@@ -613,6 +627,9 @@ const PhotosComponent = function () {
       // first made even hover-preloaded prev/next navigations flash a skeleton.
       const cached = photoPageCache.current.get(photoId)
       const bootstrapped = bootstrapPhotoFromRouterState(location.state, photoId)
+      // window.__wisawLcp is written once before React runs, so recomputing here (from the same
+      // inputs this effect already depends on) stays in step with the render-scope seed.
+      const edgeSeeded = edgeSeededPhoto(photoId, routeKind)
       setImageLoaded(false)
 
       if (cached) {
@@ -636,6 +653,18 @@ const PhotosComponent = function () {
         // Above the breakpoint the thumb was already replaced, so stay opaque. Below it this record's
         // original has never been painted, so let it fade in once decoded instead of rastering now.
         setImageLoaded(!shouldDeferFullMedia())
+      } else if (edgeSeeded) {
+        // The edge already painted this media before React existed: keep the same box on screen
+        // while getPhotoAllCurr hydrates comments/recognitions over it, instead of a skeleton.
+        setInternalState({
+          currPhoto: edgeSeeded,
+          nextPhoto: null,
+          prevPhoto: null,
+          currReady: true,
+          requestComplete: false
+        })
+        setDimensions(computeDisplayDimensions(edgeSeeded.photo))
+        setImageLoaded(false)
       } else {
         setInternalState({
           currPhoto: null,
@@ -655,7 +684,7 @@ const PhotosComponent = function () {
       }
       load({ photoId })
     }
-  }, [load, photoId, location.state])
+  }, [load, photoId, location.state, routeKind])
 
   const recognitionsLabels = (recognition, lebelsToInclude = 10) => {
     if (!recognition) return ''
