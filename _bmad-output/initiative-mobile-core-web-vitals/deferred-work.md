@@ -10,10 +10,12 @@ Appended findings that are not this change's problem to solve. Do not rewrite ex
 - source_plan: `_bmad-output/initiative-mobile-core-web-vitals/plan-static-detail-pages-portal-app.md`
   summary: After a client-side prev/next navigation on detail pages, the browser tab keeps the previous page's title — the edge serves the correct title per request, but nothing updates it during SPA navigation now that detail-route `<Helmet>` is gone.
   evidence: Real (verified by reading the diff): the deleted Helmet block was the only writer of `document.title` on detail routes. Proper fix belongs in the backend skeleton's inline script (`history.replaceState` with the record title after client navigation, or a small injected title-sync hook) — coordinate through `backend-solicitation-brief.md`; a client-side patch would re-introduce head ownership this plan removes.
+  update-2026-11-15: Solicited as brief §9 C4 and now blocked, not open — see the last entry for why (no CORS on `img.wisaw.com`, no stored `seo` block in prod). The tab title stays stale after prev/next until that is settled.
 
 - source_plan: `_bmad-output/initiative-mobile-core-web-vitals/plan-static-detail-pages-portal-app.md`
   summary: `detailSkeleton.js` rebuilds media URLs from the id (`MEDIA_ORIGIN` + `<id>.webp` / `-thumb.webp`), duplicating object-naming knowledge already encoded twice in the `index.html` inline scripts; a third copy.
   evidence: Real but low harm today — the derived URLs only seed the pre-hydration paint and are replaced by GraphQL values moments later; all three copies live in this repo and drift is caught for the inline pair by `lcpBootstrap.template.test.js`. The clean fix is the edge publishing `data-wisaw-src`/`data-wisaw-thumb` on the media node so the client reads, not derives — add to the brief when it is next amended.
+  update-2026-11-15: Closed for this copy — solicited as brief §9 C5 and built (`WiSaw.cdk@0d3bd0f`, client `4f86f8a`); `MEDIA_ORIGIN` is gone from `detailSkeleton.js` and `src/detailGeometry.contract.test.js` pins the attribute pair plus the absence of the origin. The two `index.html` inline scripts still derive the thumb URL and must keep doing so: that script runs in `<head>`, before any published attribute exists to read.
 
 - source_plan: `_bmad-output/initiative-mobile-core-web-vitals/plan-static-detail-pages-portal-app.md`
   summary: The real boot sequence in `src/index.js` (skeleton capture → conditional `#root` clear → sibling-container mount) has no test executing it; seam tests replicate the steps by hand.
