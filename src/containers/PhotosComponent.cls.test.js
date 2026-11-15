@@ -135,11 +135,12 @@ describe('detail page empty states (CLS guards)', () => {
     renderAt({ feedPhoto: FEED_PHOTO })
     await screen.findByText('site footer')
 
+    // One media node: the photo no longer carries a separate thumbnail layer to swap out.
     const full = document.querySelector('.crop img.mainImage')
+    expect(document.querySelectorAll('.crop img')).toHaveLength(1)
     // React renders camelCase fetchPriority as the lowercase fetchpriority attribute.
     expect(full.getAttribute('fetchpriority')).toBe('high')
     expect(full.getAttribute('decoding')).toBe('async')
-    expect(document.querySelector('.crop img.thumbnailImage').getAttribute('decoding')).toBe('async')
   })
 
   it('fills the comments slot in place when a comment arrives', async () => {

@@ -1,6 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { Suspense, useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
 import ReactGA from 'react-ga4'
 
@@ -8,6 +9,7 @@ import ReactGA from 'react-ga4'
 import './App.css'
 import AppErrorBoundary from './containers/AppErrorBoundary'
 import { lazyWithRetry } from './utils/lazyWithRetry'
+import { clearDetailSkeleton, getDetailSkeleton, skeletonMatchesPath, subscribeDetailSkeleton } from './utils/detailSkeleton'
 const Home = lazyWithRetry(() => import('./containers/Home'))
 const PhotosComponent = lazyWithRetry(() => import('./containers/PhotosComponent'))
 const SearchComponent = lazyWithRetry(() => import('./containers/SearchComponent'))
@@ -164,60 +166,94 @@ const App = function () {
     }
   }
 
-  const renderLoadingFallback = () => (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      fontSize: '1.2rem',
-      color: 'var(--accent-light)'
-    }}
-    >
-      Loading...
-    </div>
-  )
-
   return (
-    <div className='App'>
-      <AppErrorBoundary>
-        <HelmetProvider>
-          <BrowserRouter>
-            <Suspense fallback={renderLoadingFallback()}>
-              <Header themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
-              <Routes>
-                <Route exact path='/' element={<Home />} />
-                <Route
-                  exact
-                  path='/photos/:photoId'
-                  element={<PhotosComponent />}
-                />
-                <Route
-                  exact
-                  path='/videos/:photoId'
-                  element={<PhotosComponent />}
-                />
-                <Route
-                  exact
-                  path='/search/:searchString'
-                  element={<SearchComponent />}
-                />
-                <Route
-                  exact
-                  path='/search'
-                  element={<SearchComponent />}
-                />
-                <Route path='/about' element={<About />} />
-                <Route path='/contact' element={<Contact />} />
-                <Route path='/terms' element={<Terms />} />
-                <Route element={<NoMatch />} />
-                {/* default redirect to home page */}
-                <Route path='*' element={<Navigate to='/' />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </HelmetProvider>
-      </AppErrorBoundary>
+    <AppErrorBoundary>
+      <HelmetProvider>
+        <BrowserRouter>
+          <AppShell themeMode={themeMode} onThemeModeChange={handleThemeModeChange} />
+        </BrowserRouter>
+      </HelmetProvider>
+    </AppErrorBoundary>
+  )
+}
+
+const renderLoadingFallback = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100vh',
+    fontSize: '1.2rem',
+    color: 'var(--accent-light)'
+  }}
+  >
+    Loading...
+  </div>
+)
+
+// Renders Header and routes. While the server-painted detail skeleton is still
+// valid for the current path, the Header is portaled into the skeleton's slot
+// so React never reconciles the LCP media node; otherwise it renders normally.
+const AppShell = function ({ themeMode, onThemeModeChange }) {
+  const location = useLocation()
+  // Subscribed (not just read) so a handoff clear - which can come from PhotosComponent when the
+  // record kind disagrees with the edge's node - re-renders this shell out of portal mode.
+  const skeleton = useSyncExternalStore(subscribeDetailSkeleton, getDetailSkeleton)
+  const adopted = Boolean(skeleton && skeletonMatchesPath(skeleton, location.pathname))
+
+  // One-time handoff: the first navigation off the skeleton's detail route
+  // hands #root back to React (idempotent with PhotosComponent's own clear).
+  // `skeleton` is captured before the first commit, so it only ever goes object -> null
+  // (after the clear) and re-running the effect then is a no-op.
+  useLayoutEffect(() => {
+    if (skeleton && !skeletonMatchesPath(skeleton, location.pathname)) {
+      clearDetailSkeleton()
+    }
+  }, [location.pathname, skeleton])
+
+  // The .App wrapper lives here (not in App) because adopted mode must switch it to the
+  // transparent modifier: #wisaw-app comes after #root in DOM order, and the default .App is an
+  // opaque min-height:100vh sheet that would paint over the edge-painted page. Same reason the
+  // Suspense fallback is null while adopted - "Loading..." must never cover visible content.
+  return (
+    <div className={adopted ? 'App App--adopted' : 'App'}>
+      <Suspense fallback={adopted ? null : renderLoadingFallback()}>
+        {adopted
+          ? createPortal(
+            <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />,
+            skeleton.headerSlot
+          )
+          : <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />}
+        <Routes>
+          <Route exact path='/' element={<Home />} />
+          <Route
+            exact
+            path='/photos/:photoId'
+            element={<PhotosComponent />}
+          />
+          <Route
+            exact
+            path='/videos/:photoId'
+            element={<PhotosComponent />}
+          />
+          <Route
+            exact
+            path='/search/:searchString'
+            element={<SearchComponent />}
+          />
+          <Route
+            exact
+            path='/search'
+            element={<SearchComponent />}
+          />
+          <Route path='/about' element={<About />} />
+          <Route path='/contact' element={<Contact />} />
+          <Route path='/terms' element={<Terms />} />
+          <Route element={<NoMatch />} />
+          {/* default redirect to home page */}
+          <Route path='*' element={<Navigate to='/' />} />
+        </Routes>
+      </Suspense>
     </div>
   )
 }

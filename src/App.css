@@ -9,4 +9,11 @@
   position: relative;
 }
 
+/* Adopted detail pages: the app container mounts after #root, so the wrapper must neither paint
+   over nor add height above the edge-painted page — it only carries portals into #root's slots. */
+.App--adopted {
+  min-height: 0;
+  background: transparent;
+}
+
 /* Removed colored ambient gradients — neutral bg lets photos breathe */
