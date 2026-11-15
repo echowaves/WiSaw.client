@@ -75,3 +75,29 @@ describeContract('edge skeleton geometry mirrors the app geometry', () => {
     }
   })
 })
+
+// Second half of the same idea for media URLs: the edge publishes them, this app reads them. The
+// naming rule must stay written once per side or a rename on one half seeds a 404 on the other.
+const UTILS_PATH = path.join(HERE, '..', '..', 'WiSaw.cdk', 'lambda-fns', 'lambdas', 'injectMetaTagsLambdaFunction', 'utils.js')
+const DETAIL_SKELETON_SRC = readFileSync(path.join(HERE, 'utils', 'detailSkeleton.js'), 'utf8')
+
+describeContract('edge publishes the media URLs this app seeds from', () => {
+  const requireCjs = createRequire(import.meta.url)
+  const { buildSeoBody } = requireCjs(UTILS_PATH)
+
+  it('emits exactly the attribute names this app reads', () => {
+    const body = buildSeoBody({ entityLabel: 'photo', pathSegment: 'photos', imageIdText: '29461ee8-34dd-4c2b-848f-c16d766713e8', width: '2250', height: '3000' })
+    const media = /<(?:img|video)\b[^>]*data-wisaw-media[^>]*>/i.exec(body)?.[0] ?? ''
+    expect(media, 'edge media element').not.toBe('')
+    for (const name of ['data-wisaw-src', 'data-wisaw-thumb']) {
+      expect(media, `edge emits ${name}`).to.contain(`${name}="https://`)
+      expect(DETAIL_SKELETON_SRC, `client reads ${name}`).to.contain(`getAttribute('${name}')`)
+    }
+  })
+
+  it('leaves the media origin to the edge', () => {
+    // If this file ever names img.wisaw.com again it is deriving URLs instead of reading published
+    // ones, which is the drift these attributes exist to remove.
+    expect(DETAIL_SKELETON_SRC).to.not.contain('img.wisaw.com')
+  })
+})

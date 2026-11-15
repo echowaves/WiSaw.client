@@ -17,7 +17,6 @@
  */
 
 const DETAIL_ROUTE = /^\/(photos|videos)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
-const MEDIA_ORIGIN = 'https://img.wisaw.com/'
 
 let captured = null
 let attempted = false
@@ -151,6 +150,21 @@ export const skeletonMatchesPath = function (skeleton, pathname) {
   return Boolean(match && match[1].toLowerCase() === skeleton.kind && match[2].toLowerCase() === skeleton.photoId)
 }
 
+const ABSOLUTE_URL = /^https:\/\/[^\s"']+$/i
+
+/**
+ * The media object URLs the edge published on the skeleton node, or null when it published none.
+ * Absent is a real state — an older edge build still answers some origins — and the answer is to seed
+ * nothing rather than to guess: rebuilding the URL here would put the naming rule back in this file,
+ * which is the one thing this module exists not to do.
+ */
+const publishedUrls = function (mediaNode) {
+  const src = mediaNode.getAttribute('data-wisaw-src') || ''
+  const thumb = mediaNode.getAttribute('data-wisaw-thumb') || ''
+  if (!ABSOLUTE_URL.test(src) || !ABSOLUTE_URL.test(thumb)) return null
+  return { src, thumb }
+}
+
 /**
  * A currPhoto-shaped seed record for this route when the captured skeleton describes it - null
  * otherwise. Replaces the window.__wisawLcp-based seed: the dimensions and URLs come from the
@@ -168,12 +182,17 @@ export const skeletonSeededPhoto = function (photoId, kind) {
     return null
   }
 
+  // The URL check lives here and not in the capture: an edge that has not published URLs yet still
+  // earns adoption — the LCP win is real either way — it just gets no first paint from us.
+  const urls = publishedUrls(captured.mediaNode)
+  if (!urls) return null
+
   const isVideo = captured.kind === 'videos'
   return {
     photo: {
       id: captured.photoId,
-      thumbUrl: `${MEDIA_ORIGIN}${captured.photoId}-thumb.webp`,
-      imgUrl: `${MEDIA_ORIGIN}${captured.photoId}.webp`,
+      thumbUrl: urls.thumb,
+      imgUrl: urls.src,
       video: isVideo,
       videoUrl: isVideo ? (captured.mediaNode.getAttribute('src') || '') : '',
       width: captured.width,

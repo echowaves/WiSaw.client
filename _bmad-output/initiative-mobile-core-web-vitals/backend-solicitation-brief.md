@@ -108,6 +108,16 @@ Two findings came out of the client-side portal app (`WiSaw.client@refactor/stat
 
 ### C4 — Keep the browser tab title truthful across client-side detail navigation
 
+**Status (2026-11-15): deferred — not implementable as written.** Two blockers, both verified against
+production rather than inferred. (1) `img.wisaw.com` returns no `access-control-allow-origin`, and the img
+distribution declares no ResponseHeadersPolicy while the bucket has no CORS rule, so a page on `wisaw.com`
+cannot read the sidecar body cross-origin — which is why the client's deleted `seoRecord.js` was written
+best-effort with a served-head fallback. (2) Live records answer
+`{"v":1,"caption":…,"labels":…,"width":…,"height":…}` with no `seo` block at all: the prod backfill predates
+`seoRules.buildSeoRecord()`'s `seo` field, so there is no stored title to read. Ship a CORS policy (or a
+same-origin `/seo/<id>.json` route) and republished sidecars, then re-solicit. Tracked in
+[`deferred-work.md`](./deferred-work.md).
+
 **Problem.** Detail routes declare no `<head>` tags after round 1 — the served bytes are authoritative and correct per request. Nothing then updates the tab title when the user clicks prev/next: `document.title` keeps the record the page was *first* served with, for as long as the tab lives, however far the user browses. Verified in both repos: no `document.title` / `history.replaceState` writer exists anywhere (the injector folder has none; the client's detail-route `<Helmet>` block — the previous and only writer — was deleted by this work).
 
 **Requested.** A small script on the served page that keeps `document.title` in step with the route, using wording it **reads from the edge rather than composes**:
@@ -123,6 +133,12 @@ Two findings came out of the client-side portal app (`WiSaw.client@refactor/stat
 **Placement.** Either in this injector's skeleton output or in the shell it fetches from S3 (`template.js` reads the deployed client's `index.html`) — your call, since both reach the same page. The one thing not on the table is a client-side re-implementation of the title rules; that is exactly the duplication round 1 removed.
 
 ### C5 — Publish media object URLs on the skeleton instead of leaving the client to derive them
+
+**Status (2026-11-15): built.** Backend `WiSaw.cdk@0d3bd0f`, client in this repo's following commit. One
+deviation from the request: on a video page `data-wisaw-src` is the **thumbnail**, not the `.mp4` and not the
+derivative — that page may not name the multi-megabyte object at all (pinned by an existing backend test),
+and the video's own file stays in the element's `src`. Both attributes are always present so the client has
+one contract rather than a per-kind one.
 
 **Problem.** `src/utils/detailSkeleton.js` rebuilds both media URLs from the id (`MEDIA_ORIGIN` + `<id>.webp` / `-thumb.webp`) to seed React's first commit. That naming rule now exists in three places: the shell's preload script, the shell's swap script (both pinned against each other by `src/lcpBootstrap.template.test.js`… i.e. `lcpBootstrap.template.test.js`) and that third copy in the client. Harmless while all three agree; a rename in `mediaNaming.js`/`mediaUri.js` would silently desync the seed.
 

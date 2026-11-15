@@ -53,6 +53,7 @@ const buildSkeletonDom = () => {
         <div class='wsk-main'>
           <div class='wsk-box' style='aspect-ratio:2250/3000;--wsk-cap:525px'>
             <img class='wsk-media' data-wisaw-media data-wisaw-id='${PHOTO_ID}' src='${thumbUrl}'
+                 data-wisaw-src='${mediaUrl}' data-wisaw-thumb='${thumbUrl}'
                  width='2250' height='3000' alt='' />
           </div>
           <h1>What I Saw</h1>
@@ -228,6 +229,7 @@ describe('detail skeleton seam (portal adoption)', () => {
           <div class='wsk-main'>
             <div class='wsk-box' style='aspect-ratio:1920/1080;--wsk-cap:700px'>
               <video class='wsk-media' data-wisaw-media data-wisaw-id='${PHOTO_ID}' poster='${thumbUrl}'
+                     data-wisaw-src='${thumbUrl}' data-wisaw-thumb='${thumbUrl}'
                      width='1920' height='1080' preload='none' controls
                      src='https://img.wisaw.com/${PHOTO_ID}.mp4'></video>
             </div>
@@ -422,5 +424,59 @@ describe('detail skeleton seam (portal adoption)', () => {
     // overflow:hidden as before this change, which is still better than anchoring UI to #root.
     expect(captured.navContainer.parentElement).toBe(captured.mediaBox)
     expect(captured.navContainer.childElementCount).toBe(0)
+  })
+})
+
+// What the first paint is built from. The URLs come off the edge-published attributes, so this also
+// pins the fallback that matters: an edge that publishes none must not be guessed at.
+describe('detail skeleton seed (URLs published by the edge)', () => {
+  const seedDom = (attrs) => {
+    document.body.innerHTML = `
+      <div id='root'>
+        <div class='wsk'>
+          <div class='wsk-slot-header' data-wisaw-slot='header'></div>
+          <div class='wsk-main'>
+            <div class='wsk-box' style='aspect-ratio:2250/3000;--wsk-cap:525px'>
+              <img class='wsk-media' data-wisaw-media data-wisaw-id='${PHOTO_ID}' src='${thumbUrl}'${attrs}
+                   width='2250' height='3000' alt='' />
+            </div>
+            <nav><a href='/'>WiSaw</a></nav>
+            <div class='wsk-slot-below' data-wisaw-slot='below'></div>
+          </div>
+        </div>
+      </div>
+    `
+    window.history.pushState({}, '', `/photos/${PHOTO_ID}`)
+  }
+
+  afterEach(() => {
+    detailSkeleton.__resetDetailSkeletonForTests()
+    document.body.innerHTML = ''
+    window.history.pushState({}, '', '/')
+  })
+
+  it('seeds the exact URLs the edge published', () => {
+    seedDom(` data-wisaw-src='${mediaUrl}' data-wisaw-thumb='${thumbUrl}'`)
+    expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
+
+    const seeded = detailSkeleton.skeletonSeededPhoto(PHOTO_ID, 'photos')
+    expect(seeded.photo.imgUrl).toBe(mediaUrl)
+    expect(seeded.photo.thumbUrl).toBe(thumbUrl)
+  })
+
+  it('seeds nothing when the edge published no URLs, and still adopts the paint', () => {
+    // An older edge build is still live on some cached origins. Losing the seed costs one empty first
+    // commit until GraphQL answers; losing adoption would cost the LCP win as well.
+    seedDom('')
+    expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
+    expect(detailSkeleton.skeletonSeededPhoto(PHOTO_ID, 'photos')).toBeNull()
+  })
+
+  it('seeds nothing when a published URL is not an absolute https one', () => {
+    // A relative or scheme-less value would seed a URL that resolves against the page origin and 404s;
+    // treating it as absent is the safe reading of a contract violation.
+    seedDom(` data-wisaw-src='${PHOTO_ID}.webp' data-wisaw-thumb='${thumbUrl}'`)
+    expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
+    expect(detailSkeleton.skeletonSeededPhoto(PHOTO_ID, 'photos')).toBeNull()
   })
 })
