@@ -20,6 +20,7 @@ import { COLD_BELOW_MEDIA_RESERVE, DETAIL_MAX_SIDE, DETAIL_MOBILE_BREAKPOINT } f
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const SKELETON_PATH = path.join(HERE, '..', '..', 'WiSaw.cdk', 'lambda-fns', 'lambdas', 'injectMetaTagsLambdaFunction', 'skeleton.js')
 const HEADER_CSS_PATH = path.join(HERE, 'containers', 'Header.css')
+const CONTENT_CSS_PATH = path.join(HERE, 'containers', 'PhotosComponent.css')
 
 // The contract only exists when both repos are checked out side by side; standalone checkouts
 // skip rather than fail, matching how the duration contract handles a missing backend.
@@ -56,5 +57,21 @@ describeContract('edge skeleton geometry mirrors the app geometry', () => {
     const cap = Number(/--wsk-cap:(\d+)px/.exec(boxStyle)[1])
     expect(cap).toBe(Math.round(700 * 2250 / 3000))
     expect(cap).not.toBe(DETAIL_MAX_SIDE)
+  })
+
+  it('lays the nav anchor column out like the app content container', () => {
+    // Prev/next are absolutely positioned at the same offsets on both render paths: against
+    // <main class="content-container"> when React renders the page, against the edge's .wsk-main
+    // while the painted skeleton is adopted. Same numbers in the two rules is what makes them land
+    // in the same place across the handoff; a one-sided edit reopens the visible jump.
+    const norm = (text) => text.replace(/\s+/g, '')
+    const edgeRule = /#root \.wsk-main\{([^}]*)\}/.exec(skeleton.SKELETON_STYLE)?.[1] ?? ''
+    const appRule = /\.content-container\s*\{([^}]*)\}/.exec(readFileSync(CONTENT_CSS_PATH, 'utf8'))?.[1] ?? ''
+    expect(edgeRule, '.wsk-main rule in the edge skeleton').not.toBe('')
+    expect(appRule, '.content-container rule in PhotosComponent.css').not.toBe('')
+    for (const declaration of ['max-width:1100px', 'margin:0auto', 'padding:20px20px28px']) {
+      expect(norm(edgeRule), `edge .wsk-main ${declaration}`).toContain(declaration)
+      expect(norm(appRule), `app .content-container ${declaration}`).toContain(declaration)
+    }
   })
 })

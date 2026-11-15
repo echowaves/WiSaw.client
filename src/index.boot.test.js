@@ -43,11 +43,15 @@ describe('index.js boot sequence', () => {
   it('captures the edge skeleton, leaves #root intact and mounts beside it', async () => {
     document.body.innerHTML = `
       <div id="root">
-        <div data-wisaw-slot="header"></div>
-        <div class="wsk-box" style="position:relative">
-          <img data-wisaw-media data-wisaw-id="${PHOTO_ID}" src="${THUMB}" width="2250" height="3000" alt="" />
+        <div class="wsk">
+          <div data-wisaw-slot="header"></div>
+          <div class="wsk-main">
+            <div class="wsk-box" style="position:relative">
+              <img data-wisaw-media data-wisaw-id="${PHOTO_ID}" src="${THUMB}" width="2250" height="3000" alt="" />
+            </div>
+            <div data-wisaw-slot="below"></div>
+          </div>
         </div>
-        <div data-wisaw-slot="below"></div>
       </div>
       <div id="wisaw-app"></div>
     `
@@ -57,7 +61,17 @@ describe('index.js boot sequence', () => {
     const detailSkeleton = await boot()
 
     expect(detailSkeleton.getDetailSkeleton()).not.toBeNull()
-    expect(document.getElementById('root').innerHTML).toBe(paintedMarkup)
+    // Capture's only sanctioned additions are the empty out-of-flow nav anchor and the column's
+    // positioning rule (see detailSkeleton.js). Undoing exactly those two, every painted node,
+    // attribute and byte of the static frame must survive — anything else React touched fails here.
+    const root = document.getElementById('root')
+    const navAnchor = root.querySelector('[data-wisaw-nav]')
+    expect(navAnchor).not.toBeNull()
+    navAnchor.remove()
+    const column = root.querySelector('.wsk-main')
+    expect(column.style.position).toBe('relative')
+    column.removeAttribute('style')
+    expect(root.innerHTML).toBe(paintedMarkup)
     expect(createRootSpy).toHaveBeenCalledWith(document.getElementById('wisaw-app'))
     expect(renderSpy).toHaveBeenCalled()
   })

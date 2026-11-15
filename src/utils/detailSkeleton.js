@@ -84,13 +84,41 @@ export const captureDetailSkeleton = function () {
       return null
     }
 
-    // Overlays (nav buttons, play button, spinner) portal into the media's fixed box — the media's
-    // wrapper. If the media sits directly under #root there is no positioned box to overlay into,
-    // and absolute-positioned UI would anchor to the page instead of the picture: not adoptable.
+    // Media-centred overlays (play button, spinner, error alert) portal into the media's fixed box —
+    // the media's wrapper. If the media sits directly under #root there is no positioned box to
+    // overlay into, and absolute-positioned UI would anchor to the page instead of the picture: not
+    // adoptable.
     const mediaBox = mediaNode.parentElement
     if (!mediaBox || mediaBox === root) {
       return null
     }
+
+    // Nav buttons anchor to the column that holds the media box, never to the box itself: in the
+    // client-rendered path they anchor to <main class="content-container">, and any other box makes
+    // them visibly jump at the one-time handoff. Found structurally rather than by class name — the
+    // edge owns those names (WiSaw.cdk skeleton.js) and a rename must not silently break adoption.
+    // A column that is the mount point itself (media wrapped exactly once) keeps using the media box:
+    // anchoring UI to #root would be worse than the jump it avoids.
+    const column = mediaBox.parentElement && mediaBox.parentElement !== root
+      ? mediaBox.parentElement
+      : mediaBox
+    // The column is made a positioning context only when nothing already positions it:
+    // `position:relative` with no offsets cannot shift layout or create a stacking context, so this
+    // costs neither LCP nor CLS, and the guard never overwrites an edge-side sticky/relative rule.
+    const columnPosition = window.getComputedStyle(column).position
+    if (!columnPosition || columnPosition === 'static') {
+      column.style.position = 'relative'
+    }
+    // Portals append, and the column's last child is the below-fold slot — so portalling straight into
+    // the column would put prev/next after the comments and footer in DOM order, i.e. last in tab
+    // order on a keyboard tour (they are first inside <main> once the page is client-rendered). The
+    // anchor is therefore an empty out-of-flow node inserted ahead of the media box: it holds no box
+    // of its own (absolute, full column width), so nav's existing offsets resolve against exactly the
+    // column padding box they would have, and nothing about the painted layout changes.
+    const navContainer = document.createElement('div')
+    navContainer.setAttribute('data-wisaw-nav', '')
+    navContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%'
+    column.insertBefore(navContainer, column.firstChild)
 
     captured = {
       kind: match[1].toLowerCase(),
@@ -99,6 +127,7 @@ export const captureDetailSkeleton = function () {
       height,
       mediaNode,
       mediaBox,
+      navContainer,
       headerSlot,
       belowSlot
     }

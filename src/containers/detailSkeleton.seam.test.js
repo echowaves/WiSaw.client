@@ -40,22 +40,27 @@ const OTHER_PHOTO_ID = '7c1f9a52-0b34-4e6a-9d21-5f8e3c6a1b40'
 const mediaUrl = `https://img.wisaw.com/${PHOTO_ID}.webp`
 const thumbUrl = `https://img.wisaw.com/${PHOTO_ID}-thumb.webp`
 
-// The markup shape the edge serves inside #root (see backend-solicitation-brief.md C2): reserved
-// header slot, media at display size in its fixed box, static frame, below-fold slot.
+// The markup the edge actually serves inside #root, mirroring WiSaw.cdk
+// lambda-fns/lambdas/injectMetaTagsLambdaFunction/skeleton.js (renderSkeleton): .wsk wrapper, header
+// slot, .wsk-main column, media in its aspect-ratio .wsk-box, static frame, below slot. The names
+// are the edge's own — adoption walks this structure (media box -> parent column), so a fixture built
+// from the app's class names would pin a shape production never serves.
 const buildSkeletonDom = () => {
   document.body.innerHTML = `
     <div id='root'>
-      <div data-wisaw-slot='header'></div>
-      <main class='content-container'>
-        <div class='crop' style='width:350px;height:467px;position:relative'>
-          <img data-wisaw-media data-wisaw-id='${PHOTO_ID}' src='${thumbUrl}'
-               width='2250' height='3000' alt=''
-               style='width:350px;height:467px;object-fit:cover;border-radius:18px' />
+      <div class='wsk'>
+        <div class='wsk-slot-header' data-wisaw-slot='header'></div>
+        <div class='wsk-main'>
+          <div class='wsk-box' style='aspect-ratio:2250/3000;--wsk-cap:525px'>
+            <img class='wsk-media' data-wisaw-media data-wisaw-id='${PHOTO_ID}' src='${thumbUrl}'
+                 width='2250' height='3000' alt='' />
+          </div>
+          <h1>What I Saw</h1>
+          <p>A photo shared on WiSaw.</p>
+          <nav><a href='/'>WiSaw - free authentic stock photos and videos</a></nav>
+          <div class='wsk-slot-below' data-wisaw-slot='below'></div>
         </div>
-        <h1>What I Saw</h1>
-        <p>A photo shared on WiSaw.</p>
-        <div data-wisaw-slot='below'></div>
-      </main>
+      </div>
     </div>
     <div id='wisaw-app'></div>
   `
@@ -78,6 +83,10 @@ const currRecord = (comments) => ({
   recognitions: []
 })
 
+// Prev/next links only render once their records arrive, so a test that pins where they land has to
+// feed the app neighbours.
+const neighbourRecord = (id) => ({ ...currRecord([]), photo: { ...currRecord([]).photo, id } })
+
 // The app's own boot sequence, minus index.js: capture the skeleton before the first commit, then
 // mount <App/> into the sibling container exactly as index.js does.
 const bootWithSkeleton = () => {
@@ -90,6 +99,8 @@ const bootWithSkeleton = () => {
 
   const refs = {
     mediaNode: document.querySelector('[data-wisaw-media]'),
+    mediaBox: captured.mediaBox,
+    navContainer: captured.navContainer,
     headerSlot: document.querySelector("[data-wisaw-slot='header']"),
     belowSlot: document.querySelector("[data-wisaw-slot='below']")
   }
@@ -212,16 +223,18 @@ describe('detail skeleton seam (portal adoption)', () => {
     detailSkeleton.__resetDetailSkeletonForTests()
     document.body.innerHTML = `
       <div id='root'>
-        <div data-wisaw-slot='header'></div>
-        <main class='content-container'>
-          <div class='crop' style='width:350px;height:467px;position:relative'>
-            <video data-wisaw-media data-wisaw-id='${PHOTO_ID}' poster='${thumbUrl}'
-                   width='1920' height='1080' preload='none' controls
-                   src='https://img.wisaw.com/${PHOTO_ID}.mp4'></video>
+        <div class='wsk'>
+          <div class='wsk-slot-header' data-wisaw-slot='header'></div>
+          <div class='wsk-main'>
+            <div class='wsk-box' style='aspect-ratio:1920/1080;--wsk-cap:700px'>
+              <video class='wsk-media' data-wisaw-media data-wisaw-id='${PHOTO_ID}' poster='${thumbUrl}'
+                     width='1920' height='1080' preload='none' controls
+                     src='https://img.wisaw.com/${PHOTO_ID}.mp4'></video>
+            </div>
+            <h1>Harbour at dusk</h1>
+            <div class='wsk-slot-below' data-wisaw-slot='below'></div>
           </div>
-          <h1>Harbour at dusk</h1>
-          <div data-wisaw-slot='below'></div>
-        </main>
+        </div>
       </div>
       <div id='wisaw-app'></div>
     `
@@ -344,5 +357,70 @@ describe('detail skeleton seam (portal adoption)', () => {
     const wrapper = document.querySelector('#wisaw-app .App')
     expect(wrapper.classList.contains('App--adopted')).toBe(false)
     expect(wrapper.childElementCount).toBeGreaterThan(0)
+  })
+
+  it('anchors navigation to the page column, never to the media box', async () => {
+    // The same inline offsets are used on both render paths, so the anchor box is all that decides
+    // where prev/next sit. Client-rendered mode anchors them to <main class="content-container">;
+    // adopted mode must therefore use the column (.wsk-main), not the picture's box — otherwise they
+    // visibly jump into the photograph at the one-time handoff, and .wsk-box's overflow:hidden clips
+    // them. Media-centred overlays are the opposite case and stay in the box (pinned by the video
+    // test above, which finds its alert inside mediaNode.parentElement).
+    api.pages = {
+      [PHOTO_ID]: {
+        getPhotoAllCurr: currRecord([]),
+        getPhotoAllNext: neighbourRecord(OTHER_PHOTO_ID),
+        getPhotoAllPrev: neighbourRecord('5b7d0e93-2c4a-4f81-9d6b-a0e5c7f13b28')
+      }
+    }
+
+    const { mediaBox, navContainer } = bootWithSkeleton()
+    const column = document.querySelector('.wsk-main')
+
+    // The anchor belongs to the column and is empty by construction: no box of its own, so the
+    // painted geometry is the column's padding box — the same one <main class="content-container">
+    // gives the buttons once the page is client-rendered.
+    expect(navContainer.parentElement).toBe(column)
+    // React's portals are its only children — the node itself contributes no content or box.
+    expect(navContainer.getAttribute('data-wisaw-nav')).toBe('')
+    expect(window.getComputedStyle(navContainer).position).toBe('absolute')
+    expect(window.getComputedStyle(column).position).toBe('relative')
+    // Portalling into the column itself would append after the below-fold slot; prev/next must stay
+    // ahead of the media in DOM order, which is what keeps them early in tab order.
+    expect(navContainer.compareDocumentPosition(mediaBox) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    await flush()
+
+    const links = Array.from(document.querySelectorAll('#root a'))
+      .filter((node) => /prev|next/.test(node.textContent))
+    expect(links).toHaveLength(2)
+    for (const link of links) {
+      expect(navContainer.contains(link)).toBe(true)
+      expect(mediaBox.contains(link)).toBe(false)
+    }
+  })
+
+  it('keeps adopting a skeleton whose media box is the only wrapper', () => {
+    // Degenerate shape: media wrapped exactly once, so the column would be #root itself. Anchoring UI
+    // to the mount point is worse than reusing the box, and refusing adoption would throw away a
+    // perfectly good LCP paint for nothing.
+    detailSkeleton.__resetDetailSkeletonForTests()
+    document.body.innerHTML = `
+      <div id='root'>
+        <div class='wsk-slot-header' data-wisaw-slot='header'></div>
+        <div class='wsk-box'>
+          <img data-wisaw-media data-wisaw-id='${PHOTO_ID}' src='${thumbUrl}' width='2250' height='3000' alt='' />
+        </div>
+        <div class='wsk-slot-below' data-wisaw-slot='below'></div>
+      </div>
+    `
+    window.history.pushState({}, '', `/photos/${PHOTO_ID}`)
+
+    const captured = detailSkeleton.captureDetailSkeleton()
+    expect(captured).not.toBeNull()
+    // Degenerate shape still adopts, with the anchor inside the media box: clipped by its
+    // overflow:hidden as before this change, which is still better than anchoring UI to #root.
+    expect(captured.navContainer.parentElement).toBe(captured.mediaBox)
+    expect(captured.navContainer.childElementCount).toBe(0)
   })
 })

@@ -304,4 +304,24 @@ describe('detail page full-resolution media budget', () => {
     expect(requested).not.toContain(FULL_777)
     expect(mainImage()).toBeNull()
   })
+
+  it('anchors prev/next to the content container on the client-rendered page', async () => {
+    // The other half of the handoff contract: adopted mode anchors navigation to an anchor inside the
+    // edge's column precisely because this is where they sit once React owns the page. Moving them
+    // here (or changing this element's box) re-opens the visible jump and must fail this test too.
+    api.pages = {
+      777: { getPhotoAllCurr: record('777'), getPhotoAllNext: record('888'), getPhotoAllPrev: record('666') }
+    }
+    setViewport(1024)
+    renderDetail()
+    await flush()
+
+    const main = document.querySelector('main.content-container')
+    expect(main).not.toBeNull()
+    for (const label of [/prev/, /next/]) {
+      const link = screen.getByText(label).closest('a')
+      expect(link.parentElement, `${label} is a direct child of <main>`).toBe(main)
+      expect(main.style.position).toBe('relative')
+    }
+  })
 })

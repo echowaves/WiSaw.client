@@ -1163,20 +1163,20 @@ const PhotosComponent = function () {
   const { currPhoto, currReady } = internalState
 
   // Adopted mode: the server painted this exact media node into #root and React owns only a sibling
-  // container. Render just the enhancement layer - nav buttons + video overlays into the media box,
-  // comments/recognitions/footer into the below slot - via portals, so the LCP <img>/<video> is never
-  // mounted, cloned or touched by React. The static frame (h1/description/labels) stays server-owned.
+  // container. Render just the enhancement layer - nav buttons into the page column (the same box
+  // <main class="content-container"> is in the client-rendered path, so they do not move at handoff),
+  // video overlays into the media box they centre on, comments/recognitions/footer into the below
+  // slot - via portals, so the LCP <img>/<video> is never mounted, cloned or touched by React. The
+  // static frame (h1/description/labels) stays server-owned.
   if (adopted && skeleton && currPhoto?.photo) {
     const isVideo = currPhoto.photo.video === true
 
     return (
       <>
         <Suspense fallback={null}>
-          {createPortal(
-            <>
-              {renderNavigationButtons()}
-              {isVideo && <VideoOverlays showVideoPlayer={showVideoPlayer} videoReady={videoReady} videoError={videoError} onPlayRequest={handleVideoPlayRequest} />}
-            </>,
+          {createPortal(renderNavigationButtons(), skeleton.navContainer)}
+          {isVideo && createPortal(
+            <VideoOverlays showVideoPlayer={showVideoPlayer} videoReady={videoReady} videoError={videoError} onPlayRequest={handleVideoPlayRequest} />,
             skeleton.mediaBox
           )}
         </Suspense>
