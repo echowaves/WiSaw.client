@@ -1,0 +1,15 @@
+# Team override for the BMad code-review workflow — WiSaw.client.
+# The local model endpoint accepts exactly ONE concurrent execution; parallel
+# launches fail with "Failed to get response from the AI model" (see
+# .github/copilot-instructions.md, "Execution Constraints", directives 2026-11-13 and 2026-11-15).
+# Arrays here APPEND to the defaults in <install-path>/customize.toml.
+
+[workflow]
+
+persistent_facts = [
+  "Concurrency limit (hard): at most one model execution in flight at any moment — subagents, review lenses, research assistants, and several blocking calls awaited together all count. Never fan out, never launch a batch before handling a result, never background or detach a model call. Where a step says to run things in parallel or 'launch every X before handling any result', treat that capability as unavailable: do each one yourself, inline in this session, completing it fully before starting the next. Skip the no-subagent branch that HALTs and asks the human to run prompts in separate sessions — do that work yourself on this thread instead, one item at a time. Launch no subagents at all unless the user explicitly asks for one, and even then never more than one at a time.",
+]
+
+activation_steps_append = [
+  "Apply the concurrency limit from persistent_facts for this whole run before starting step 01: plan sequential, inline execution and spawn no parallel or backgrounded model work.",
+]
