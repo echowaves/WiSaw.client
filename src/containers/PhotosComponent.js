@@ -416,7 +416,9 @@ const PhotosComponent = function () {
   const adopted = Boolean(
     skeleton &&
     skeletonMatchesPath(skeleton, location.pathname) &&
-    internalState.currPhoto?.photo?.id == photoId &&
+    // Case-insensitive like captureDetailSkeleton: the seed record carries the lower-cased id,
+    // the route param keeps whatever case the URL had.
+    String(internalState.currPhoto?.photo?.id ?? '').toLowerCase() === String(photoId ?? '').toLowerCase() &&
     (skeleton.kind === 'videos') === (internalState.currPhoto?.photo?.video === true)
   )
 
@@ -444,6 +446,24 @@ const PhotosComponent = function () {
       }
     }
   }, [adopted, skeleton, internalState.currPhoto?.photo?.video])
+
+  // Adopted photo: below the breakpoint the shell's swap script demoted the edge node to the
+  // thumbnail, and while adopted React renders no <img> that could upgrade. When the input gate
+  // opens, put the original on the painted node — the adopted twin of the src swap the
+  // client-rendered path does on its single <img>. Above the breakpoint the gate starts open and
+  // the node already carries this exact URL, so the write is a no-op there.
+  useEffect(() => {
+    if (!adopted || !skeleton) {
+      return
+    }
+    const photo = internalState.currPhoto?.photo
+    if (!paintFullMedia || !photo || photo.video === true || !photo.imgUrl) {
+      return
+    }
+    if (skeleton.mediaNode.getAttribute('src') !== photo.imgUrl) {
+      skeleton.mediaNode.setAttribute('src', photo.imgUrl)
+    }
+  }, [adopted, skeleton, paintFullMedia, internalState.currPhoto?.photo])
 
   // Hand #root back to React once the skeleton stops describing what is on screen: either the
   // route moved off it (first prev/next navigation) or this page stopped adopting it (a record

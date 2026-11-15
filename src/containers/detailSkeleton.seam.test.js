@@ -36,6 +36,7 @@ const detailSkeleton = await import('../utils/detailSkeleton')
 
 // A real UUID: detailSkeleton only adopts skeletons for strict /photos|videos/<uuid> routes.
 const PHOTO_ID = '29461ee8-34dd-4c2b-848f-c16d766713e8'
+const OTHER_PHOTO_ID = '7c1f9a52-0b34-4e6a-9d21-5f8e3c6a1b40'
 const mediaUrl = `https://img.wisaw.com/${PHOTO_ID}.webp`
 const thumbUrl = `https://img.wisaw.com/${PHOTO_ID}-thumb.webp`
 
@@ -114,6 +115,7 @@ describe('detail skeleton seam (portal adoption)', () => {
     detailSkeleton.__resetDetailSkeletonForTests()
     document.body.innerHTML = ''
     window.history.pushState({}, '', '/')
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 })
   })
 
   it('keeps the server-painted media node alive through first commit and hydration', async () => {
@@ -281,5 +283,66 @@ describe('detail skeleton seam (portal adoption)', () => {
     await waitFor(() => {
       expect(document.querySelector('.loading-spinner')).not.toBeNull()
     })
+  })
+
+  it('keeps adoption on a route whose id is upper-cased', async () => {
+    // captureDetailSkeleton matches ids case-insensitively; the seed and adopted checks must not
+    // reject the very skeleton that was just adopted, or an uppercase URL adopts and then hands
+    // off, destroying its own painted LCP node.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
+
+    buildSkeletonDom()
+    detailSkeleton.__resetDetailSkeletonForTests()
+    window.history.pushState({}, '', `/photos/${PHOTO_ID.toUpperCase()}`)
+    expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
+
+    const refs = { mediaNode: document.querySelector('[data-wisaw-media]') }
+    render(<App />, { container: document.getElementById('wisaw-app') })
+    await flush()
+
+    expect(document.querySelector('#wisaw-app .App').classList.contains('App--adopted')).toBe(true)
+    expect(document.querySelector('[data-wisaw-media]')).toBe(refs.mediaNode)
+  })
+
+  it('upgrades the adopted edge node to full resolution when the paint gate opens', async () => {
+    // Below the breakpoint the shell's swap script has left the thumbnail on the painted node and
+    // the adopted path renders no <img> of its own — the upgrade must re-point that very node.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+
+    const { mediaNode } = bootWithSkeleton()
+    await screen.findByText('test header')
+    expect(mediaNode.getAttribute('src')).toBe(thumbUrl)
+
+    act(() => {
+      window.dispatchEvent(new window.Event('pointerdown'))
+    })
+    await flush()
+
+    expect(mediaNode.getAttribute('src')).toBe(mediaUrl)
+    expect(document.querySelector('[data-wisaw-media]')).toBe(mediaNode)
+  })
+
+  it('hands #root back on the first navigation away from the adopted route', async () => {
+    // The once-per-session handoff: prev/next must clear the static frame exactly, leave no React
+    // portal behind in #root, and take the shell out of adopted mode.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([{ id: 'c1', comment: 'seam comment' }]) } }
+
+    const { mediaNode, belowSlot } = bootWithSkeleton()
+    await screen.findByText('seam comment')
+    expect(belowSlot.childElementCount).toBeGreaterThan(0)
+
+    act(() => {
+      window.history.pushState({}, '', `/photos/${OTHER_PHOTO_ID}`)
+      window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }))
+    })
+    await flush()
+
+    const root = document.getElementById('root')
+    expect(root.childElementCount).toBe(0)
+    expect(mediaNode.isConnected).toBe(false)
+    const wrapper = document.querySelector('#wisaw-app .App')
+    expect(wrapper.classList.contains('App--adopted')).toBe(false)
+    expect(wrapper.childElementCount).toBeGreaterThan(0)
   })
 })

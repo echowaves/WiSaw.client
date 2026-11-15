@@ -129,7 +129,10 @@ export const skeletonMatchesPath = function (skeleton, pathname) {
  * construction. Unknown fields (duration, capture date) stay absent.
  */
 export const skeletonSeededPhoto = function (photoId, kind) {
-  if (!captured || String(captured.photoId) !== String(photoId ?? '')) {
+  // captured.photoId is stored lower-cased; the route param can arrive in any case, and capture
+  // already matched it case-insensitively — a strict compare here would reject the very skeleton
+  // capture just adopted and hand #root back, destroying the painted node on uppercase URLs.
+  if (!captured || captured.photoId !== String(photoId ?? '').toLowerCase()) {
     return null
   }
   if (kind != null && captured.kind !== kind) {
