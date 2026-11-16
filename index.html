@@ -207,6 +207,7 @@
       goal is to capture shots spontaneously, with minimal preparation—just point and shoot. As photographers, we often
       worry too much about getting everything perfect, and in doing so, we miss great opportunities.</h2>
   </div>
+  <div id="wisaw-app"></div>
 
   <!--
     LCP bootstrap (2 of 2): point the media Lambda@Edge already injected at those bytes.
@@ -234,24 +235,11 @@
         var root = document.getElementById('root')
         if (!root) { return }
 
-        // The injected media element is the only place the natural size lives before any GraphQL
-        // answer arrives. Copy it onto the plan so React's first commit can paint this exact box
-        // instead of a skeleton while getPhotoAllCurr round-trips - that round trip is what used to
-        // push LCP past 5 s on mobile. Absent or non-numeric attributes stay off the plan, and the
-        // component then falls back to the skeleton rather than guessing an aspect ratio.
+        // The media element the injector wrote is what the browser paints first. All this script
+        // does is point it at the thumb bytes when the route wants them - React adopts the node
+        // itself (data-wisaw-media, see src/utils/detailSkeleton.js), so nothing needs to be
+        // copied onto the plan for the app anymore.
         var media = root.querySelectorAll('img[src], video[poster]')
-        for (var i = 0; i < media.length; i++) {
-          if (!media[i].hasAttribute('width') || !media[i].hasAttribute('height')) { continue }
-          var width = parseInt(media[i].getAttribute('width'), 10)
-          var height = parseInt(media[i].getAttribute('height'), 10)
-          if (!(width > 0) || !(height > 0)) { continue }
-          plan.width = width
-          plan.height = height
-          if (media[i].tagName === 'VIDEO') {
-            plan.videoSrc = media[i].getAttribute('src') || ''
-          }
-          break
-        }
 
         if (!plan.useThumb) { return }
 

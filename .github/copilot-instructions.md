@@ -140,6 +140,17 @@ src/
 - `npm run lint` — `eslint src --ext .js`
 - `npm run lint:fix` — auto-fix lint issues
 
+## Execution Constraints
+
+- **Do not launch subagents at all.** The local model endpoint serves exactly 1 concurrent
+  execution on the session's active model, and subagent launches either queue behind it or fail.
+  Execute every step — including bmad-build/bmad-review lens reviews, exploration, and
+  verification — directly on the main thread, sequentially. (User directives 2026-11-13 and
+  2026-11-15; parallel lenses failed, then a subagent launch errored with "The requested model is
+  not supported".) Subagents may be used only if the user explicitly asks for one.
+- **Subagents must run on the session's active model** — never pass a `model` override to any
+  agent or tool that picks a different one.
+
 ## Key Guidelines for AI
 
 1. **JavaScript only** — do not convert files to TypeScript

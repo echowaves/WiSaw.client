@@ -170,7 +170,6 @@ my-app/
   node_modules/
   package.json
   public/
-    index.html
     favicon.ico
   src/
     App.css
@@ -183,7 +182,7 @@ my-app/
 
 For the project to build, **these files must exist with exact filenames**:
 
-* `public/index.html` is the page template;
+* `index.html` (project root) is the Vite page template;
 * `src/index.js` is the JavaScript entry point.
 
 You can delete or rename the other files.
@@ -191,7 +190,7 @@ You can delete or rename the other files.
 You may create subdirectories inside `src`. For faster rebuilds, only files inside `src` are processed by Webpack.<br>
 You need to **put any JS and CSS files inside `src`**, otherwise Webpack won’t see them.
 
-Only files inside `public` can be used from `public/index.html`.<br>
+Files inside `public` are copied to the build output as-is and referenced by absolute path.<br>
 Read instructions below for using assets from JavaScript and HTML.
 
 You can, however, create more top-level directories.<br>
@@ -942,18 +941,7 @@ When you compile the app with `npm run build`, the minification step will strip 
 
 ### Referencing Environment Variables in the HTML
 
->Note: this feature is available with `react-scripts@0.9.0` and higher.
-
-You can also access the environment variables starting with `REACT_APP_` in the `public/index.html`. For example:
-
-```html
-<title>%REACT_APP_WEBSITE_NAME%</title>
-```
-
-Note that the caveats from the above section apply:
-
-* Apart from a few built-in variables (`NODE_ENV` and `PUBLIC_URL`), variable names must start with `REACT_APP_` to work.
-* The environment variables are injected at build time. If you need to inject them at runtime, [follow this approach instead](#generating-dynamic-meta-tags-on-the-server).
+Vite substitutes `%MODE%`, `%BASE_URL%`, and any `VITE_`-prefixed environment variable in `index.html` (e.g. `%VITE_WEBSITE_NAME%`). Any other value must be read from JavaScript via `import.meta.env`.
 
 ### Adding Temporary Environment Variables In Your Shell
 
