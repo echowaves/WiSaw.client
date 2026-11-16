@@ -36,10 +36,14 @@
 
     img { max-width: 100%; height: auto }
 
-    /* Roughly the .content-container column so the edge-injected markup does not sit full-bleed.
-       Scoped to what Lambda@Edge injects and deliberately never applied to #root itself: no
-       stylesheet in this app styles #root, so a rule there would outlive hydration and cap the
-       hydrated page's width (and pad its full-bleed sticky header) on every route. */
+    /* Roughly the .content-container column so edge-injected flat markup does not sit full-bleed.
+       These guard the static routes (/about, /contact, /terms...) and any cached pre-skeleton flat
+       body whose h1/p/nav/img are direct children of #root - NOT the nested detail skeleton, whose
+       nodes live under .wsk/.wsk-main and bring their own scoped style. Do not delete them: they
+       are those pages' only first-frame layout; do not extend them to the skeleton either. Still
+       deliberately never applied to #root itself: no stylesheet in this app styles #root, so a rule
+       there would outlive hydration and cap the hydrated page's width (and pad its full-bleed
+       sticky header) on every route. */
     #root > h1, #root > p, #root > nav {
       max-width: 1100px;
       margin: 0 auto 1em;
