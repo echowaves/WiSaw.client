@@ -118,6 +118,48 @@ const flush = async () => {
   })
 }
 
+// An edge build that publishes no media URLs: the node is painted and adoptable, but the client can
+// seed nothing from it, so adoption stays unknown until the record answers.
+const stripPublishedUrls = () => {
+  const media = document.querySelector('[data-wisaw-media]')
+  media.removeAttribute('data-wisaw-src')
+  media.removeAttribute('data-wisaw-thumb')
+}
+
+// The video twin of buildSkeletonDom, mirroring the same edge markup for /videos/<id>.
+const buildVideoSkeletonDom = () => {
+  document.body.innerHTML = `
+    <div id='root'>
+      <div class='wsk'>
+        <div class='wsk-slot-header' data-wisaw-slot='header'></div>
+        <div class='wsk-main'>
+          <div class='wsk-box' style='aspect-ratio:1920/1080;--wsk-cap:700px'>
+            <video class='wsk-media' data-wisaw-media data-wisaw-id='${PHOTO_ID}' poster='${thumbUrl}'
+                   data-wisaw-src='${thumbUrl}' data-wisaw-thumb='${thumbUrl}'
+                   width='1920' height='1080' preload='none' controls
+                   src='https://img.wisaw.com/${PHOTO_ID}.mp4'></video>
+          </div>
+          <h1>Harbour at dusk</h1>
+          <div class='wsk-slot-below' data-wisaw-slot='below'></div>
+        </div>
+      </div>
+    </div>
+    <div id='wisaw-app'></div>
+  `
+}
+
+const bootWithVideoSkeleton = () => {
+  detailSkeleton.__resetDetailSkeletonForTests()
+  buildVideoSkeletonDom()
+  window.history.pushState({}, '', `/videos/${PHOTO_ID}`)
+
+  const captured = detailSkeleton.captureDetailSkeleton()
+  expect(captured).not.toBeNull()
+
+  render(<App />, { container: document.getElementById('wisaw-app') })
+  return { mediaNode: document.querySelector('[data-wisaw-media]') }
+}
+
 describe('detail skeleton seam (portal adoption)', () => {
   beforeEach(() => {
     api.pages = null
@@ -425,7 +467,190 @@ describe('detail skeleton seam (portal adoption)', () => {
     expect(captured.navContainer.parentElement).toBe(captured.mediaBox)
     expect(captured.navContainer.childElementCount).toBe(0)
   })
+
+  it('keeps the painted node when an edge publishes no URLs and never hands off on absence', async () => {
+    // The regression this pins: with no published attributes the client can seed nothing, so the
+    // first commit had no record to contradict - clearing #root there destroyed the painted LCP
+    // node before anything could replace it. Absence of a record must never be a handoff.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
+
+    detailSkeleton.__resetDetailSkeletonForTests()
+    buildSkeletonDom()
+    stripPublishedUrls()
+    window.history.pushState({}, '', `/photos/${PHOTO_ID}`)
+    expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
+    const mediaNode = document.querySelector('[data-wisaw-media]')
+    render(<App />, { container: document.getElementById('wisaw-app') })
+
+    // First commit: no seed, so the reserved client frame renders - but over the untouched paint.
+    expect(document.querySelector('[data-wisaw-media]')).toBe(mediaNode)
+    expect(document.getElementById('root').contains(mediaNode)).toBe(true)
+
+    await flush() // the record arrives and agrees: adoption continues, the node never moves
+
+    expect(detailSkeleton.getDetailSkeleton()).not.toBeNull()
+    expect(document.querySelector('[data-wisaw-media]')).toBe(mediaNode)
+    expect(document.getElementById('root').contains(mediaNode)).toBe(true)
+  })
+
+  it('reverts a failed full-resolution swap on the adopted node to its thumbnail', async () => {
+    // The edge's own onerror marks the media box broken (hiding the media via CSS). When the
+    // original React published is the object that 404s, the client must put the thumb back on the
+    // same node and keep that verdict off it - otherwise the visitor stares at an empty box forever.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 })
+
+    const { mediaNode } = bootWithSkeleton()
+    await screen.findByText('test header')
+
+    act(() => {
+      window.dispatchEvent(new window.Event('pointerdown'))
+    })
+    await flush()
+    expect(mediaNode.getAttribute('src')).toBe(mediaUrl)
+
+    // The edge's inline marker is present so the interception is real, not incidental: a capture
+    // listener on the media box runs before any target-phase handler, whatever the registration
+    // order, and stops the event from ever reaching it.
+    mediaNode.setAttribute('onerror', "this.parentNode&&(this.parentNode.className+=' wsk-box--broken')")
+    act(() => {
+      mediaNode.dispatchEvent(new window.Event('error', { bubbles: false }))
+    })
+
+    expect(mediaNode.getAttribute('src')).toBe(thumbUrl)
+    expect(mediaNode.parentElement.classList.contains('wsk-box--broken')).toBe(false)
+    expect(document.querySelector('[data-wisaw-media]')).toBe(mediaNode)
+
+    // A second failure — the thumb itself, an object we never chose to publish — is left to the
+    // edge's own rule, and the thumbnail stays put: no rewrite loop.
+    act(() => {
+      mediaNode.dispatchEvent(new window.Event('error', { bubbles: false }))
+    })
+    expect(mediaNode.getAttribute('src')).toBe(thumbUrl)
+    expect(mediaNode.parentElement.classList.contains('wsk-box--broken')).toBe(true)
+  })
+
+  it('follows native play/pause on the adopted video without a React-initiated load', async () => {
+    // The edge node carries its own controls: pressing play bypasses React, so the overlay must
+    // track the element's real state. A React-initiated load() would also reset playback that was
+    // started through those very controls.
+    const videoRecord = currRecord([])
+    videoRecord.photo.video = true
+    videoRecord.photo.videoUrl = `https://img.wisaw.com/${PHOTO_ID}.mp4`
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: videoRecord } }
+
+    const { mediaNode } = bootWithVideoSkeleton()
+    // jsdom implements none of the media surface: give the node just enough of it to observe what
+    // React does to it, and to tell a mirrored native pause apart from a React-driven stop.
+    let playing = false
+    let position = 0
+    Object.defineProperty(mediaNode, 'paused', { configurable: true, get: () => !playing })
+    Object.defineProperty(mediaNode, 'currentTime', {
+      configurable: true,
+      get: () => position,
+      set: (value) => { position = value }
+    })
+    mediaNode.load = vi.fn()
+    mediaNode.play = vi.fn(() => {
+      playing = true
+      return Promise.resolve()
+    })
+    mediaNode.pause = vi.fn(() => { playing = false })
+
+    await screen.findByRole('button', { name: 'Play video' })
+    expect(mediaNode.hasAttribute('playsinline')).toBe(true)
+
+    act(() => {
+      playing = true
+      mediaNode.currentTime = 42
+      mediaNode.dispatchEvent(new window.Event('play'))
+    })
+    expect(screen.queryByRole('button', { name: 'Play video' })).toBeNull()
+    // Playing via the node's own controls must not be reset by React reaching for load().
+    expect(mediaNode.load).not.toHaveBeenCalled()
+
+    act(() => {
+      playing = false
+      mediaNode.dispatchEvent(new window.Event('pause'))
+    })
+    expect(await screen.findByRole('button', { name: 'Play video' })).not.toBeNull()
+    // Mirroring a native pause must not rewind the visitor's position or drop readiness — a source
+    // that will not fire loadeddata again would leave the spinner stuck over the next play.
+    expect(mediaNode.currentTime).toBe(42)
+    expect(mediaNode.pause).not.toHaveBeenCalled()
+  })
+
+  it('gives the portalled header its sticky travel back', async () => {
+    // A sticky element cannot escape its containing block: inside the edge's fixed 72px slot the
+    // header would unpin almost immediately. display:contents on the slot makes .wsk the
+    // containing block again, and the inline style must not survive the handoff.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
+
+    const { headerSlot } = bootWithSkeleton()
+    await screen.findByText('test header')
+    expect(headerSlot.style.display).toBe('contents')
+
+    act(() => {
+      window.history.pushState({}, '', `/photos/${OTHER_PHOTO_ID}`)
+      window.dispatchEvent(new window.PopStateEvent('popstate', { state: {} }))
+    })
+    await flush()
+
+    // Handoff drops the inline style; only edge CSS remains, which never sets display here.
+    expect(headerSlot.style.display).toBe('')
+  })
+
+  it.each([
+    ['an id that differs from the route', (dom) => {
+      dom.querySelector('[data-wisaw-media]').setAttribute('data-wisaw-id', OTHER_PHOTO_ID)
+    }],
+    ['non-numeric published dimensions', (dom) => {
+      const media = dom.querySelector('[data-wisaw-media]')
+      media.setAttribute('width', '0')
+      media.setAttribute('height', 'auto')
+    }],
+    ['a <video> node with no src', (dom) => {
+      const media = dom.querySelector('[data-wisaw-media]')
+      if (media.tagName === 'VIDEO') {
+        media.removeAttribute('src')
+      } else {
+        replaceWithSrclessVideo(media)
+      }
+    }],
+    ['a skeleton missing the below slot', (dom) => {
+      dom.querySelector("[data-wisaw-slot='below']").remove()
+    }]
+  ])('still renders the full client page when capture declines because of %s', async (_label, corrupt) => {
+    // A declined capture must stay reachable and idempotent: index.js clears #root and the app
+    // renders exactly as it did before adoption existed - no crash, nothing left half-adopted.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([{ id: 'c1', comment: 'client-rendered comment' }]) } }
+
+    detailSkeleton.__resetDetailSkeletonForTests()
+    buildSkeletonDom()
+    corrupt(document)
+    window.history.pushState({}, '', `/photos/${PHOTO_ID}`)
+
+    expect(detailSkeleton.captureDetailSkeleton()).toBeNull()
+    document.getElementById('root').innerHTML = '' // what index.js does when nothing was captured
+
+    render(<App />, { container: document.getElementById('wisaw-app') })
+    await flush()
+
+    expect(await screen.findByText('client-rendered comment')).not.toBeNull()
+    expect(document.querySelector('#wisaw-app .PhotosComponent')).not.toBeNull()
+    expect(document.querySelector('#wisaw-app .App').classList.contains('App--adopted')).toBe(false)
+  })
 })
+
+// Fixture helper for the declined-capture table: swap the img for a src-less video.
+function replaceWithSrclessVideo (media) {
+  const video = document.createElement('video')
+  for (const attribute of media.attributes) {
+    video.setAttribute(attribute.name, attribute.value)
+  }
+  video.removeAttribute('src')
+  media.replaceWith(video)
+}
 
 // What the first paint is built from. The URLs come off the edge-published attributes, so this also
 // pins the fallback that matters: an edge that publishes none must not be guessed at.

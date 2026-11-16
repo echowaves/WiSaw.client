@@ -398,12 +398,14 @@ const PhotosComponent = function () {
           })
         }
       }
-    } else {
+    } else if (videoRef.current && !videoRef.current.paused) {
+      // Stopping the player is React's call: rewind and let the next play re-report readiness. When
+      // `showVideoPlayer` only went false because the adopted node was paused through its own
+      // controls, resetting here would throw away the visitor's position — and clearing readiness
+      // for a source that will not fire `loadeddata` again would leave the spinner over playback.
       setVideoReady(false)
-      if (videoRef.current) {
-        videoRef.current.pause()
-        videoRef.current.currentTime = 0
-      }
+      videoRef.current.pause()
+      videoRef.current.currentTime = 0
     }
   }, [showVideoPlayer])
 
@@ -428,6 +430,12 @@ const PhotosComponent = function () {
     }
     const node = skeleton.mediaNode
     videoRef.current = node
+    // iOS plays inline only when told to; the edge owns this markup and older builds publish without
+    // it, so set the attribute defensively (the client-rendered path carries playsInline in JSX).
+    // Written as an attribute because that is what the platform reads at playback time.
+    if (!node.hasAttribute('playsinline')) {
+      node.setAttribute('playsinline', '')
+    }
     const onLoadedData = () => {
       setVideoReady(true)
       setVideoError(null)
@@ -436,11 +444,20 @@ const PhotosComponent = function () {
       setVideoReady(false)
       setVideoError('This video is unavailable right now.')
     }
+    // The edge node carries its own native controls: a visitor pressing play or pause bypasses
+    // React entirely, so the overlay must follow the element's real state or it would sit over a
+    // playing video. No React-initiated load() here — playback belongs to the node's own controls.
+    const onPlay = () => setShowVideoPlayer(true)
+    const onPause = () => setShowVideoPlayer(false)
     node.addEventListener('loadeddata', onLoadedData)
     node.addEventListener('error', onError)
+    node.addEventListener('play', onPlay)
+    node.addEventListener('pause', onPause)
     return () => {
       node.removeEventListener('loadeddata', onLoadedData)
       node.removeEventListener('error', onError)
+      node.removeEventListener('play', onPlay)
+      node.removeEventListener('pause', onPause)
       if (videoRef.current === node) {
         videoRef.current = null
       }
@@ -460,25 +477,49 @@ const PhotosComponent = function () {
     if (!paintFullMedia || !photo || photo.video === true || !photo.imgUrl) {
       return
     }
-    if (skeleton.mediaNode.getAttribute('src') !== photo.imgUrl) {
-      skeleton.mediaNode.setAttribute('src', photo.imgUrl)
+    const node = skeleton.mediaNode
+    if (node.getAttribute('src') !== photo.imgUrl) {
+      // This failure is ours to repair: the object that 404s is the original we are publishing, not
+      // one the edge chose. Intercept it on the media box in the capture phase — which runs before
+      // the edge's inline `onerror` regardless of registration order, and works even though error
+      // events do not bubble — put the thumbnail back on the same node, and stop that marker from
+      // firing: `.wsk-box--broken .wsk-media { visibility:hidden }` would hide a picture the
+      // visitor can still see. A failure of anything else (the thumb itself, an object we never
+      // pointed at) is left to the edge handler, which reserves the geometry and hides nothing.
+      const box = node.parentElement
+      const onSwapError = (event) => {
+        if (event.target !== node || node.getAttribute('src') !== photo.imgUrl || !photo.thumbUrl) {
+          return
+        }
+        event.stopPropagation()
+        node.setAttribute('src', photo.thumbUrl)
+      }
+      box?.addEventListener('error', onSwapError, true)
+      // The box may already be marked broken by an object the edge painted and we are replacing;
+      // that verdict does not describe the source this write installs.
+      box?.classList.remove('wsk-box--broken')
+      node.setAttribute('src', photo.imgUrl)
+      return () => { box?.removeEventListener('error', onSwapError, true) }
     }
   }, [adopted, skeleton, paintFullMedia, internalState.currPhoto?.photo])
 
-  // Hand #root back to React once the skeleton stops describing what is on screen: either the
-  // route moved off it (first prev/next navigation) or this page stopped adopting it (a record
-  // whose kind disagrees with the edge's - e.g. a video id under /photos/ - would otherwise leave
-  // the static frame and the full React page stacked). AppShell clears on route change too; both
-  // calls are idempotent.
+  // Hand #root back to React only on evidence that the skeleton does not describe this page: the
+  // route moved off it (first prev/next navigation), or the loaded record positively contradicts
+  // it (wrong id, wrong kind - e.g. a video id under /photos/ - which would otherwise stack the
+  // React page over the static frame). `!adopted` alone must never clear: while the record is
+  // still in flight - every cold deep link on an edge that publishes no media URLs - adoption is
+  // merely unknown, and clearing there destroys the painted LCP node before anything can replace it.
+  // AppShell clears on route change too; both calls are idempotent.
   useEffect(() => {
     if (!skeleton) {
       return
     }
     const onSkeletonPage = skeletonMatchesPath(skeleton, location.pathname)
-    if (!onSkeletonPage || !adopted) {
+    const recordKnown = Boolean(internalState.currPhoto?.photo?.id)
+    if (!onSkeletonPage || (recordKnown && !adopted)) {
       clearDetailSkeleton()
     }
-  }, [skeleton, location.pathname, adopted])
+  }, [skeleton, location.pathname, adopted, internalState.currPhoto])
 
   useEffect(() => {
     const handleResize = () => {
@@ -499,10 +540,17 @@ const PhotosComponent = function () {
     setImageLoaded(true)
   }
 
-  const handleImageError = () => {
+  const handleImageError = (event) => {
     console.log('Image failed to load, falling back to thumbnail only')
-    // On error, just keep the thumbnail visible by setting imageLoaded to true
-    // This prevents infinite loading states
+    // The single media node carries the original below-deck until the paint gate swaps it, so an
+    // error here means a source that should have been visible. Revert this very node to the
+    // thumbnail (direct DOM write - React will re-render the same thumb src and skip the img),
+    // then fade it in; if the thumb fails too this is a no-op and stays crash-free as before.
+    const node = event?.target
+    const fallback = internalState.currPhoto?.photo?.thumbUrl
+    if (node && fallback && node.getAttribute('src') !== fallback) {
+      node.setAttribute('src', fallback)
+    }
     setImageLoaded(true)
   }
 

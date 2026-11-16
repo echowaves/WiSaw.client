@@ -211,6 +211,21 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
     }
   }, [location.pathname, skeleton])
 
+  // Sticky travel for the portalled Header: while adopted it lives inside the edge's fixed-height
+  // header slot, and a sticky element cannot escape its containing block - pinned once at the
+  // slot's top, it would scroll away after ~72px instead of travelling the page. display:contents
+  // drops the slot's own box (its reserved height stays painted until the handoff clear) so the
+  // header's containing block becomes the tall .wsk and it keeps its travel. Cleared with the
+  // inline style on handoff; the edge never styles this slot's display, so nothing else competes.
+  useEffect(() => {
+    if (!adopted || !skeleton) {
+      return undefined
+    }
+    const headerSlot = skeleton.headerSlot
+    headerSlot.style.display = 'contents'
+    return () => { headerSlot.style.display = '' }
+  }, [adopted, skeleton])
+
   // The .App wrapper lives here (not in App) because adopted mode must switch it to the
   // transparent modifier: #wisaw-app comes after #root in DOM order, and the default .App is an
   // opaque min-height:100vh sheet that would paint over the edge-painted page. Same reason the

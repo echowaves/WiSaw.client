@@ -305,6 +305,24 @@ describe('detail page full-resolution media budget', () => {
     expect(mainImage()).toBeNull()
   })
 
+  it('falls back to the thumbnail when a painted image source fails, never leaving a broken icon', async () => {
+    // The single media node carries the original below-deck until the paint gate swaps it, so its
+    // error path must re-point that very node at the thumb and fade it in - otherwise a 404 shows
+    // the browser's broken-image placeholder at full opacity.
+    api.pages = { 777: { getPhotoAllCurr: record('777'), getPhotoAllNext: null, getPhotoAllPrev: null } }
+    setViewport(390)
+    renderDetail(null)
+    await flush()
+
+    fireEvent.pointerDown(window)
+    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+
+    fireEvent.error(mainImage())
+
+    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
+    expect(mainImage()?.style.opacity).toBe('1')
+  })
+
   it('anchors prev/next to the content container on the client-rendered page', async () => {
     // The other half of the handoff contract: adopted mode anchors navigation to an anchor inside the
     // edge's column precisely because this is where they sit once React owns the page. Moving them
