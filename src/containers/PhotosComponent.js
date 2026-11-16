@@ -504,22 +504,24 @@ const PhotosComponent = function () {
   }, [adopted, skeleton, paintFullMedia, internalState.currPhoto?.photo])
 
   // Hand #root back to React only on evidence that the skeleton does not describe this page: the
-  // route moved off it (first prev/next navigation), or the loaded record positively contradicts
-  // it (wrong id, wrong kind - e.g. a video id under /photos/ - which would otherwise stack the
-  // React page over the static frame). `!adopted` alone must never clear: while the record is
-  // still in flight - every cold deep link on an edge that publishes no media URLs - adoption is
-  // merely unknown, and clearing there destroys the painted LCP node before anything can replace it.
-  // AppShell clears on route change too; both calls are idempotent.
+  // route moved off it (first prev/next navigation), or the record settled to something else — a
+  // wrong id, a wrong kind (e.g. a video id under /photos/), or no record at all, which would put
+  // the NoMatch page under a fully painted picture. `!adopted` alone must never clear: while the
+  // record is still in flight — every cold deep link on an edge that publishes no media URLs —
+  // adoption is merely unknown, and clearing there destroys the painted LCP node before anything
+  // can replace it. AppShell clears on route change too; both calls are idempotent.
   useEffect(() => {
     if (!skeleton) {
       return
     }
     const onSkeletonPage = skeletonMatchesPath(skeleton, location.pathname)
-    const recordKnown = Boolean(internalState.currPhoto?.photo?.id)
-    if (!onSkeletonPage || (recordKnown && !adopted)) {
+    // Settled, not populated: a query that answers "no such photo" is as much a contradiction as a
+    // wrong id or kind, and the static frame must not stay up behind the NoMatch page that follows.
+    const recordSettled = internalState.currReady === true
+    if (!onSkeletonPage || (recordSettled && !adopted)) {
       clearDetailSkeleton()
     }
-  }, [skeleton, location.pathname, adopted, internalState.currPhoto])
+  }, [skeleton, location.pathname, adopted, internalState.currPhoto, internalState.currReady])
 
   useEffect(() => {
     const handleResize = () => {

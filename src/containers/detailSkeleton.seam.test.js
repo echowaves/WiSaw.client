@@ -493,6 +493,27 @@ describe('detail skeleton seam (portal adoption)', () => {
     expect(document.getElementById('root').contains(mediaNode)).toBe(true)
   })
 
+  it('hands #root back when the settled record is empty, leaving no static frame behind', async () => {
+    // "No such photo" is a contradiction like a wrong id is: without it the NoMatch page renders
+    // under a fully painted picture — a photo and its own 404 on one page.
+    api.pages = { [PHOTO_ID]: { getPhotoAllCurr: null } }
+
+    detailSkeleton.__resetDetailSkeletonForTests()
+    buildSkeletonDom()
+    stripPublishedUrls() // no seed, so nothing is painted from the record before it answers
+    window.history.pushState({}, '', `/photos/${PHOTO_ID}`)
+    expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
+    const mediaNode = document.querySelector('[data-wisaw-media]')
+    render(<App />, { container: document.getElementById('wisaw-app') })
+
+    await flush() // the query answers: nothing here
+
+    expect(detailSkeleton.getDetailSkeleton()).toBeNull()
+    expect(document.getElementById('root').innerHTML).toBe('')
+    expect(document.contains(mediaNode)).toBe(false)
+    expect(document.querySelector('#wisaw-app .PhotosComponent')).not.toBeNull()
+  })
+
   it('reverts a failed full-resolution swap on the adopted node to its thumbnail', async () => {
     // The edge's own onerror marks the media box broken (hiding the media via CSS). When the
     // original React published is the object that 404s, the client must put the thumb back on the

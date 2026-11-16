@@ -3,14 +3,14 @@ title: 'Adopted detail page: fix the regressions the edge-skeleton review surfac
 type: 'bugfix'
 ticket: ''
 created: '2026-11-15'
-status: 'in-progress'
+status: 'built'
 baseline_revision: '0884af3269cc5b1728d5fa62d70fa9594975b01c'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context:
   - '`_bmad-output/initiative-mobile-core-web-vitals/deferred-work.md`'
@@ -90,11 +90,23 @@ context:
 - **`playsinline`** is written as an attribute (not the IDL property) because that is what iOS reads at playback time and it is observable in tests; skipped when the edge already published it.
 - **Client-rendered image error**: reverts the failing node's `src` to `photo.thumbUrl` by direct DOM write, then fades in. React's next render compares its own previous prop (`imgUrl`) with the same value and writes nothing, so the fallback survives a re-render. Known bound: if an effect dep changes after a revert, the swap effect republishes the original once more and reverts again — one wasted request per page view, self-correcting; left un-latched rather than shipping an untested guard.
 - **Header sticky** (`App.js`): `display:contents` on the captured slot while adopted, with an inline-style reset in the effect cleanup so nothing survives the handoff. jsdom paints nothing, so this is pinned structurally (inline style present while adopted, empty after handoff), not visually — the ~1 px reserve question stays a G2/field-measurement item per the resolved decision.
+- **Settled, not populated** (review fix): the handoff gate reads `internalState.currReady === true`, not "the record has an id". A query that answers with nothing is a contradiction like a wrong id is — gating on the id left the static frame standing behind the `NoMatch` page.
 - Lint: `npx eslint` on all four touched files is clean; `npm run lint` still reports 17 pre-existing problems in `About.js`, `Contact.js`, `Home.js`, `NoMatch.js`, `SearchComponent.js`, `Terms.js`, `setupTests.js` — untouched by this change and left alone.
 
 ## Plan Change Log
 
 ## Review Triage Log
+
+Review run 2026-11-15, `review: quick`, `lenses_ran: [quick]`. The Quick lens was executed on the main thread rather than as a subagent, per this repo's standing execution constraint (`copilot-instructions.md`: single-concurrency model endpoint; subagent launches prohibited — a prior launch errored and was interrupted). The lens read the plan, its `context:` file, `CLAUDE.md`, and the staged diff at `$TMPDIR/g1-diff-1794792522/g1.diff`, then followed callers into `PhotosComponent.js` render branches.
+
+| Finding | Verdict | Route | Evidence |
+|---|---|---|---|
+| Handoff gate keyed on "record has an id" leaves the static frame up when the query settles empty, so `<NoMatch/>` renders under a fully painted photo (one page shows a picture and its own 404) | high | patch (applied) | `paintCurrentPhoto` sets `currReady: true` with no photo on a null/failed answer (`PhotosComponent.js:789-795`) and the render branch at :1391 then emits `NoMatch`; the id-based gate never cleared because `currPhoto` stayed null. Fixed by gating on `internalState.currReady === true`; new pin `hands #root back when the settled record is empty...` fails with the id-based gate (verified by reverting the condition) and passes with the fix |
+| `display:contents` on the header slot could hide the portalled header's links from assistive tech in older WebKit, where a `display:contents` element took its descendants with it | maybe-false | defer | Cannot be settled in jsdom or by reading either repo — needs a tab-order/AT check on Safari (and an iOS WebView) against a deployed adopted page. If real it is medium: the header's nav and menu become unreachable on cold deep links, the highest-traffic detail entry |
+| Acceptance criterion "when the visitor scrolls, then the header stays pinned" is only pinned structurally (inline style present while adopted, cleared after handoff); jsdom computes no layout, so sticky travel itself is unverified | low | rejected | Real limitation, but the fix is a manual browser check or a plan edit, not a code correction; recorded as a manual check below and in `## Verification` |
+| Direct DOM write in `handleImageError` leaves React's virtual `src` (`imgUrl`) out of sync with the node (thumb) | low | rejected | The desync is what makes the fallback survive a re-render: React diffs its previous prop against the same value and writes nothing. Only reachable on a failed image, where the resulting state is the intended one; a latch would add state for no user-visible gain |
+| After a revert, a later change to the swap effect's deps republishes the broken original once, then reverts again | low | rejected | Bounded at one wasted request per page view (deps are record identity and the paint gate, both stable after the revert) and self-correcting; guarding it means new state this plan cannot test |
+| Second-error assertion couples the seam test to edge CSS by asserting `wsk-box--broken` appears | false | — | The marker in that fixture is the inline `onerror` the test itself sets on the node (`detailSkeleton.seam.test.js`, the `setAttribute('onerror', …)` line); nothing in the assertion depends on `WiSaw.cdk` styling. First-error behaviour (class absent) is the cross-repo contract, and it is pinned by `src/detailGeometry.contract.test.js` |
 
 ## Design Notes
 
@@ -115,3 +127,7 @@ if (!onSkeletonPage || (recordKnown && !adopted)) clearDetailSkeleton()
 - `npm test` -- expected: full suite green (157 tests before this change)
 - `npm run lint` -- expected: no new warnings
 - `git stash && npx vitest run src/containers/detailSkeleton.seam.test.js; git stash pop` -- expected: the new pins fail without the fix
+**Manual checks (jsdom paints nothing):**
+- Safari desktop + iOS on a deployed `/photos/<id>` deep link, adopted state (no prev/next yet): tab through the page and confirm the header's menu and links are reachable — this is the one decision `display:contents` cannot settle in tests.
+- Same page at desktop width: scroll and confirm the header stays pinned with no content flashing under it.
+- Adopted video: play and pause with the element's own native controls; the overlay follows, playback is not rewound on pause, and no spinner appears over live playback.
