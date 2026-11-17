@@ -146,12 +146,15 @@ describe('static route copy comes from the shared table', () => {
     expect(result.unmanaged).toEqual([])
   })
 
-  it('names the searched term in the search head and keeps it out of the index', async () => {
+  it('names the searched term in the search head and keeps it indexable', async () => {
     const result = await hydrate(<RouteSeo pathname='/search' term='new york' />, '/search/new%20york')
 
     expect(result.title).toBe('WiSaw: searching for new york')
+    // An indexed page needs a snippet that says more than the heading, and both come from the table.
+    expect(result.value('meta[name=description]')).toBe(staticHead('/search', 'new york').description)
+    expect(result.value('meta[name=description]')).not.toBe(result.title)
     expect(result.value('link[rel=canonical]')).toBe('https://wisaw.com/search/new%20york')
-    expect(result.value('meta[name=robots]')).toBe(ROBOTS_NOINDEX)
+    expect(result.value('meta[name=robots]')).toBe(ROBOTS_INDEX)
   })
 
   it('publishes nothing for a route the edge does not own', async () => {
@@ -181,15 +184,15 @@ describe('static pages render the shared head', () => {
     expect(result.duplicates).toEqual([])
   })
 
-  it('/search/:term publishes the term and stays out of the index', async () => {
+  it('/search/:term publishes the term and is open to the index', async () => {
     // react-router hands the page the decoded term, so this also pins that the canonical is
     // re-encoded before it reaches a crawler.
     const result = await hydrate(<SearchComponent />, '/search/new%20york', '/search/:searchString')
 
     expect(result.title).toBe('WiSaw: searching for new york')
-    expect(result.value('meta[name=description]')).toBe('WiSaw: searching for new york')
+    expect(result.value('meta[name=description]')).toBe(staticHead('/search', 'new york').description)
     expect(result.value('link[rel=canonical]')).toBe('https://wisaw.com/search/new%20york')
-    expect(result.value('meta[name=robots]')).toBe(ROBOTS_NOINDEX)
+    expect(result.value('meta[name=robots]')).toBe(ROBOTS_INDEX)
     expect(result.duplicates).toEqual([])
   })
 })
