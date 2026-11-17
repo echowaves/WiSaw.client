@@ -59,3 +59,7 @@ Appended findings that are not this change's problem to solve. Do not rewrite ex
 - source_plan: `_bmad-output/initiative-mobile-core-web-vitals/plan-index-search-routes.md`
   summary: Search tag pages are indexable now but absent from `sitemap.xml`, so their discovery rests entirely on the up-to-eight `/search/<label>` links prerendered into media bodies; consider a curated tag sitemap if indexation stalls.
   evidence: Unverified as a problem — `scripts/generateSiteMap` output contains no static routes, and Google treats sitemap inclusion as a weak canonical signal. Would be settled by a Search Console page report showing how many `/search/*` URLs are discovered versus indexed after the injector redeploy.
+
+## Deferred from: code review (2026-11-16, plan-detail-nav-shared-template)
+
+- No CDK test asserts a handler's served **description** text. `tests/edge-detail-truthfulness.js` exercises `photo.js`/`video.js` but never inspects the description paragraph, so the `FALLBACK_DESCRIPTIONS` wiring added in cdk `c88ed04` is pinned only by source-text and key-existence assertions in `tests/detail-template-copy-once.js:185-195`. Settling it means stubbing the sidecar read there and asserting the served body contains the fallback sentence for a record with no published wording.

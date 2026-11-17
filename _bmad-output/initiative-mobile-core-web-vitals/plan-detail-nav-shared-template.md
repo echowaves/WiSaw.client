@@ -139,3 +139,34 @@ Lenses ran inline (no subagents — repo execution constraint). Verdicts rendere
 - `curl -s https://wisaw.com/photos/<id>` before/after deploy: body bytes for the frame unchanged.
 
 - Open Questions resolved 2026-11-16 (all three answers are now Intent decisions 1–3 above); the section was deleted rather than left answered.
+
+## Code Review
+
+### 2026-11-16 — formal code review (`bmad-code-review`, thorough lenses run inline; target: both branches)
+
+Diffs reviewed: WiSaw.client `43f4cf5..HEAD` + WiSaw.cdk `1edaa794..HEAD` (23 files, +2066/−736). 0 `decision-needed`, 3 `patch` (all applied in client `036a3a8`), 1 `defer`, 8 rejected.
+
+- [x] [Review][Patch] Painted frame wore wording published for the other media type — `seoText.kind` was never compared with the route's kind, while the edge drops mismatched sidecar text and derives instead (`WiSaw.cdk …/seoText.js:34`). A record whose kind changed after publishing would caption a photo "…unaltered video on WiSaw". Gated title/description/imageCaption on kind, kept tag links ungated (they are not kind-dependent at the edge). [src/containers/PhotosComponent.js:99] — applied in 036a3a8, pinned by two new cls tests.
+- [x] [Review][Patch] In-place text refresh wrote `alt` onto a `<video>` element, an attribute the served page never carries, so a navigated video frame diverged from the edge's markup in DevTools. Guarded to `IMG`. [src/utils/detailSkeleton.js:225] — applied in 036a3a8, pinned by a new paint test.
+- [x] [Review][Patch] Sidecar reader returned `imageTitle` and `altText` that nothing renders (og:image:title is edge-only; alt text is composed from the record's comment by the caller). Dead fields removed. [src/utils/detailSeoText.js:37] — applied in 036a3a8.
+- [x] [Review][Defer] No CDK test asserts a handler's served description text, so `photo.js`/`video.js` fallback wiring rests on source-text pins (`tests/detail-template-copy-once.js:185-195`) rather than an end-to-end body check. [WiSaw.cdk/tests/edge-detail-truthfulness.js] — deferred: pre-existing harness shape (that suite stubs the media probe but never inspects the description); the moved value's existence and both keys are pinned, so the specific regression this change could introduce is caught.
+
+**Rejected**
+- Hung sidecar request keeps its in-flight promise until the browser times out, blocking a retry for that id — low: bounded by the platform timeout and self-healing; closing it needs a timer branch racing the fetch.
+- Prefetching two neighbours' sidecars costs requests for photos never opened — low: deliberate warm-up, deduped and cached per id.
+- Tab title shows `wisaw photo <id>` briefly before published wording lands — low: transient, and better than keeping the previous photo's title.
+- `ensureFrameStyle` strips `<style>` with a first/last anchored regex — false: the string is authored in this same module and its shape is pinned by tests on both sides.
+- A sidecar that answers 200 with no usable title is cached as "no wording" for the page's life — low: a reload heals it, and the edge caches absence for ten minutes too.
+- `getActiveDetailFrame` could churn identity and loop `useSyncExternalStore` — false: it returns the stored record (`captured || painted`), stable between calls.
+- Producers might disagree on `kind` ('photos'/'videos' vs 'photo'/'video') — false: paint maps `entityLabel` to the path-segment form at `src/utils/detailSkeleton.js:249`, matching capture and both consumers.
+- De-scoping the frame stylesheet from `#root` could restyle other routes — false: all 10 rules are `.wsk`-scoped (checked programmatically); only `@media` wrappers are bare.
+
+### 2026-11-16 — second formal pass (`bmad-code-review`, thorough lenses inline; target includes client `036a3a8`)
+
+✅ Clean review — all layers passed. 0 `decision-needed`, 0 `patch`, 0 `defer`, 4 rejected. Traced this pass: video event wiring on a painted `<video>` (listeners attach to `frame.mediaNode` under the same adopted gate as an edge node, `src/containers/PhotosComponent.js:468-506`, with `playsinline` set defensively); full-res src upgrade and its capture-phase error repair on the painted node (`:513-545`); `AppShell`'s widened portal condition and why a stale frame cannot linger (a cold prev/next clears it in the same commit because `!skeletonMatchesPath`, while a cached record repaints in the same effect pass, `src/App.js:205`); media-failure parity — the shared template emits `onerror` itself (`src/utils/detailTemplate.generated.js:139`), so both paths hide a broken box identically; `clearDetailSkeleton` handles both producers and always notifies.
+
+**Rejected**
+- A malformed paint (template missing `[data-wisaw-media]` or a slot) leaves `#root` emptied without notifying, because the wipe at `src/utils/detailSkeleton.js:258` precedes the two failure returns at `:265`/`:269` — low: unreachable by construction, both producers render the same pinned template and its shape is asserted on both sides; closing it means rollback branches for a state nothing can produce.
+- `skeletonSeededPhoto` seeds only from an edge-captured frame, so a client-painted photo cannot pre-seed a later visit — low: pre-existing scope of that helper (it exists to reuse the edge's published URLs at boot), and a painted record is already in React state by then.
+- `clearDetailSkeleton` leaves `<style id="wisaw-frame-style">` in `<head>` after leaving the route — low: no `.wsk` element exists outside a detail page, and re-inserting per navigation is what the single-copy rule exists to avoid.
+- Double space in two effect dependency arrays (`src/containers/PhotosComponent.js:506`, `:541`) — cosmetic; matches pre-existing formatting in this file and no lint rule flags it.
