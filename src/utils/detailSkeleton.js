@@ -222,7 +222,7 @@ function refreshFrameText (host, parts) {
   // The picture's description is wording too — the edge writes it once, at serve time. Comments
   // arrive after a client paint, so this is where they become the alt text.
   const altText = String(parts.altText ?? '')
-  if (altText && media.getAttribute('alt') !== altText) {
+  if (altText && media.tagName === 'IMG' && media.getAttribute('alt') !== altText) {
     media.setAttribute('alt', altText)
   }
   return true

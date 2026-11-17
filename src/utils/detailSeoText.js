@@ -34,14 +34,14 @@ export const parseSidecar = (body) => {
   const labels = Array.isArray(body.labels)
     ? body.labels.filter((label) => typeof label === 'string' && label.trim()).map((label) => label.trim())
     : []
+  // Only what a page renders. `seo.imageTitle` describes og:image:title, which only the edge ever
+  // publishes, and the media's alt text is composed from the record's own comment by the caller.
   return {
     title,
     kind: seo.kind === 'video' ? 'video' : 'photo',
     description: typeof seo.description === 'string' ? seo.description.trim() : '',
-    imageTitle: typeof seo.imageTitle === 'string' ? seo.imageTitle.trim() : '',
     imageCaption: typeof seo.imageCaption === 'string' ? seo.imageCaption.trim() : '',
-    labels,
-    altText: (typeof body.caption === 'string' && body.caption.trim()) || labels.join(', ')
+    labels
   }
 }
 

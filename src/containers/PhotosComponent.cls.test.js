@@ -23,6 +23,8 @@ const PhotosComponent = (await import('./PhotosComponent')).default
 const detailSkeleton = await import('../utils/detailSkeleton')
 const seoText = await import('../utils/detailSeoText')
 const { COLD_BELOW_MEDIA_RESERVE } = await import('../utils/detailLayout')
+const { detailFrameParts } = await import('./PhotosComponent')
+const { FALLBACK_DESCRIPTIONS } = await import('../utils/detailTemplate.generated')
 
 // No published wording sidecar: the frame falls back to the record, which is what these
 // layout tests are about.
@@ -205,6 +207,33 @@ describe('detail page empty states (CLS guards)', () => {
 
     const { FALLBACK_DESCRIPTIONS } = await import('../utils/detailTemplate.generated')
     expect(document.querySelector('#root .wsk-main > p').textContent).toBe(FALLBACK_DESCRIPTIONS.photo)
+  })
+})
+
+describe('the published wording a painted frame may wear', () => {
+  const photo = { id: PHOTO_ID, video: false }
+  const wording = {
+    title: 'Drone shot — video · WiSaw',
+    kind: 'video',
+    description: 'Aerial over the harbour at dusk.',
+    imageCaption: 'from above',
+    labels: ['Harbour']
+  }
+
+  it('refuses wording written for the other media type, as the edge does', () => {
+    const parts = detailFrameParts({ photo, currPhoto: {}, seoText: wording })
+
+    expect(parts.title).toBe(`wisaw photo ${PHOTO_ID}`)
+    expect(parts.description).toBe(FALLBACK_DESCRIPTIONS.photo)
+    // Tag links are not kind-dependent at the edge either, so they still come from the sidecar.
+    expect(parts.labels).toEqual(['Harbour'])
+  })
+
+  it('wears wording published for this kind', () => {
+    const parts = detailFrameParts({ photo, currPhoto: {}, seoText: { ...wording, kind: 'photo' } })
+
+    expect(parts.title).toBe(wording.title)
+    expect(parts.description).toBe(wording.description)
   })
 })
 

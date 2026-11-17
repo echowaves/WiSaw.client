@@ -97,14 +97,19 @@ const frameLabelsFor = (currPhoto, seoText) => {
  * own labels and first comment standing in when a sidecar has not been generated.
  */
 export const detailFrameParts = ({ photo, currPhoto, seoText, paintFullMedia = true }) => {
-  const labels = frameLabelsFor(currPhoto, seoText)
   const entityLabel = photo.video === true ? 'video' : 'photo'
-  const title = seoText?.title || fallbackDetailTitle(photo)
+  // One record is one media type. The edge will not dress a page in wording published for the other
+  // one (WiSaw.cdk …/seoText.js drops it and derives instead), so this page drops it too — otherwise
+  // a record whose kind changed after publishing would describe itself as the wrong thing. Tag links
+  // are not kind-dependent there, so they keep coming from the sidecar either way.
+  const words = seoText && seoText.kind === entityLabel ? seoText : null
+  const labels = frameLabelsFor(currPhoto, seoText)
+  const title = words?.title || fallbackDetailTitle(photo)
   // The edge always has a sentence to put under the heading: when no wording has been published for
   // a record yet, it serves this one. It lives in the shared template module, so a page painted here
   // cannot be the only one of the two without a paragraph.
-  const description = seoText?.description || FALLBACK_DESCRIPTIONS[entityLabel]
-  const caption = seoText?.imageCaption || currPhoto?.comments?.[0]?.comment || ''
+  const description = words?.description || FALLBACK_DESCRIPTIONS[entityLabel]
+  const caption = words?.imageCaption || currPhoto?.comments?.[0]?.comment || ''
   return {
     entityLabel,
     mediaId: photo.id,

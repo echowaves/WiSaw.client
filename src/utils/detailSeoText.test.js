@@ -48,10 +48,8 @@ describe('detail wording sidecar reader', () => {
       title: 'Heron at dawn — photo · WiSaw',
       kind: 'photo',
       description: 'A heron standing in shallow water at sunrise.',
-      imageTitle: 'Heron at dawn',
       imageCaption: 'A heron at dawn',
-      labels: ['Heron', 'Wetland'],
-      altText: 'A heron at dawn'
+      labels: ['Heron', 'Wetland']
     })
   })
 
@@ -97,10 +95,12 @@ describe('detail wording sidecar reader', () => {
     expect(parseSidecar('not an object')).toBeNull()
   })
 
-  it('falls back to the labels for alt text when there is no caption', () => {
+  it('yields no description when the sidecar has none', () => {
+    // Alt text is not this module's business: the caller composes it from the record's own comment
+    // through the shared template's altTextFor, exactly as the edge does.
     const parsed = parseSidecar({ labels: ['Heron'], seo: { title: 'T' } })
-    expect(parsed.altText).toBe('Heron')
     expect(parsed.description).toBe('')
+    expect(parsed.labels).toEqual(['Heron'])
   })
 
   it('prefetches neighbours without rejecting on failure', async () => {

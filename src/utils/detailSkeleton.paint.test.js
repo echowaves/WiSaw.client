@@ -58,6 +58,22 @@ describe('client-side paint of the shared detail template', () => {
     expect(painted.innerHTML).toBe(expected.innerHTML)
   })
 
+  it('does not give a video an alt attribute the served page never has', () => {
+    const videoParts = partsFor(ID, {
+      entityLabel: 'video',
+      videoUrl: `https://img.wisaw.com/${ID}.mp4`,
+      altText: 'A heron at dawn'
+    })
+    paintClientDetailFrame(videoParts)
+    // Same photo and kind: this repaint goes through the in-place text refresh, which is where an
+    // unguarded alt write would land on a <video> element the template never describes that way.
+    paintClientDetailFrame({ ...videoParts, altText: 'wording that arrived later' })
+
+    const media = document.querySelector('#root [data-wisaw-media]')
+    expect(media.tagName).toBe('VIDEO')
+    expect(media.hasAttribute('alt')).toBe(false)
+  })
+
   it('hands back every node the enhancement layer portals into', () => {
     const frame = paintClientDetailFrame(partsFor(ID))
 
