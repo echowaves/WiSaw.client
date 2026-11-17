@@ -48,9 +48,9 @@ export const STATIC_ROUTES = {
     "description": "Search several thousand unaltered photos and videos taken with phone cameras by what appears in them.",
     "canonical": "https://wisaw.com/search",
     "image": "https://wisaw.com/android-chrome-512x512.png",
-    "noindex": true,
+    "noindex": false,
     "titleTerm": "WiSaw: searching for {term}",
-    "descriptionTerm": "WiSaw: searching for {term}",
+    "descriptionTerm": "Browse {term} photos and videos on WiSaw: free, unaltered shots taken with phone cameras, searchable by what appears in them.",
     "canonicalTerm": "https://wisaw.com/search/{term}"
   }
 }
