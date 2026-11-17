@@ -3,7 +3,7 @@ title: 'Detail prev/next must render the edge page template, from one shared tem
 type: 'bugfix'
 ticket: ''
 created: '2026-11-16'
-status: 'in-progress'
+status: 'built'
 baseline_revision: '43f4cf50288eefed0dd0664a62502b1466772e72' # WiSaw.client main; WiSaw.cdk main was 1edaa794163a82567de31f160da48bd642018ead
 route: 'full'
 route_source: 'auto'
@@ -91,9 +91,40 @@ context: ['.github/copilot-instructions.md']
 
 ## Implementation Notes
 
+- **Commits.** `WiSaw.cdk` branch `fix/detail-nav-shared-template`: `a07ee61` (single authored template, publisher, CORS for `img.wisaw.com/*.json`, drift + golden-body tests), `c88ed04` (fallback description moved into the shared template). `WiSaw.client` same branch: `74747f4` (client paint of the shared template, card deleted, sidecar wording reader), `7d4bf72` (fallback description + read-again policy). No pushes; both branch off the recorded baselines.
+- **One source, two producers.** `WiSaw.cdk/lambda-fns/lambdas/injectMetaTagsLambdaFunction/skeleton.js` is the only authored markup. `scripts/publish-detail-template.js` renders it into `src/utils/detailTemplate.generated.js`; `src/utils/detailSkeleton.js` paints that string into `#root` for any detail render the edge did not paint, and its enhancement slots are identical to the captured ones, so nav buttons, overlays, below-media content and footer behave the same on both paths. Drift is pinned on both sides (`WiSaw.cdk/tests/detail-template-copy-once.js`, `src/detailGeometry.contract.test.js`).
+- **Wording.** Headings/descriptions/tag rows come from the published sidecar `https://img.wisaw.com/<id>.json` (`src/utils/detailSeoText.js`), the same file Lambda@Edge reads; neighbours are prefetched with their media. Only an HTTP 404 is cached as "no published wording" — matching `sidecar.js`, which refuses to cache a throttled or server-side answer.
+- **Known divergences, both data-availability rather than template:**
+  - Media geometry: the edge reads width/height off the sidecar, this app off the GraphQL record. For a record whose sidecar does not exist yet, a direct load reserves the unknown-dimension cap while a navigated page uses the true ratio. The client has the better datum; degrading it to match would be worse for every visitor who can see the layout.
+  - Until `WiSaw.cdk` is deployed with the `*.json` CORS behaviour, a navigated page reads no sidecar and shows the edge's own fallback heading plus `FALLBACK_DESCRIPTIONS` copy — same template, less copy. Nothing here needs a coordinated release.
+- **Test results.** Client `npx vitest run`: 187 passing. Client `npm run lint`: unchanged pre-existing findings only (`src/setupTests.js` indent errors; warnings in `About/Contact/Home/NoMatch/SearchComponent/Terms`). `npm run build && postbuild`: green, `seo.template.test.js` 12 passing. CDK `npm test`: 424 passing, 6 failing — the same 6 at baseline (bucket-env `edge-detail-truthfulness.js` and 5 timezone-dependent `season-key.js` cases), confirmed against a clean worktree of `1edaa794`.
+- Implementation and every review lens run sequentially on this thread: `.github/copilot-instructions.md` Execution Constraints forbid subagent launches against the single-concurrency model endpoint (same handling as plan `plan-static-detail-pages-portal-app`).
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+Lenses ran inline (no subagents — repo execution constraint). Verdicts rendered by this session against the code at the cited location; every finding from every lens has a row.
+
+| # | Finding (lens) | Location | Verdict | Evidence / action |
+|---|---|---|---|---|
+| 1 | Navigated page paints no description where the served page shows the fallback sentence (blind-hunter, edge-case claims) | `PhotosComponent.js` `detailFrameParts` | medium | `photo.js:54`/`video.js:59` used `seo.metaDescription \|\| FALLBACK_DESCRIPTION`, and `descriptionMarkup('')` emits an empty `<p>` — a fresh photo showed nothing under the heading after prev/next. Fixed: `FALLBACK_DESCRIPTIONS` authored in `skeleton.js`, read by both handlers (`c88ed04`) and by the client paint (`7d4bf72`), pinned by a new cls test. |
+| 2 | Sidecar read caches `null` on any failure, so prev→next→prev keeps a page without its wording (blind-hunter, verification-gap) | `detailSeoText.js` `fetchSeoText` | medium | `sidecar.js:62-74` deliberately caches only NoSuchKey/NotFound for exactly this reason. Fixed: only an HTTP 404 or a readable body counts as answered; tests pin 404-cached, 503-retried, network-retried. |
+| 3 | Dead exports left behind by the card deletion (`COLD_BELOW_MEDIA_RESERVE`, `PLACEHOLDER_LABEL_COUNT`, `getPlaceholderDimensions`) (blind-hunter) | `detailLayout.js` | false | My grep was truncated by `head`; the loading placeholder still uses all three (`PhotosComponent.js` placeholder + `RecognitionLabelsSkeleton`). Nothing dead. |
+| 4 | Stylesheet inserted twice per paint (`withStyle: true` plus `ensureFrameStyle`) (blind-hunter) | `detailSkeleton.js` | false | Both client-paint paths already pass `withStyle: false`; the single `<style id="wisaw-frame-style">` lives in `<head>` and is asserted to stay singular. |
+| 5 | Client does not re-run `normaliseLabels` on sidecar labels (blind-hunter) | `detailSeoText.js` `parseSidecar` | low — rejected | The writer stores `pickLabels([photo])`, already deduped and capped at 8, and `labelLinksMarkup` slices to `FRAME_LABEL_LIMIT` itself. Closing the legacy-object case would mean copying `LABEL_LIMIT` into the client. |
+| 6 | Media geometry from the record vs the sidecar (blind-hunter) | `detailFrameParts` | low — rejected | Real only for a record with no published sidecar, where the edge is the degraded party. Fix = ignore known dimensions on the client; worse for every visitor who can see it. Recorded as a known divergence above. |
+| 7 | Deleted card's `onerror` placeholder swap is gone (edge-case deletion check) | `PhotosComponent.js` (removed) | low — rejected | The shared template carries no `onerror`, so the served page never had one; parity is the intent, and re-adding a client-only handler reintroduces the divergence. |
+| 8 | `document.title` write can contradict an edge-authored title (blind-hunter) | `PhotosComponent.js` title effect | false | The effect returns early when the adopted frame's source is `edge`; on client-painted frames there is no served title to contradict. |
+| 9 | Blank page if `paintClientDetailFrame` finds no `#root` (blind-hunter, edge-case) | `PhotosComponent.js` render tail | low — rejected | `index.html` ships `<div id="root">` and `AppShell` mounts there; reaching it needs a shell with no mount point. |
+| 10 | `refreshFrameText` could write into detached slots (edge-case) | `detailSkeleton.js` | false | The slots live inside the painted `#root` subtree, which React never renders into on this route (component returns `null` and portals only). |
+| 11 | Neighbour prefetch re-runs whenever wording arrives (blind-hunter) | `PhotosComponent.js` | false | Prefetch is its own effect keyed on `[nextPhoto, prevPhoto]`. |
+| 12 | Stale frame for a route whose record is still in flight (edge-case) | `PhotosComponent.js` paint effect | false | Handled by the `!skeletonMatchesPath(frame, location.pathname)` clear branch, covered by a cls test. |
+| 13 | Wrong-kind adoption (video under `/photos/`) left half-enhanced (edge-case) | `detailSkeleton.js` / paint effect | false | Guard is on `frame.source === 'edge'` plus id/kind equality, so a kind mismatch falls through and is replaced by a correct client frame; pinned in `detailSkeleton.seam.test.js`. |
+| 14 | No test would fail if the description fallback regressed (verification-gap) | cls test | medium → patch | Added `says the served page's fallback sentence while no wording is published`, asserting `.wsk-main > p` equals `FALLBACK_DESCRIPTIONS.photo` with fetch stubbed to 404. |
+| 15 | No test pinned the retry-vs-cache policy (verification-gap) | `detailSeoText.test.js` | medium → patch | Three assertions added: 404 cached once, 503 asked again, rejected network call asked again. |
+| 16 | Cross-repo byte-drift pin silently skips when `../WiSaw.cdk` is not checked out (verification-gap) | `detailGeometry.contract.test.js:33` | low — rejected | The invariant is pinned authoritatively in the CDK suite, which reads the committed client copy (`TARGET`) and fails there on any drift; making the client test hard-fail would break `npm test` for a client-only checkout. |
+| 17 | Intent alignment (descriptive) | — | n/a | Readings: (a) one look for direct load and navigation — implemented at markup level, pinned by byte-equality against `detailFrameHtml`; (b) one authored file — implemented via `skeleton.js` + publisher + drift pins both sides. Residual divergence is data availability (#6, sidecar wording), not template or surface: the intent's expectations live in the DOM, and the tests that exercise them run the real DOM. |
 
 ## Verification
 
@@ -107,9 +138,4 @@ context: ['.github/copilot-instructions.md']
 - Dev server: open `/photos/<id>`, click next/prev — the page keeps the edge look; compare with a hard reload of the same id (same classes and geometry in DevTools).
 - `curl -s https://wisaw.com/photos/<id>` before/after deploy: body bytes for the frame unchanged.
 
-## Implementation Notes
-
 - Open Questions resolved 2026-11-16 (all three answers are now Intent decisions 1–3 above); the section was deleted rather than left answered.
-- Implementation and every review lens run sequentially on this thread: `.github/copilot-instructions.md` Execution Constraints forbid subagent launches against the single-concurrency model endpoint (same handling as plan `plan-static-detail-pages-portal-app`).
-- Branches: a matching feature branch in each repo, committed locally, no push.
-- Deploy-order dependency: the client's sidecar wording degrades to the edge's own `wisaw <kind> <id>` fallback until `WiSaw.cdk` is deployed with the CORS policy, so nothing here requires a coordinated release; the frame itself does not depend on it.
