@@ -1,15 +1,15 @@
 # Team override for the BMad code-review workflow — WiSaw.client.
-# The local model endpoint accepts exactly ONE concurrent execution; parallel
-# launches fail with "Failed to get response from the AI model" (see
-# .github/copilot-instructions.md, "Execution Constraints", directives 2026-11-13 and 2026-11-15).
+# The local model endpoint allows at most THREE concurrent executions on the
+# session's active model (see .github/copilot-instructions.md,
+# "Execution Constraints", directive updated 2026-11-16).
 # Arrays here APPEND to the defaults in <install-path>/customize.toml.
 
 [workflow]
 
 persistent_facts = [
-  "Concurrency limit (hard): at most one model execution in flight at any moment — subagents, review lenses, research assistants, and several blocking calls awaited together all count. Never fan out, never launch a batch before handling a result, never background or detach a model call. Where a step says to run things in parallel or 'launch every X before handling any result', treat that capability as unavailable: do each one yourself, inline in this session, completing it fully before starting the next. Skip the no-subagent branch that HALTs and asks the human to run prompts in separate sessions — do that work yourself on this thread instead, one item at a time. Launch no subagents at all unless the user explicitly asks for one, and even then never more than one at a time.",
+  "Concurrency limit (hard): at most 3 model executions in flight at any moment — subagents, review lenses, and research assistants all count toward this cap. Never exceed 3 concurrent model calls; when a step names more than 3 items (e.g. every lens of a thorough review), run them in batches of at most 3 and handle each batch's results completely before launching the next. When the work is small enough that fan-out costs more coordination than it saves, or when fewer than 3 independent items exist, do it inline on this thread instead. Do not background or detach a model call beyond the cap, and never leave a launched execution unharvested.",
 ]
 
 activation_steps_append = [
-  "Apply the concurrency limit from persistent_facts for this whole run before starting step 01: plan sequential, inline execution and spawn no parallel or backgrounded model work.",
+  "Apply the concurrency limit from persistent_facts for this whole run before starting step 01: plan at most 3 concurrent model executions, batch anything larger, and collect every launched result before finishing.",
 ]

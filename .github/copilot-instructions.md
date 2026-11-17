@@ -142,12 +142,14 @@ src/
 
 ## Execution Constraints
 
-- **Do not launch subagents at all.** The local model endpoint serves exactly 1 concurrent
-  execution on the session's active model, and subagent launches either queue behind it or fail.
-  Execute every step — including bmad-build/bmad-review lens reviews, exploration, and
-  verification — directly on the main thread, sequentially. (User directives 2026-11-13 and
-  2026-11-15; parallel lenses failed, then a subagent launch errored with "The requested model is
-  not supported".) Subagents may be used only if the user explicitly asks for one.
+- **At most 3 concurrent subagent executions.** The local model endpoint serves up to 3 concurrent
+  executions on the session's active model; launches beyond that queue behind it or fail with
+  "Failed to get response from the AI model". Fan out at most 3 at a time — when a step names more
+  than 3 items (e.g. every lens of a thorough review), run them in batches of 3 and handle each
+  batch's results before starting the next. Anything smaller, cheaper to do inline, or not genuinely
+  independent stays on the main thread. Every launched execution must be harvested before the step
+  that depends on it completes. (User directive 2026-11-16, raising the earlier 1-at-a-time limit of
+  2026-11-13/2026-11-15.) Mirrored in `_bmad/custom/bmad-*.toml` `persistent_facts`.
 - **Subagents must run on the session's active model** — never pass a `model` override to any
   agent or tool that picks a different one.
 
