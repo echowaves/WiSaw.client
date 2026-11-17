@@ -49,36 +49,39 @@ export const parseSidecar = (body) => {
 export const getCachedSeoText = (photoId) => (photoId ? byId.get(photoId) || null : null)
 
 /**
- * Read (or return the cached) wording sidecar for a photo id. Never rejects:
- * a network or parse failure caches null so one bad id cannot retry-loop.
+ * Read (or return the cached) wording sidecar for a photo id. Never rejects: a page whose copy has
+ * not arrived is a page without that copy, not a broken one — the frame is already painted from the
+ * record. Only an authoritative answer is cached; see below.
  */
 export const fetchSeoText = (photoId) => {
   if (!photoId) return Promise.resolve(null)
   if (byId.has(photoId)) return Promise.resolve(byId.get(photoId))
   if (inflight.has(photoId)) return inflight.get(photoId)
 
-  // A page without fetch (or with a sidecar that 404s) is a page with no published wording, not a
-  // broken page — the frame is painted from the record and this copy is enhancement.
-  let started
-  try {
-    started = fetch(sidecarUrlFor(photoId), { headers: { Accept: 'application/json' } })
-      .then((response) => (response && response.ok ? response.json() : null))
-  } catch {
-    byId.set(photoId, null)
-    return Promise.resolve(null)
-  }
-
-  const request = started
-    .then((body) => {
-      const parsed = parseSidecar(body)
+  // Absence is an answer worth remembering: a freshly uploaded photo has no sidecar yet, and going
+  // back to it later should not re-request it. Offline, throttled, 5xx or an unreadable body are not
+  // answers — caching those would leave that photo without its published wording for the rest of the
+  // session (prev, next, prev), which is exactly the failure WiSaw.cdk's edge reader refuses to
+  // cache. An unanswered id simply asks again on the next render.
+  const request = (async () => {
+    let answered = false
+    let parsed = null
+    try {
+      const response = await fetch(sidecarUrlFor(photoId), { headers: { Accept: 'application/json' } })
+      if (response && response.status === 404) {
+        answered = true
+      } else if (response && response.ok) {
+        parsed = parseSidecar(await response.json())
+        answered = true
+      }
+    } catch {
+      // No answer at all — a page with no fetch, an offline visitor, or a blocked request.
+    }
+    if (answered) {
       byId.set(photoId, parsed)
-      return parsed
-    })
-    .catch(() => {
-      byId.set(photoId, null)
-      return null
-    })
-    .finally(() => inflight.delete(photoId))
+    }
+    return parsed
+  })().finally(() => inflight.delete(photoId))
 
   inflight.set(photoId, request)
   return request

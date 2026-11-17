@@ -195,6 +195,17 @@ describe('detail page empty states (CLS guards)', () => {
 
     expect(document.querySelector('#root [data-wisaw-media]').getAttribute('alt')).toBe('A heron at dawn')
   })
+
+  it('says the served page\'s fallback sentence while no wording is published', async () => {
+    // fetch is stubbed to 404 for this file: no sidecar, which is a real state — a photo uploaded
+    // since the last sitemap run. The edge answers that with a sentence, so a navigated page must
+    // not be the one place that shows an empty paragraph under the heading.
+    renderAt({ feedPhoto: FEED_PHOTO })
+    await waitForBox()
+
+    const { FALLBACK_DESCRIPTIONS } = await import('../utils/detailTemplate.generated')
+    expect(document.querySelector('#root .wsk-main > p').textContent).toBe(FALLBACK_DESCRIPTIONS.photo)
+  })
 })
 
 // The frame is painted by an effect after commit, so the box shows up one tick later.

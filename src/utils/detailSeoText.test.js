@@ -4,7 +4,7 @@ import { __resetSeoTextForTests, fetchSeoText, getCachedSeoText, parseSidecar, p
 
 const ID = '29461ee8-34dd-4c2b-848f-c16d766713e8'
 
-const response = (body, ok = true) => ({ ok, json: () => Promise.resolve(body) })
+const response = (body, ok = true, status = ok ? 200 : 503) => ({ ok, status, json: () => Promise.resolve(body) })
 
 const sidecar = {
   v: 1,
@@ -64,15 +64,27 @@ describe('detail wording sidecar reader', () => {
   })
 
   it('caches an absent sidecar as null instead of retrying on every render', async () => {
-    globalThis.fetch = vi.fn(() => Promise.resolve(response({}, false)))
+    // A 404 is the bucket answering: this photo has no published wording (yet).
+    globalThis.fetch = vi.fn(() => Promise.resolve(response({}, false, 404)))
     await expect(fetchSeoText(ID)).resolves.toBeNull()
     await expect(fetchSeoText(ID)).resolves.toBeNull()
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
   })
 
+  it('asks again when a read was never answered', async () => {
+    // A throttled or server-side reply proves nothing about the photo, and caching it would leave
+    // that page without its published wording for the rest of the session — prev, next, prev.
+    globalThis.fetch = vi.fn(() => Promise.resolve(response({}, false, 503)))
+    await expect(fetchSeoText(ID)).resolves.toBeNull()
+    await expect(fetchSeoText(ID)).resolves.toBeNull()
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
+  })
+
   it('survives a network failure and a missing fetch', async () => {
     globalThis.fetch = vi.fn(() => Promise.reject(new Error('offline')))
     await expect(fetchSeoText(ID)).resolves.toBeNull()
+    await expect(fetchSeoText(ID)).resolves.toBeNull()
+    expect(globalThis.fetch).toHaveBeenCalledTimes(2)
 
     __resetSeoTextForTests()
     delete globalThis.fetch

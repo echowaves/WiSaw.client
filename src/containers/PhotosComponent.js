@@ -38,7 +38,7 @@ import {
   skeletonSeededPhoto,
   subscribeDetailSkeleton
 } from '../utils/detailSkeleton'
-import { altTextFor } from '../utils/detailTemplate.generated'
+import { altTextFor, FALLBACK_DESCRIPTIONS } from '../utils/detailTemplate.generated'
 import { fetchSeoText, getCachedSeoText, prefetchSeoText } from '../utils/detailSeoText'
 
 const Footer = lazy(() => import('./Footer'))
@@ -98,11 +98,15 @@ const frameLabelsFor = (currPhoto, seoText) => {
  */
 export const detailFrameParts = ({ photo, currPhoto, seoText, paintFullMedia = true }) => {
   const labels = frameLabelsFor(currPhoto, seoText)
+  const entityLabel = photo.video === true ? 'video' : 'photo'
   const title = seoText?.title || fallbackDetailTitle(photo)
-  const description = seoText?.description || ''
+  // The edge always has a sentence to put under the heading: when no wording has been published for
+  // a record yet, it serves this one. It lives in the shared template module, so a page painted here
+  // cannot be the only one of the two without a paragraph.
+  const description = seoText?.description || FALLBACK_DESCRIPTIONS[entityLabel]
   const caption = seoText?.imageCaption || currPhoto?.comments?.[0]?.comment || ''
   return {
-    entityLabel: photo.video === true ? 'video' : 'photo',
+    entityLabel,
     mediaId: photo.id,
     // The served markup always names the full-resolution object and lets the shell's swap script
     // demote it below the breakpoint; a page built here knows the viewport already, so it asks for
