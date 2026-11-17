@@ -9,7 +9,7 @@ import ReactGA from 'react-ga4'
 import './App.css'
 import AppErrorBoundary from './containers/AppErrorBoundary'
 import { lazyWithRetry } from './utils/lazyWithRetry'
-import { clearDetailSkeleton, getDetailSkeleton, skeletonMatchesPath, subscribeDetailSkeleton } from './utils/detailSkeleton'
+import { clearDetailSkeleton, getActiveDetailFrame, isDetailPath, subscribeDetailSkeleton } from './utils/detailSkeleton'
 const Home = lazyWithRetry(() => import('./containers/Home'))
 const PhotosComponent = lazyWithRetry(() => import('./containers/PhotosComponent'))
 const SearchComponent = lazyWithRetry(() => import('./containers/SearchComponent'))
@@ -191,25 +191,27 @@ const renderLoadingFallback = () => (
   </div>
 )
 
-// Renders Header and routes. While the server-painted detail skeleton is still
-// valid for the current path, the Header is portaled into the skeleton's slot
-// so React never reconciles the LCP media node; otherwise it renders normally.
+// Renders Header and routes. While a detail-page frame is live for this route - the one Lambda@Edge
+// painted, or the one React painted after prev/next - the Header is portaled into that frame's own
+// header slot so React never reconciles its media node; otherwise it renders normally.
 const AppShell = function ({ themeMode, onThemeModeChange }) {
   const location = useLocation()
-  // Subscribed (not just read) so a handoff clear - which can come from PhotosComponent when the
-  // record kind disagrees with the edge's node - re-renders this shell out of portal mode.
-  const skeleton = useSyncExternalStore(subscribeDetailSkeleton, getDetailSkeleton)
-  const adopted = Boolean(skeleton && skeletonMatchesPath(skeleton, location.pathname))
+  // Subscribed (not just read) so a repaint or a handoff clear - either can come from PhotosComponent
+  // - re-renders this shell in or out of portal mode.
+  const frame = useSyncExternalStore(subscribeDetailSkeleton, getActiveDetailFrame)
+  // Any detail route with a live frame is portal mode, including the moment right after a prev/next
+  // click when the frame still shows the previous photo: #root holds a page either way, so the
+  // opaque .App sheet must stay out of its way and the Header belongs inside that page.
+  const adopted = Boolean(frame && isDetailPath(location.pathname))
 
-  // One-time handoff: the first navigation off the skeleton's detail route
-  // hands #root back to React (idempotent with PhotosComponent's own clear).
-  // `skeleton` is captured before the first commit, so it only ever goes object -> null
-  // (after the clear) and re-running the effect then is a no-op.
+  // Handing #root back to React: only a route that is not a detail page at all can do it. Moving
+  // between two detail pages must not - `paintClientDetailFrame` replaces the frame in one step, so
+  // prev/next never shows a blank page (idempotent with PhotosComponent's own clear).
   useLayoutEffect(() => {
-    if (skeleton && !skeletonMatchesPath(skeleton, location.pathname)) {
+    if (!isDetailPath(location.pathname)) {
       clearDetailSkeleton()
     }
-  }, [location.pathname, skeleton])
+  }, [location.pathname])
 
   // Sticky travel for the portalled Header: while adopted it lives inside the edge's fixed-height
   // header slot, and a sticky element cannot escape its containing block - pinned once at the
@@ -218,13 +220,13 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
   // header's containing block becomes the tall .wsk and it keeps its travel. Cleared with the
   // inline style on handoff; the edge never styles this slot's display, so nothing else competes.
   useEffect(() => {
-    if (!adopted || !skeleton) {
+    if (!adopted || !frame) {
       return undefined
     }
-    const headerSlot = skeleton.headerSlot
+    const headerSlot = frame.headerSlot
     headerSlot.style.display = 'contents'
     return () => { headerSlot.style.display = '' }
-  }, [adopted, skeleton])
+  }, [adopted, frame])
 
   // The .App wrapper lives here (not in App) because adopted mode must switch it to the
   // transparent modifier: #wisaw-app comes after #root in DOM order, and the default .App is an
@@ -236,7 +238,7 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
         {adopted
           ? createPortal(
             <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />,
-            skeleton.headerSlot
+            frame.headerSlot
           )
           : <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />}
         <Routes>
