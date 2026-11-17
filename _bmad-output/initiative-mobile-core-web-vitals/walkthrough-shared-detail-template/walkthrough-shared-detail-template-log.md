@@ -55,3 +55,12 @@ Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T06:58-05:
 - Result: Block 2 (Broad strokes) presented as current; narrative checkboxes updated. Tree now carries uncommitted BMad bookkeeping (plan triage, deferred-work entry, walkthrough files) — reviewer asked whether to commit it.
 - Evidence: plan `## Code Review`; narrative sections 1–2.
 - Open: Block 2 walkthrough; Blocks 3–9; branches still unpushed.
+
+## 7 — bookkeeping committed while block 2 is read
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T07:02-05:00
+
+- Action: Reviewer chose to commit the uncommitted BMad artifacts; no walkthrough move requested on block 2 yet.
+- Result: WiSaw.client `d0b756f` (docs only: plan review sections, deferred-work entry, narrative + log). Working tree clean; both branches still unpushed. Block 2 stays current and open.
+- Evidence: commit `d0b756f`.
+- Open: Blocks 2–9; push/PRs at wrap-up.
