@@ -64,3 +64,57 @@ Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T07:02-05:
 - Result: WiSaw.client `d0b756f` (docs only: plan review sections, deferred-work entry, narrative + log). Working tree clean; both branches still unpushed. Block 2 stays current and open.
 - Evidence: commit `d0b756f`.
 - Open: Blocks 2–9; push/PRs at wrap-up.
+
+## 8 — block 2 Broad strokes → ✅; block 3 presented
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T18:48-05:00
+
+- Action: Reviewer accepted the broad-strokes map with no move run on it, then was shown block 3 (template authoring, publishing, drift pins).
+- Result: Narrative updated — blocks 1–2 ✅, block 3 current. No code changes; log file left dirty pending the next docs commit.
+- Evidence: narrative sections 2–3; commits `a07ee61`/`74747f4` for the slice content.
+- Open: Blocks 3–9; branches unpushed.
+
+## 9 — block 3 template/publishing → ✅; block 4 presented
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T18:50-05:00
+
+- Action: Reviewer accepted the template/publishing slice after hearing the two judgement points (conditional cross-repo pin; golden crawler bytes). No move run.
+- Result: Narrative blocks 1–3 ✅, block 4 current; refreshed four stale line references (`utils.js` 356→295, never-repaint guard 589→598, render null 1267→1273, adopted gate 453→459) — drift from the review-pass commit.
+- Evidence: `src/detailGeometry.contract.test.js:32` skip-vs-fail; `WiSaw.cdk/tests/detail-template-copy-once.js` golden-body block.
+- Open: Blocks 4–9; branches unpushed.
+
+## 10 — block 4 seam producers → ✅; block 5 presented
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T18:53-05:00
+
+- Action: Reviewer accepted the seam slice after the two judgement points (guard keyed on `source` not route; refresh deliberately narrow). No move run.
+- Result: Narrative blocks 1–4 ✅, block 5 current. Verified `collectFrameNodes` is shared by both producers (`detailSkeleton.js:88`, `:268`) and that `captureDetailSkeleton` runs pre-mount from `src/index.js:27`.
+- Evidence: narrative section 4 bullets re-checked against source.
+- Open: Blocks 5–9; branches unpushed.
+
+## 11 — block 5 page component — `thoughts`
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T18:57-05:00
+
+- Action: Ran `thoughts` on the page-component slice with source checks rather than restating it.
+- Result: No orphaned CSS from the deleted card (`mainImage`/`thumbnailImage` absent from JS and CSS; surviving classes still used by the placeholder). Placeholder square vs template aspect-ratio box confirmed as an accepted divergence; the "cannot shift the page" comment at `PhotosComponent.js:1289` is true only because nothing else paints below it. Cold-nav header handoff verified coherent (`App.js:206`, `:220`). Nits filed: two exported-but-internal constants in `detailLayout.js`; stray space `PhotosComponent.js:1243`; double spaces at `:506`/`:545`. Block stays open.
+- Evidence: class-by-class grep of deleted card classes; `detailLayout.js:53` vs `detailTemplate.generated.js:106`.
+- Open: Block 5 acceptance; Blocks 6–9.
+
+## 12 — full restart requested: statuses cleared, pass 2 at slow pace
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T19:00-05:00
+
+- Action: Reviewer asked to resume from Block 1 and chose a full restart with a slower, question-driven pace. All narrative block marks cleared; Block 1 set current, blocks 2–9 not visited.
+- Result: Acceptances given in the first pass (blocks 1–4) are withdrawn as review state; nothing was reverted in code — commits `a07ee61`, `c88ed04`, `74747f4`, `7d4bf72`, `292f323`, `036a3a8`, `d0b756f` stand. Block 5's `thoughts` findings (entry 11) remain available and still apply.
+- Evidence: narrative header statuses; log entries 4–11 for the first pass.
+- Open: Blocks 1–9 re-walked one at a time; cosmetic nits from entry 11 still unfixed; branches unpushed.
+
+## 13 — all blocks closed by reviewer instruction
+
+Session: 75172b46-3f17-43bc-946d-58d54d69fa09 · Timestamp: 2026-11-17T20:00-05:00
+
+- Action: Reviewer asked to close every block without continuing the walkthrough. Narrative sections 1–9 all marked ✅.
+- Result: Closure is by instruction, not uniform review — read the record that way. Block 1 had `thoughts` plus two formal review passes; blocks 2–4 were accepted on a fast first pass (later withdrawn, then re-accepted here); block 5 had `thoughts` with findings still open; blocks 6–9 were never presented in detail. Nothing was verified or changed in code by this closure.
+- Evidence: log entries 4–12 for what each block actually received.
+- Open: cosmetic nits (entry 11); push of both branches and PRs; CDK CORS deploy still pending before wording parity goes live.
