@@ -281,10 +281,7 @@ const BelowMediaContent = ({ currPhoto, renderRecognitions }) => (
         ))}
       </div>
     ) : <CommentSlotSkeleton />}
-    {/* A record with no recognitions keeps the box (the slot's height is then stable) but loses its
-        glass chrome: below media only paints once it is final, so an empty panel would be permanent
-        furniture rather than a placeholder on its way to full. */}
-    <div className={parseRecognitionLabels(currPhoto.recognitions?.[0])?.length ? 'recognition-tags' : 'recognition-tags recognition-tags--slot'}>
+    <div className='recognition-tags'>
       {currPhoto.recognitions && renderRecognitions(currPhoto?.recognitions[0])}
     </div>
     <div style={{ margin: '6px', align: 'center' }} />
@@ -307,17 +304,12 @@ const PhotosComponent = function () {
 
   // currReady flips when the current record's own answer is in (or bootstrap/cache painted it);
   // requestComplete waits for the neighbours too. The LCP paint must not wait for them.
-  // detailsSettled is the below-media gate's record half: seeded and bootstrapped records carry no
-  // comments or recognitions (both synthesise empty arrays), so their enhancements are still unknown
-  // even though the media can paint. It flips true only when nothing more can arrive for this id —
-  // a fetched record painted, or its fetch settled with nothing. See BelowMediaContent's mount gate.
   const [internalState, setInternalState] = useState(() => ({
     currPhoto: bootstrappedPhoto ?? skeletonSeeded,
     nextPhoto: null,
     prevPhoto: null,
     currReady: bootstrappedPhoto != null || skeletonSeeded != null,
-    requestComplete: false,
-    detailsSettled: false
+    requestComplete: false
   }))
 
   // No display-size state: the media box is laid out by the shared detail template
@@ -325,9 +317,6 @@ const PhotosComponent = function () {
   // the record's own width/height. Two sets of numbers is what let a navigated page size its picture
   // differently from the same photo loaded directly.
   const [seoText, setSeoText] = useState(() => getCachedSeoText(photoId))
-  // The below-media gate's wording half: until this id's sidecar attempt resolves, the frame above
-  // the slot can still be re-worded (and grow), so nothing may be painted under it yet.
-  const [wordingSettled, setWordingSettled] = useState(false)
   // The original is multi-megabyte, so on phones its bytes are warmed in the background and only
   // painted once the visitor interacts - that paint would otherwise become the LCP candidate. A
   // visitor who already interacted before this lazy chunk loaded froze LCP too, and nothing else
@@ -562,16 +551,10 @@ const PhotosComponent = function () {
       return undefined
     }
     setSeoText(getCachedSeoText(photoId))
-    setWordingSettled(false)
     let alive = true
     fetchSeoText(photoId).then((text) => {
       if (alive) {
         setSeoText(text)
-        // Any outcome settles it: published copy, an authoritative absence, or a failed attempt are
-        // all final for this render — detailSeoText deliberately re-asks on a failed read, and the
-        // only thing that re-runs this effect is a photoId change, which takes the enhancement layer
-        // down with it. Settling on an *answer* instead would strand the footer offline.
-        setWordingSettled(true)
       }
     })
     return () => { alive = false }
@@ -871,13 +854,12 @@ const PhotosComponent = function () {
   const paintCurrentPhoto = useCallback((curr) => {
     if (curr == null) {
       // Failed fetch: keep any content already painted (bootstrapped or cached); only fall
-      // through to NoMatch when nothing valid is on screen. Settled either way — a record that
-      // cannot be read will not grow its comments later, so the below media may paint.
-      setInternalState((prev) => ({ ...prev, currReady: true, detailsSettled: true }))
+      // through to NoMatch when nothing valid is on screen.
+      setInternalState((prev) => ({ ...prev, currReady: true }))
       return
     }
 
-    setInternalState((prev) => ({ ...prev, currPhoto: curr, currReady: true, detailsSettled: true }))
+    setInternalState((prev) => ({ ...prev, currPhoto: curr, currReady: true }))
   }, [])
 
   const load = useCallback(({ photoId }) => {
@@ -904,8 +886,7 @@ const PhotosComponent = function () {
         nextPhoto: pageData.nextPhoto,
         prevPhoto: pageData.prevPhoto,
         currReady: true,
-        requestComplete: true,
-        detailsSettled: true
+        requestComplete: true
       }))
       preloadPhotoPage(pageData?.nextPhoto?.photo?.id)
       preloadPhotoPage(pageData?.prevPhoto?.photo?.id)
@@ -930,16 +911,13 @@ const PhotosComponent = function () {
       // its node so the first commit matches what is on screen instead of a skeleton.
       const seeded = skeletonSeededPhoto(photoId, routeKind)
 
-      // A cache entry is a complete page, so its enhancements are final; every other start paints
-      // from data that still owes comments/recognitions, and must keep the below media unpainted.
       if (cached) {
         setInternalState({
           currPhoto: cached.currPhoto,
           nextPhoto: cached.nextPhoto,
           prevPhoto: cached.prevPhoto,
           currReady: true,
-          requestComplete: true,
-          detailsSettled: true
+          requestComplete: true
         })
       } else if (bootstrapped) {
         setInternalState({
@@ -947,8 +925,7 @@ const PhotosComponent = function () {
           nextPhoto: null,
           prevPhoto: null,
           currReady: true,
-          requestComplete: false,
-          detailsSettled: false
+          requestComplete: false
         })
       } else if (seeded) {
         // The edge already painted this media before React existed: keep the same box on screen
@@ -958,8 +935,7 @@ const PhotosComponent = function () {
           nextPhoto: null,
           prevPhoto: null,
           currReady: true,
-          requestComplete: false,
-          detailsSettled: false
+          requestComplete: false
         })
       } else {
         setInternalState({
@@ -967,8 +943,7 @@ const PhotosComponent = function () {
           nextPhoto: null,
           prevPhoto: null,
           currReady: false,
-          requestComplete: false,
-          detailsSettled: false
+          requestComplete: false
         })
       }
 
@@ -1259,16 +1234,6 @@ const PhotosComponent = function () {
 
   const { currPhoto, currReady } = internalState
 
-  // Cumulative Layout Shift gate for everything under the media box. Comments and recognitions arrive
-  // after the media paints, and on a client-painted frame the published wording arrives after that
-  // and can grow the heading/description/tag row above them. Anything already painted below either
-  // growth is then pushed down — visible only when the media is short (landscape), which is why field
-  // CLS reported only those records. Reserving heights cannot win here (comment count and label
-  // wrapping are unbounded), so nothing goes into the slot until both inputs are final: the block
-  // then arrives whole, as new nodes at its final height, which the metric does not count.
-  const wordingIsFinal = wordingSettled || Boolean(adopted && frame?.source === 'edge')
-  const belowMediaIsFinal = internalState.detailsSettled === true && wordingIsFinal
-
   // Adopted mode: the server painted this exact media node into #root and React owns only a sibling
   // container. Render just the enhancement layer - nav buttons into the page column (the same box
   // <main class="content-container"> is in the client-rendered path, so they do not move at handoff),
@@ -1287,22 +1252,15 @@ const PhotosComponent = function () {
             frame.mediaBox
           )}
         </Suspense>
-        {/* One gate for the whole region, so the footer can never be painted first and then ride a
-            late-growing comment block. While it is closed the slot keeps only the template's
-            transparent 220px reserve, which moves nothing when the content lands. */}
-        {belowMediaIsFinal && (
-          <>
-            <Suspense fallback={null}>
-              {frame.belowSlot && createPortal(
-                <BelowMediaContent currPhoto={currPhoto} renderRecognitions={renderRecognitions} />,
-                frame.belowSlot
-              )}
-            </Suspense>
-            <Suspense fallback={null}>
-              {frame.belowSlot && createPortal(<Footer />, frame.belowSlot)}
-            </Suspense>
-          </>
-        )}
+        <Suspense fallback={null}>
+          {frame.belowSlot && createPortal(
+            <BelowMediaContent currPhoto={currPhoto} renderRecognitions={renderRecognitions} />,
+            frame.belowSlot
+          )}
+        </Suspense>
+        <Suspense fallback={null}>
+          {frame.belowSlot && createPortal(<Footer />, frame.belowSlot)}
+        </Suspense>
       </>
     )
   }
