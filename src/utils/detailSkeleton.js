@@ -1,24 +1,34 @@
 /**
- * One-shot capture of the detail-page skeleton that Lambda@Edge painted into #root.
+ * The detail page's frame, whoever painted it.
  *
- * The edge serves a complete static layout for /photos/<id> and /videos/<id>: reserved header,
- * the media element at its natural size inside a fixed box, heading, description, labels and a
- * reserved below-fold space, with the interactive parts marked as enhancement slots. React mounts
- * into a sibling container (see src/index.js) so it never reconciles #root - the server-painted
- * media node is the LCP candidate and any detach at first-commit time would re-date its paint to
- * JS-delivery time, which is the failure this architecture removes. Capture must therefore happen
- * before the first commit; after that the nodes are gone from React's point of view anyway, and
- * the captured references keep them alive.
+ * Two producers fill one store:
  *
- * The capture is deliberately strict: a skeleton only counts when it describes exactly the id the
- * route asked for and its media node carries numeric dimensions. Anything else (old edge still
- * cached, malformed output, non-detail route) yields null and the app renders fully client-side
- * as it always did - one honest check, no dual-format tolerance.
+ * - `captureDetailSkeleton` adopts the complete static layout Lambda@Edge served for
+ *   /photos/<id> and /videos/<id>: reserved header, the media element at its natural size inside a
+ *   fixed box, heading, description, labels and reserved below-fold space, with the interactive
+ *   parts marked as enhancement slots. React mounts into a sibling container (see src/index.js) so
+ *   it never reconciles #root - the server-painted media node is the LCP candidate and any detach at
+ *   first-commit time would re-date its paint to JS-delivery time, which is the failure this
+ *   architecture removes. Capture must therefore happen before the first commit; after that the
+ *   nodes are gone from React's point of view anyway, and the captured references keep them alive.
+*   The capture is deliberately strict: a frame only counts when it describes exactly the id the
+ *   route asked for and its media node carries numeric dimensions. Anything else (old edge still
+ *   cached, malformed output, non-detail route) yields null and the app paints the page itself.
+ *
+ * - `paintClientDetailFrame` renders the very same template - the module the edge's body is built
+ *   from, published into this repository verbatim (src/utils/detailTemplate.generated.js) - for a
+ *   detail render the edge did not paint: after prev/next, in local development, or on a stale edge
+ *   cache. It goes through the same store and hands back the same node references, so every piece
+ *   of enhancement (nav buttons, video overlays, comments, footer, Header) portals identically and
+ *   one photo cannot look like two different pages depending on how the visitor arrived.
  */
+
+import { detailFrameHtml, SKELETON_STYLE } from './detailTemplate.generated'
 
 const DETAIL_ROUTE = /^\/(photos|videos)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i
 
 let captured = null
+let painted = null
 let attempted = false
 const listeners = new Set()
 
@@ -75,66 +85,194 @@ export const captureDetailSkeleton = function () {
       return null
     }
 
-    const headerSlot = root.querySelector('[data-wisaw-slot="header"]')
-    const belowSlot = root.querySelector('[data-wisaw-slot="below"]')
-    // The enhancement layer portals into both slots; a skeleton missing either is not the format
-    // this app adopts, so it renders fully client-side instead of half-enhancing.
-    if (!headerSlot || !belowSlot) {
+    const nodes = collectFrameNodes(root, mediaNode)
+    if (!nodes) {
       return null
     }
-
-    // Media-centred overlays (play button, spinner, error alert) portal into the media's fixed box —
-    // the media's wrapper. If the media sits directly under #root there is no positioned box to
-    // overlay into, and absolute-positioned UI would anchor to the page instead of the picture: not
-    // adoptable.
-    const mediaBox = mediaNode.parentElement
-    if (!mediaBox || mediaBox === root) {
-      return null
-    }
-
-    // Nav buttons anchor to the column that holds the media box, never to the box itself: in the
-    // client-rendered path they anchor to <main class="content-container">, and any other box makes
-    // them visibly jump at the one-time handoff. Found structurally rather than by class name — the
-    // edge owns those names (WiSaw.cdk skeleton.js) and a rename must not silently break adoption.
-    // A column that is the mount point itself (media wrapped exactly once) keeps using the media box:
-    // anchoring UI to #root would be worse than the jump it avoids.
-    const column = mediaBox.parentElement && mediaBox.parentElement !== root
-      ? mediaBox.parentElement
-      : mediaBox
-    // The column is made a positioning context only when nothing already positions it:
-    // `position:relative` with no offsets cannot shift layout or create a stacking context, so this
-    // costs neither LCP nor CLS, and the guard never overwrites an edge-side sticky/relative rule.
-    const columnPosition = window.getComputedStyle(column).position
-    if (!columnPosition || columnPosition === 'static') {
-      column.style.position = 'relative'
-    }
-    // Portals append, and the column's last child is the below-fold slot — so portalling straight into
-    // the column would put prev/next after the comments and footer in DOM order, i.e. last in tab
-    // order on a keyboard tour (they are first inside <main> once the page is client-rendered). The
-    // anchor is therefore an empty out-of-flow node inserted ahead of the media box: it holds no box
-    // of its own (absolute, full column width), so nav's existing offsets resolve against exactly the
-    // column padding box they would have, and nothing about the painted layout changes.
-    const navContainer = document.createElement('div')
-    navContainer.setAttribute('data-wisaw-nav', '')
-    navContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%'
-    column.insertBefore(navContainer, column.firstChild)
 
     captured = {
+      source: 'edge',
       kind: match[1].toLowerCase(),
       photoId: match[2].toLowerCase(),
       width,
       height,
       mediaNode,
-      mediaBox,
-      navContainer,
-      headerSlot,
-      belowSlot
+      ...nodes
     }
   } catch {
     captured = null
   }
 
   return captured
+}
+
+/**
+ * The node references the enhancement layer portals into, found on a frame that is already in the
+ * DOM — the edge's copy or one this module painted. Returns null when the frame is not shaped the
+ * way the enhancement layer needs.
+ */
+function collectFrameNodes (host, mediaNode) {
+  const headerSlot = host.querySelector('[data-wisaw-slot="header"]')
+  const belowSlot = host.querySelector('[data-wisaw-slot="below"]')
+  // The enhancement layer portals into both slots; a frame missing either is not the format this app
+  // enhances, so it declines the page instead of half-enhancing it.
+  if (!headerSlot || !belowSlot) {
+    return null
+  }
+
+  // Media-centred overlays (play button, spinner, error alert) portal into the media's fixed box —
+  // the media's wrapper. If the media sits directly under the mount point there is no positioned box
+  // to overlay into, and absolute-positioned UI would anchor to the page instead of the picture: not
+  // adoptable.
+  const mediaBox = mediaNode.parentElement
+  if (!mediaBox || mediaBox === host) {
+    return null
+  }
+
+  // Nav buttons anchor to the column that holds the media box, never to the box itself: in the
+  // fully client-rendered path they anchor to <main class="content-container">, and any other box
+  // makes them visibly jump at the one-time handoff. Found structurally rather than by class name —
+  // the template owns those names (WiSaw.cdk skeleton.js) and a rename must not silently break
+  // adoption. A column that is the mount point itself (media wrapped exactly once) keeps using the
+  // media box: anchoring UI to #root would be worse than the jump it avoids.
+  const column = mediaBox.parentElement && mediaBox.parentElement !== host
+    ? mediaBox.parentElement
+    : mediaBox
+  // The column is made a positioning context only when nothing already positions it:
+  // `position:relative` with no offsets cannot shift layout or create a stacking context, so this
+  // costs neither LCP nor CLS, and the guard never overwrites a rule the template itself carries.
+  const columnPosition = window.getComputedStyle(column).position
+  if (!columnPosition || columnPosition === 'static') {
+    column.style.position = 'relative'
+  }
+  // Portals append, and the column's last child is the below-fold slot — so portalling straight into
+  // the column would put prev/next after the comments and footer in DOM order, i.e. last in tab
+  // order on a keyboard tour (they are first inside <main> once the page is client-rendered). The
+  // anchor is therefore an empty out-of-flow node inserted ahead of the media box: it holds no box
+  // of its own (absolute, full column width), so nav's existing offsets resolve against exactly the
+  // column padding box they would have, and nothing about the painted layout changes.
+  const navContainer = document.createElement('div')
+  navContainer.setAttribute('data-wisaw-nav', '')
+  navContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%'
+  column.insertBefore(navContainer, column.firstChild)
+
+  return { mediaBox, navContainer, headerSlot, belowSlot }
+}
+
+/** The frame the browser is showing for a detail route, from either producer. */
+export const getActiveDetailFrame = function () {
+  return captured || painted
+}
+
+const FRAME_STYLE_ID = 'wisaw-frame-style'
+
+// The edge ships the frame stylesheet inside the body it serves; a page React paints has never
+// seen that body, so the same string is inserted once here. It goes in <head> rather than beside the
+// frame so repainting a photo cannot churn a copy of it per navigation.
+function ensureFrameStyle (doc) {
+  if (doc.getElementById(FRAME_STYLE_ID)) {
+    return
+  }
+  const style = doc.createElement('style')
+  style.id = FRAME_STYLE_ID
+  style.textContent = SKELETON_STYLE.replace(/^<style>/, '').replace(/<\/style>$/, '')
+  doc.head.appendChild(style)
+}
+
+/**
+ * Replace the wording nodes of an already-painted frame — heading, description, tag row, home link —
+ * with what the same template builds now. Found structurally (the nodes between the media box and the
+ * below slot) rather than by class name, and the media node is never touched: it is the LCP candidate
+ * of this paint and, for a video, the element that may be mid-playback.
+ *
+ * Returns false when the live frame is not shaped as expected, in which case the caller does a full
+ * repaint instead.
+ */
+function refreshFrameText (host, parts) {
+  const media = host.querySelector('[data-wisaw-media]')
+  const box = media?.parentElement
+  const belowSlot = host.querySelector('[data-wisaw-slot="below"]')
+  if (!box || !belowSlot || box.parentElement !== belowSlot.parentElement) {
+    return false
+  }
+
+  const next = document.createElement('div')
+  next.innerHTML = detailFrameHtml({ ...parts, withStyle: false })
+  const nextBox = next.querySelector('[data-wisaw-media]')?.parentElement
+  const nextBelowSlot = next.querySelector('[data-wisaw-slot="below"]')
+  if (!nextBox || !nextBelowSlot) {
+    return false
+  }
+
+  const incoming = []
+  for (let node = nextBox.nextSibling; node && node !== nextBelowSlot; node = node.nextSibling) {
+    incoming.push(node)
+  }
+
+  let outgoing = box.nextSibling
+  while (outgoing && outgoing !== belowSlot) {
+    const nextSibling = outgoing.nextSibling
+    outgoing.remove()
+    outgoing = nextSibling
+  }
+  for (const node of incoming) {
+    belowSlot.parentElement.insertBefore(node, belowSlot)
+  }
+
+  // The picture's description is wording too — the edge writes it once, at serve time. Comments
+  // arrive after a client paint, so this is where they become the alt text.
+  const altText = String(parts.altText ?? '')
+  if (altText && media.tagName === 'IMG' && media.getAttribute('alt') !== altText) {
+    media.setAttribute('alt', altText)
+  }
+  return true
+}
+
+/**
+ * Paint the shared detail template into #root for a record the edge did not paint, and publish it
+ * through this store so the enhancement layer portals into it exactly as it does into the edge's.
+ *
+ * Replaces whatever frame is there now (the edge's copy of the previous photo, or a previous client
+ * paint) in one step, then notifies: listeners see one transition, never an empty #root between two
+ * photos. `parts` are the template's own inputs — see detailTemplate.generated.js.
+ */
+export const paintClientDetailFrame = function (parts = {}) {
+  if (typeof document === 'undefined') {
+    return null
+  }
+  const host = document.getElementById('root')
+  const photoId = String(parts.mediaId ?? '').toLowerCase()
+  if (!host || !photoId) {
+    return null
+  }
+
+  const kind = parts.entityLabel === 'video' ? 'videos' : 'photos'
+
+  // The frame for this record is already up: the wording sidecar arrived after it was painted. Put
+  // the new heading/description/tags in place and leave the media node alone — replacing it would
+  // re-decode the picture (a visible blink) and restart any video that had started playing.
+  if (painted && painted.photoId === photoId && painted.kind === kind && refreshFrameText(host, parts)) {
+    return painted
+  }
+
+  host.innerHTML = ''
+  captured = null
+  painted = null
+  ensureFrameStyle(document)
+  host.insertAdjacentHTML('afterbegin', detailFrameHtml({ ...parts, withStyle: false }))
+
+  const mediaNode = host.querySelector('[data-wisaw-media]')
+  if (!mediaNode) {
+    return null
+  }
+  const nodes = collectFrameNodes(host, mediaNode)
+  if (!nodes) {
+    return null
+  }
+
+  painted = { source: 'client', kind, photoId, mediaNode, ...nodes }
+  listeners.forEach((listener) => listener())
+  return painted
 }
 
 export const getDetailSkeleton = function () {
@@ -148,6 +286,11 @@ export const skeletonMatchesPath = function (skeleton, pathname) {
   }
   const match = DETAIL_ROUTE.exec(pathname)
   return Boolean(match && match[1].toLowerCase() === skeleton.kind && match[2].toLowerCase() === skeleton.photoId)
+}
+
+/** True for any photo/video detail route, whatever id it asks for. */
+export const isDetailPath = function (pathname) {
+  return Boolean(DETAIL_ROUTE.exec(String(pathname || '')))
 }
 
 const ABSOLUTE_URL = /^https:\/\/[^\s"']+$/i
@@ -204,12 +347,14 @@ export const skeletonSeededPhoto = function (photoId, kind) {
 }
 
 /**
- * One-time handoff: the static frame is removed so the fully React-rendered page takes its place.
- * Called exactly once - on the first navigation away from the seeded page (prev/next or any other
- * route). After this, captured is null and every render path is the ordinary client-side one.
+ * Hand #root back to React: the frame — whichever producer painted it — is removed and both slots of
+ * this store go empty. Called when the route leaves a detail page, or when an edge-painted frame
+ * turns out not to describe the page (wrong id, wrong kind, no record). Navigating between two detail
+ * pages does NOT clear: `paintClientDetailFrame` replaces the frame in one step, so prev/next never
+ * shows a blank page.
  */
 export const clearDetailSkeleton = function () {
-  if (!captured) {
+  if (!captured && !painted) {
     return
   }
   const root = document.getElementById('root')
@@ -217,11 +362,13 @@ export const clearDetailSkeleton = function () {
     root.innerHTML = ''
   }
   captured = null
+  painted = null
   listeners.forEach((listener) => listener())
 }
 
-/** Test seam: forget any capture and re-arm, so a suite can simulate fresh boots. */
+/** Test seam: forget any capture or paint and re-arm, so a suite can simulate fresh boots. */
 export const __resetDetailSkeletonForTests = function () {
   captured = null
+  painted = null
   attempted = false
 }

@@ -1,45 +1,41 @@
 import { describe, expect, it } from 'vitest'
+import * as template from './detailTemplate.generated'
 import {
   COLD_BELOW_MEDIA_RESERVE,
   DETAIL_MAX_SIDE,
+  DETAIL_MOBILE_BREAKPOINT,
+  HEADER_DESKTOP_PX,
+  HEADER_MOBILE_PX,
+  MEDIA_RADIUS_PX,
   UNKNOWN_DIMENSIONS,
-  computeDisplayDimensions,
   getPlaceholderDimensions
 } from './detailLayout'
 
-// The detail page reserves its skeleton slots from these numbers, so a change in
-// the aspect maths silently moves visible content on screen (Cumulative Layout
-// Shift). Pinned against the pre-extraction implementation of PhotosComponent.js.
-describe('computeDisplayDimensions', () => {
-  it('falls back to a 300x300 box when the record has no usable size', () => {
-    expect(computeDisplayDimensions({ width: null, height: 1080 }, 1280)).toEqual(UNKNOWN_DIMENSIONS)
-    expect(computeDisplayDimensions(undefined, 1280)).toEqual(UNKNOWN_DIMENSIONS)
+// The display box for a record's media is inline style built by the shared detail template now —
+// the same module Lambda@Edge builds its body from — so this file only mirrors its numbers. A figure
+// re-declared here would be a second answer to one question, which is what let one photo be laid out
+// two ways depending on how the visitor arrived.
+describe('the detail geometry is the shared template\'s', () => {
+  it('re-exports every figure the template lays the frame out from', () => {
+    expect(DETAIL_MAX_SIDE).toBe(template.DETAIL_MAX_SIDE)
+    expect(DETAIL_MOBILE_BREAKPOINT).toBe(template.DETAIL_MOBILE_BREAKPOINT)
+    expect(HEADER_DESKTOP_PX).toBe(template.HEADER_DESKTOP_PX)
+    expect(HEADER_MOBILE_PX).toBe(template.HEADER_MOBILE_PX)
+    expect(MEDIA_RADIUS_PX).toBe(template.MEDIA_RADIUS_PX)
+    expect(COLD_BELOW_MEDIA_RESERVE).toBe(template.BELOW_MEDIA_RESERVE_PX)
   })
 
-  it('returns a fresh object so callers can never mutate the shared fallback', () => {
-    const first = computeDisplayDimensions({}, 1280)
-    first.width = 1
-    expect(computeDisplayDimensions({}, 1280)).toEqual(UNKNOWN_DIMENSIONS)
+  it('sizes an unknown-dimension box with the template\'s own cap', () => {
+    expect(UNKNOWN_DIMENSIONS).toEqual({
+      width: template.DETAIL_UNKNOWN_DIMENSION_CAP_PX,
+      height: template.DETAIL_UNKNOWN_DIMENSION_CAP_PX
+    })
   })
 
-  it('caps the long side at 700px on desktop, landscape', () => {
-    expect(computeDisplayDimensions({ width: 1920, height: 1080 }, 1280))
-      .toEqual({ width: DETAIL_MAX_SIDE, height: 393.75 })
-  })
-
-  it('caps the long side at 700px on desktop, portrait', () => {
-    expect(computeDisplayDimensions({ width: 1080, height: 1920 }, 1280))
-      .toEqual({ width: 393.75, height: DETAIL_MAX_SIDE })
-  })
-
-  it('uses the full viewport minus a 40px gutter below the breakpoint', () => {
-    expect(computeDisplayDimensions({ width: 1920, height: 1080 }, 412))
-      .toEqual({ width: 372, height: 209.25 })
-  })
-
-  it('keeps a square photo square at the mobile width', () => {
-    expect(computeDisplayDimensions({ width: 1000, height: 1000 }, 412))
-      .toEqual({ width: 372, height: 372 })
+  it('keeps the media radius the frame uses for both hosts', () => {
+    // The box and the element inside it are rounded by the stylesheet this test file's module
+    // re-exports; a second radius in app CSS would show as a visible seam at the corner.
+    expect(template.SKELETON_STYLE).toContain(`border-radius:${MEDIA_RADIUS_PX}px`)
   })
 })
 

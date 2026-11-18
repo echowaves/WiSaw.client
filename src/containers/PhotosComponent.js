@@ -22,7 +22,6 @@ import * as CONST from '../consts'
 import {
   COLD_BELOW_MEDIA_RESERVE,
   PLACEHOLDER_LABEL_COUNT,
-  computeDisplayDimensions,
   getPlaceholderDimensions
 } from '../utils/detailLayout'
 import {
@@ -33,11 +32,14 @@ import {
 } from '../utils/mediaUpgrade'
 import {
   clearDetailSkeleton,
-  getDetailSkeleton,
+  getActiveDetailFrame,
+  paintClientDetailFrame,
   skeletonMatchesPath,
   skeletonSeededPhoto,
   subscribeDetailSkeleton
 } from '../utils/detailSkeleton'
+import { altTextFor, FALLBACK_DESCRIPTIONS } from '../utils/detailTemplate.generated'
+import { fetchSeoText, getCachedSeoText, prefetchSeoText } from '../utils/detailSeoText'
 
 const Footer = lazy(() => import('./Footer'))
 
@@ -78,9 +80,58 @@ const parseRecognitionLabels = (recognition) => {
   }
 }
 
+/** Heading text for a record with no published wording — the same shape as the media's own alt fallback. */
+export const fallbackDetailTitle = (photo) => `wisaw ${photo?.video === true ? 'video' : 'photo'} ${photo?.id ?? ''}`
+
+/** Tag row of the frame: the sidecar's labels, else whatever this record's recognition carries. */
+const frameLabelsFor = (currPhoto, seoText) => {
+  if (seoText?.labels?.length) {
+    return seoText.labels
+  }
+  return (parseRecognitionLabels(currPhoto?.recognitions?.[0]) ?? []).map((label) => label.Name)
+}
+
 /**
- * Label row shown while recognitions are still in flight. It mirrors the DOM and
- * box metrics of renderLabelRow's output (same wrapper divs, same h1, pills with the
+ * The inputs of the shared detail template (detailTemplate.generated.js `detailFrameHtml`) for one
+ * record. Media comes from the record, wording from the sidecar the edge reads — with the record's
+ * own labels and first comment standing in when a sidecar has not been generated.
+ */
+export const detailFrameParts = ({ photo, currPhoto, seoText, paintFullMedia = true }) => {
+  const entityLabel = photo.video === true ? 'video' : 'photo'
+  // One record is one media type. The edge will not dress a page in wording published for the other
+  // one (WiSaw.cdk …/seoText.js drops it and derives instead), so this page drops it too — otherwise
+  // a record whose kind changed after publishing would describe itself as the wrong thing. Tag links
+  // are not kind-dependent there, so they keep coming from the sidecar either way.
+  const words = seoText && seoText.kind === entityLabel ? seoText : null
+  const labels = frameLabelsFor(currPhoto, seoText)
+  const title = words?.title || fallbackDetailTitle(photo)
+  // The edge always has a sentence to put under the heading: when no wording has been published for
+  // a record yet, it serves this one. It lives in the shared template module, so a page painted here
+  // cannot be the only one of the two without a paragraph.
+  const description = words?.description || FALLBACK_DESCRIPTIONS[entityLabel]
+  const caption = words?.imageCaption || currPhoto?.comments?.[0]?.comment || ''
+  return {
+    entityLabel,
+    mediaId: photo.id,
+    // The served markup always names the full-resolution object and lets the shell's swap script
+    // demote it below the breakpoint; a page built here knows the viewport already, so it asks for
+    // the thumbnail outright. Same element either way — the upgrade effect swaps its src once the
+    // paint gate opens, exactly as it does on an edge-painted node.
+    imageUrl: (photo.video === true || paintFullMedia) ? (photo.imgUrl || '') : (photo.thumbUrl || ''),
+    previewUrl: photo.thumbUrl || '',
+    videoUrl: photo.videoUrl || '',
+    width: photo.width,
+    height: photo.height,
+    title,
+    description,
+    labels,
+    altText: altTextFor({ caption, labels, description, title })
+  }
+}
+
+/**
+ * Label row shown on the loading placeholder while the record is still in flight. It mirrors the
+ * DOM and box metrics of BelowMediaContent's recognitions row (same wrapper divs, same h1, pills with the
  * same padding/border/margins), so swapping real labels in cannot move the media box
  * below it — a magic min-height always disagreed with the hydrated height by tens of
  * pixels and pushed the whole page down on hydration. The pills carry no text: the
@@ -261,20 +312,11 @@ const PhotosComponent = function () {
     requestComplete: false
   }))
 
-  const [dimensions, setDimensions] = useState(() => {
-    if (bootstrappedPhoto) {
-      return computeDisplayDimensions(bootstrappedPhoto.photo)
-    }
-    if (skeletonSeeded) {
-      return computeDisplayDimensions(skeletonSeeded.photo)
-    }
-    return { width: null, height: null }
-  })
-  // A bootstrapped photo is already decoded (the feed card just displayed its
-  // thumbnail), so paint it immediately instead of hiding it behind a spinner. An edge-seeded one
-  // was painted by the browser before React existed, but this element is a fresh node - start it
-  // hidden and let its own load event fade it in (it is preloaded, so that is usually instant).
-  const [imageLoaded, setImageLoaded] = useState(bootstrappedPhoto != null)
+  // No display-size state: the media box is laid out by the shared detail template
+  // (detailTemplate.generated.js `mediaBoxStyle`), which both the edge and this component paint from
+  // the record's own width/height. Two sets of numbers is what let a navigated page size its picture
+  // differently from the same photo loaded directly.
+  const [seoText, setSeoText] = useState(() => getCachedSeoText(photoId))
   // The original is multi-megabyte, so on phones its bytes are warmed in the background and only
   // painted once the visitor interacts - that paint would otherwise become the LCP candidate. A
   // visitor who already interacted before this lazy chunk loaded froze LCP too, and nothing else
@@ -344,7 +386,6 @@ const PhotosComponent = function () {
     const upgrade = () => {
       setPaintFullMedia(true)
       setWarmFullMedia(true)
-      setImageLoaded(false)
     }
     const options = { once: true, passive: true }
     window.addEventListener('pointerdown', upgrade, options)
@@ -413,22 +454,22 @@ const PhotosComponent = function () {
   // ref and media handlers are attached to that existing node here instead of through JSX. The
   // skeleton's own kind decides (not the record's claim): a video id requested under /photos/ is
   // served an <img> by the edge, and adopting it as a video would attach player state to an image.
-  // Subscribed so a handoff clear re-renders this component out of adopted mode.
-  const skeleton = useSyncExternalStore(subscribeDetailSkeleton, getDetailSkeleton)
+  // Subscribed so a repaint or a handoff clear re-renders this component in or out of portal mode.
+  const frame = useSyncExternalStore(subscribeDetailSkeleton, getActiveDetailFrame)
   const adopted = Boolean(
-    skeleton &&
-    skeletonMatchesPath(skeleton, location.pathname) &&
+    frame &&
+    skeletonMatchesPath(frame, location.pathname) &&
     // Case-insensitive like captureDetailSkeleton: the seed record carries the lower-cased id,
     // the route param keeps whatever case the URL had.
     String(internalState.currPhoto?.photo?.id ?? '').toLowerCase() === String(photoId ?? '').toLowerCase() &&
-    (skeleton.kind === 'videos') === (internalState.currPhoto?.photo?.video === true)
+    (frame.kind === 'videos') === (internalState.currPhoto?.photo?.video === true)
   )
 
   useEffect(() => {
-    if (!adopted || !skeleton || internalState.currPhoto?.photo?.video !== true) {
+    if (!adopted || !frame || internalState.currPhoto?.photo?.video !== true) {
       return undefined
     }
-    const node = skeleton.mediaNode
+    const node = frame.mediaNode
     videoRef.current = node
     // iOS plays inline only when told to; the edge owns this markup and older builds publish without
     // it, so set the attribute defensively (the client-rendered path carries playsInline in JSX).
@@ -462,7 +503,7 @@ const PhotosComponent = function () {
         videoRef.current = null
       }
     }
-  }, [adopted, skeleton, internalState.currPhoto?.photo?.video])
+  },  [adopted, frame, internalState.currPhoto?.photo?.video])
 
   // Adopted photo: below the breakpoint the shell's swap script demoted the edge node to the
   // thumbnail, and while adopted React renders no <img> that could upgrade. When the input gate
@@ -470,14 +511,14 @@ const PhotosComponent = function () {
   // client-rendered path does on its single <img>. Above the breakpoint the gate starts open and
   // the node already carries this exact URL, so the write is a no-op there.
   useEffect(() => {
-    if (!adopted || !skeleton) {
+    if (!adopted || !frame) {
       return
     }
     const photo = internalState.currPhoto?.photo
     if (!paintFullMedia || !photo || photo.video === true || !photo.imgUrl) {
       return
     }
-    const node = skeleton.mediaNode
+    const node = frame.mediaNode
     if (node.getAttribute('src') !== photo.imgUrl) {
       // This failure is ours to repair: the object that 404s is the original we are publishing, not
       // one the edge chose. Intercept it on the media box in the capture phase — which runs before
@@ -501,34 +542,88 @@ const PhotosComponent = function () {
       node.setAttribute('src', photo.imgUrl)
       return () => { box?.removeEventListener('error', onSwapError, true) }
     }
-  }, [adopted, skeleton, paintFullMedia, internalState.currPhoto?.photo])
+  },  [adopted, frame, paintFullMedia, internalState.currPhoto?.photo])
 
-  // Hand #root back to React only on evidence that the skeleton does not describe this page: the
-  // route moved off it (first prev/next navigation), or the record settled to something else — a
-  // wrong id, a wrong kind (e.g. a video id under /photos/), or no record at all, which would put
-  // the NoMatch page under a fully painted picture. `!adopted` alone must never clear: while the
-  // record is still in flight — every cold deep link on an edge that publishes no media URLs —
-  // adoption is merely unknown, and clearing there destroys the painted LCP node before anything
-  // can replace it. AppShell clears on route change too; both calls are idempotent.
+  // The heading, description and tag row the edge shows are stored on the record's sitemap sidecar
+  // (img.wisaw.com/<id>.json), not in GraphQL, so a page this component paints reads that same file.
   useEffect(() => {
-    if (!skeleton) {
+    if (!photoId) {
+      return undefined
+    }
+    setSeoText(getCachedSeoText(photoId))
+    let alive = true
+    fetchSeoText(photoId).then((text) => {
+      if (alive) {
+        setSeoText(text)
+      }
+    })
+    return () => { alive = false }
+  }, [photoId])
+
+  // The neighbours' copy is warmed with their media, so prev/next paints from cache.
+  useEffect(() => {
+    prefetchSeoText([internalState.nextPhoto?.photo?.id, internalState.prevPhoto?.photo?.id])
+  }, [internalState.nextPhoto, internalState.prevPhoto])
+
+  // Every detail render the edge did not paint gets the edge's own page: the shared template is
+  // painted into #root and this component portals its enhancements into it, exactly as it does into
+  // the captured copy. That covers prev/next, local development, a stale edge cache, and a record
+  // whose kind contradicts what the edge served (a video under /photos/, which the edge paints as an
+  // <img> and this page must not leave half-enhanced).
+  //
+  // The wording usually arrives after the record does, and re-calling this with the same photo lets
+  // the paint module update the frame's heading/description/tags in place instead of rebuilding it —
+  // so the media node is never replaced behind a visitor who is already looking at it.
+  useEffect(() => {
+    const photo = internalState.currPhoto?.photo
+    if (!photo) {
+      // Settled "no such record": the picture must not stay up behind the NoMatch page. And while a
+      // new id's record is still in flight, a frame showing somebody else's photo has to come down —
+      // the URL moved, so the honest state is the loading placeholder, not the previous photo. A
+      // cached hover-preload skips this branch entirely and repaints with no gap.
+      if (frame && (internalState.currReady === true || !skeletonMatchesPath(frame, location.pathname))) {
+        clearDetailSkeleton()
+      }
       return
     }
-    const onSkeletonPage = skeletonMatchesPath(skeleton, location.pathname)
-    // Settled, not populated: a query that answers "no such photo" is as much a contradiction as a
-    // wrong id or kind, and the static frame must not stay up behind the NoMatch page that follows.
-    const recordSettled = internalState.currReady === true
-    if (!onSkeletonPage || (recordSettled && !adopted)) {
-      clearDetailSkeleton()
-    }
-  }, [skeleton, location.pathname, adopted, internalState.currPhoto, internalState.currReady])
 
+    if (String(photo.id ?? '').toLowerCase() !== String(photoId ?? '').toLowerCase()) {
+      return
+    }
+
+    // An edge-painted frame this page has adopted is never rebuilt: that media node carries the
+    // page's LCP paint, and its wording is already the sidecar's, because the edge read the same file
+    // when it served the page. A frame that cannot be adopted (wrong kind for the record) falls
+    // through and gets replaced by a correct one.
+    if (adopted && frame?.source === 'edge') {
+      return
+    }
+
+    paintClientDetailFrame(detailFrameParts({ photo, currPhoto: internalState.currPhoto, seoText, paintFullMedia }))
+  }, [frame, adopted, seoText, paintFullMedia, internalState.currPhoto, internalState.currReady, photoId, location.pathname])
+
+  // Keep the tab title in step with a frame this app painted. An edge-painted page already carries
+  // the same title in its served bytes — writing it again would be a <head> mutation on the adopted
+  // route, which is pinned to stay at zero so nothing competes with what Lambda@Edge sent.
+  useEffect(() => {
+    const photo = internalState.currPhoto?.photo
+    if (!photo || typeof document === 'undefined') {
+      return
+    }
+    if (String(photo.id ?? '').toLowerCase() !== String(photoId ?? '').toLowerCase()) {
+      return
+    }
+    if (adopted && frame?.source === 'edge') {
+      return
+    }
+    document.title = seoText?.title || fallbackDetailTitle(photo)
+  }, [frame, adopted, internalState.currPhoto, seoText, photoId, location.pathname])
+
+  // The media box sizes itself from the record's own dimensions through the shared template, so a
+  // viewport change needs no re-measure here. Widening past the breakpoint does need one thing: the
+  // full-resolution source must not stay deferred forever on a visitor who resized onto a desktop.
   useEffect(() => {
     const handleResize = () => {
-      if (internalState.currPhoto?.photo) {
-        setDimensions(computeDisplayDimensions(internalState.currPhoto.photo))
-      }
-      // Widening past the breakpoint must not leave a visitor stuck on the small source.
       if (!shouldDeferFullMedia()) {
         setPaintFullMedia(true)
         setWarmFullMedia(true)
@@ -536,25 +631,7 @@ const PhotosComponent = function () {
     }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
-  }, [internalState.currPhoto])
-
-  const handleImageLoad = () => {
-    setImageLoaded(true)
-  }
-
-  const handleImageError = (event) => {
-    console.log('Image failed to load, falling back to thumbnail only')
-    // The single media node carries the original below-deck until the paint gate swaps it, so an
-    // error here means a source that should have been visible. Revert this very node to the
-    // thumbnail (direct DOM write - React will re-render the same thumb src and skip the img),
-    // then fade it in; if the thumb fails too this is a no-op and stays crash-free as before.
-    const node = event?.target
-    const fallback = internalState.currPhoto?.photo?.thumbUrl
-    if (node && fallback && node.getAttribute('src') !== fallback) {
-      node.setAttribute('src', fallback)
-    }
-    setImageLoaded(true)
-  }
+  }, [])
 
   const handleVideoPlayRequest = () => {
     setVideoError(null)
@@ -563,16 +640,6 @@ const PhotosComponent = function () {
       videoRef.current.load()
     }
     setShowVideoPlayer(true)
-  }
-
-  const handleVideoLoadedData = () => {
-    setVideoReady(true)
-    setVideoError(null)
-  }
-
-  const handleVideoError = () => {
-    setVideoReady(false)
-    setVideoError('This video is unavailable right now.')
   }
 
   const fetchCurrPhoto = useCallback(async ({ photoId }) => {
@@ -739,8 +806,7 @@ const PhotosComponent = function () {
       return {
         currPhoto: null,
         nextPhoto: null,
-        prevPhoto: null,
-        dimensions: { width: 300, height: 300 }
+        prevPhoto: null
       }
     }
 
@@ -762,10 +828,7 @@ const PhotosComponent = function () {
       const pageData = {
         currPhoto: curr,
         nextPhoto: next,
-        prevPhoto: prev,
-        dimensions: curr?.photo
-          ? computeDisplayDimensions(curr.photo)
-          : { width: 300, height: 300 }
+        prevPhoto: prev
       }
 
       photoPageCache.current.set(photoId, pageData)
@@ -796,7 +859,6 @@ const PhotosComponent = function () {
       return
     }
 
-    setDimensions(computeDisplayDimensions(curr.photo))
     setInternalState((prev) => ({ ...prev, currPhoto: curr, currReady: true }))
   }, [])
 
@@ -848,7 +910,6 @@ const PhotosComponent = function () {
       // The captured skeleton (index.js) already painted this media before React existed; seed from
       // its node so the first commit matches what is on screen instead of a skeleton.
       const seeded = skeletonSeededPhoto(photoId, routeKind)
-      setImageLoaded(false)
 
       if (cached) {
         setInternalState({
@@ -858,7 +919,6 @@ const PhotosComponent = function () {
           currReady: true,
           requestComplete: true
         })
-        setDimensions(cached.dimensions || computeDisplayDimensions(cached.currPhoto?.photo))
       } else if (bootstrapped) {
         setInternalState({
           currPhoto: bootstrapped,
@@ -867,10 +927,6 @@ const PhotosComponent = function () {
           currReady: true,
           requestComplete: false
         })
-        setDimensions(computeDisplayDimensions(bootstrapped.photo))
-        // Above the breakpoint the thumb was already replaced, so stay opaque. Below it this record's
-        // original has never been painted, so let it fade in once decoded instead of rastering now.
-        setImageLoaded(!shouldDeferFullMedia())
       } else if (seeded) {
         // The edge already painted this media before React existed: keep the same box on screen
         // while getPhotoAllCurr hydrates comments/recognitions over it, instead of a skeleton.
@@ -881,8 +937,6 @@ const PhotosComponent = function () {
           currReady: true,
           requestComplete: false
         })
-        setDimensions(computeDisplayDimensions(seeded.photo))
-        setImageLoaded(false)
       } else {
         setInternalState({
           currPhoto: null,
@@ -903,38 +957,6 @@ const PhotosComponent = function () {
       load({ photoId })
     }
   }, [load, photoId, location.state, routeKind])
-
-  const recognitionsLabels = (recognition, lebelsToInclude = 10) => {
-    if (!recognition) return ''
-    try {
-      return JSON.parse(recognition.metaData)?.Labels?.slice(0, lebelsToInclude).map((label) => label.Name).join(', ')
-    } catch (err) {
-      console.error('Error parsing recognition data:', err.message)
-      return ''
-    }
-  }
-
-  const renderLabelRow = (labels) => (
-    <div>
-      <div style={{ margin: '4px 0 8px' }}>
-        <h1 className='recognition-tags-h1'>
-          {labels.slice(0, PLACEHOLDER_LABEL_COUNT).map((label) => (
-            <Link
-              key={label.Name}
-              to={`/search/${encodeURIComponent(label.Name)}`}
-              style={{
-                opacity: Math.max(0.6, label.Confidence / 100),
-                fontSize: `${Math.max(0.8, label.Confidence / 100)}em`,
-                fontWeight: Math.max(400, 400 + (label.Confidence / 100) * 300)
-              }}
-            >
-              {stringifyObject(label.Name).replace(/'/g, '')}
-            </Link>
-          ))}
-        </h1>
-      </div>
-    </div>
-  )
 
   const renderRecognitions = (recognition) => {
     if (!recognition) return (<div />)
@@ -1218,176 +1240,37 @@ const PhotosComponent = function () {
   // video overlays into the media box they centre on, comments/recognitions/footer into the below
   // slot - via portals, so the LCP <img>/<video> is never mounted, cloned or touched by React. The
   // static frame (h1/description/labels) stays server-owned.
-  if (adopted && skeleton && currPhoto?.photo) {
+  if ( adopted && frame && currPhoto?.photo) {
     const isVideo = currPhoto.photo.video === true
 
     return (
       <>
         <Suspense fallback={null}>
-          {createPortal(renderNavigationButtons(), skeleton.navContainer)}
+          {createPortal(renderNavigationButtons(), frame.navContainer)}
           {isVideo && createPortal(
             <VideoOverlays showVideoPlayer={showVideoPlayer} videoReady={videoReady} videoError={videoError} onPlayRequest={handleVideoPlayRequest} />,
-            skeleton.mediaBox
+            frame.mediaBox
           )}
         </Suspense>
         <Suspense fallback={null}>
-          {skeleton.belowSlot && createPortal(
+          {frame.belowSlot && createPortal(
             <BelowMediaContent currPhoto={currPhoto} renderRecognitions={renderRecognitions} />,
-            skeleton.belowSlot
+            frame.belowSlot
           )}
         </Suspense>
         <Suspense fallback={null}>
-          {skeleton.belowSlot && createPortal(<Footer />, skeleton.belowSlot)}
+          {frame.belowSlot && createPortal(<Footer />, frame.belowSlot)}
         </Suspense>
       </>
     )
   }
 
-  if (currPhoto && currPhoto?.photo && dimensions.width && dimensions.height) {
-    const isVideo = currPhoto.photo.video === true
-    // A short label for the player's own accessibility text; the page title carries the brand.
-    const videoLabel = recognitionsLabels(currPhoto?.recognitions[0], 3) || 'WiSaw video'
-    const detailLabels = parseRecognitionLabels(currPhoto.recognitions?.[0])
-    const hasDetailLabels = detailLabels?.length > 0
-
-    return (
-      <div className='PhotosComponent'>
-        {/* Main article/video content wrapper to establish this as a watch page */}
-        <main className='content-container' role='main' style={{ position: 'relative' }}>
-          {/* Navigation buttons in upper corners */}
-          {renderNavigationButtons()}
-
-          {/*
-            Label row above the media. Its box is kept in every state - loading,
-            labeled, or confirmed label-free (transparent slot) - because the media
-            panel below it is already painted and would ride any height change.
-          */}
-          <div
-            className={hasDetailLabels
-              ? 'recognition-tags'
-              : 'recognition-tags recognition-tags--slot'}
-          >
-            {hasDetailLabels
-              ? renderLabelRow(detailLabels)
-              : <RecognitionLabelsSkeleton />}
-          </div>
-
-          <div // eslint-disable-line
-            className='crop'
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: `${dimensions.width}px`,
-              height: `${dimensions.height}px`,
-              position: 'relative'
-              // cursor: "pointer",
-            }}
-          >
-            {isVideo && (
-              <>
-                {/* Thumbnail as base layer for videos - always visible */}
-                <img
-                  width={`${dimensions.width}`}
-                  height={`${dimensions.height}`}
-                  className='thumbnailImage'
-                  src={currPhoto.photo.thumbUrl}
-                  decoding='async'
-                  alt={
-                    currPhoto?.comments?.length > 0
-                      ? currPhoto?.comments[0]?.comment
-                      : `wisaw video ${currPhoto.photo.id}`
-                  }
-                  style={{
-                    width: `${dimensions.width}px`,
-                    height: `${dimensions.height}px`,
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    borderRadius: '18px',
-                    objectFit: 'cover',
-                    zIndex: 1,
-                    display: showVideoPlayer ? 'none' : 'block' // Hide when video is playing
-                  }}
-                />
-
-                {/* Play button overlay to indicate video */}
-                <VideoOverlays showVideoPlayer={showVideoPlayer} videoReady={videoReady} videoError={videoError} onPlayRequest={handleVideoPlayRequest} />
-
-                <video
-                  ref={videoRef}
-                  className='mainImage'
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  style={{
-                    width: `${dimensions.width}px`,
-                    height: `${dimensions.height}px`,
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    borderRadius: '18px',
-                    zIndex: 3,
-                    opacity: showVideoPlayer ? 1 : 0,
-                    pointerEvents: showVideoPlayer ? 'auto' : 'none',
-                    backgroundColor: 'black'
-                  }}
-                  poster={currPhoto.photo.thumbUrl}
-                  controls
-                  preload='metadata'
-                  playsInline
-                  aria-hidden={!showVideoPlayer}
-                  aria-label={videoLabel}
-                  onLoadedData={handleVideoLoadedData}
-                  onPlay={handleVideoLoadedData}
-                  onError={handleVideoError}
-                >
-                  <source src={currPhoto.photo.videoUrl} type='video/mp4' />
-                  Your browser does not support the video tag.
-                </video>
-              </>
-            )}
-
-            {isVideo !== true && (
-              // One media node: thumb below the breakpoint until first input, full-res above it or
-              // after interaction - the upgrade is a src swap on this same element, so nothing
-              // re-lays-out and the painted LCP candidate is never replaced by a second node.
-              <img
-                key={currPhoto.photo.id}
-                width={`${dimensions.width}`}
-                height={`${dimensions.height}`}
-                className='mainImage'
-                src={paintFullMedia ? currPhoto.photo.imgUrl : currPhoto.photo.thumbUrl}
-                fetchPriority='high'
-                decoding='async'
-                alt={
-                  currPhoto?.comments?.length > 0
-                    ? currPhoto?.comments[0]?.comment
-                    : `wisaw photo ${currPhoto.photo.id}`
-                }
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-                style={{
-                  width: `${dimensions.width}px`,
-                  height: `${dimensions.height}px`,
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  borderRadius: '18px',
-                  objectFit: 'cover',
-                  opacity: imageLoaded ? 1 : 0,
-                  transition: 'opacity 0.5s ease-in-out',
-                  zIndex: 2
-                }}
-              />
-            )}
-          </div>
-          <BelowMediaContent currPhoto={currPhoto} renderRecognitions={renderRecognitions} />
-        </main>
-        <Suspense fallback={null}>
-          <Footer />
-        </Suspense>
-      </div>
-    )
+  // A record this component has to paint a frame for: the paint effect does it in #root right after
+  // this commit, so React renders nothing of its own here. Anything it could render — a card, a
+  // spinner box — would be a second template for the same page, which is what this file used to do
+  // on every prev/next navigation.
+  if (currPhoto?.photo) {
+    return null
   }
 
   if (currReady === true && (currPhoto === null || currPhoto?.photo === null)) {
@@ -1401,9 +1284,11 @@ const PhotosComponent = function () {
     )
   }
 
-  // Cold load (deep link, no cache/router state): mirror the final page so
-  // content fills reserved slots instead of swapping a different layout.
-  if (!currReady || !currPhoto || !dimensions.width || !dimensions.height) {
+  // Nothing to paint yet (deep link with no cache/router state, or a prev/next whose record is still
+  // in flight on a page the edge did not paint): reserve the boxes so the frame that replaces this
+  // cannot shift the page. This paints no heading, description or labels — it is a placeholder, not
+  // a second version of the page.
+  if (!currReady || !currPhoto) {
     const placeholder = getPlaceholderDimensions()
     return (
       <div className='PhotosComponent'>
@@ -1440,20 +1325,8 @@ const PhotosComponent = function () {
     )
   }
 
-  return (
-    <div className='PhotosComponent'>
-      <div
-        className='content-container' style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '400px'
-        }}
-      >
-        <div className='loading-spinner' />
-      </div>
-    </div>
-  )
+  // Every state above covers a detail route; there is no fifth one.
+  return null
 }
 
 export default PhotosComponent

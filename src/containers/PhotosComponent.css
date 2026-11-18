@@ -66,42 +66,16 @@
     border: 1px solid var(--border);
 }
 
-/* ---- Main image/video crop ---- */
+/* ---- Loading placeholder for the media box (the media itself is painted by the shared detail
+   template, styled by its own stylesheet — see src/utils/detailTemplate.generated.js) ---- */
 .crop {
     margin: 16px auto;
     border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.3s var(--ease-out);
     background: var(--bg-raised);
     position: relative;
     width: fit-content;
     max-width: 100%;
-}
-
-.crop:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.crop img,
-.crop .mainImage {
-    object-fit: contain;
-    border-radius: var(--radius-md);
-    display: block;
-    position: relative;
-    z-index: 2;
-}
-
-.crop .thumbnailImage {
-    object-fit: cover;
-    border-radius: var(--radius-md);
-    margin: 0;
-    padding: 0;
-}
-
-.crop:hover img,
-.crop:hover .mainImage {
-    filter: none;
 }
 
 /* ---- Recognition tags ---- */

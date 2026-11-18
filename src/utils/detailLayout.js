@@ -1,57 +1,53 @@
 /**
  * Geometry for the photo/video detail page.
  *
- * The detail page reserves its skeleton slots from these numbers, so any change
- * here moves real content on screen. They live apart from PhotosComponent.js so
- * the maths can be unit-tested without mounting Apollo/router-dependent JSX.
+ * The numbers come from the shared detail template — the module the edge paints
+ * its body from and publishes into this repository verbatim — because a navigated
+ * detail page is painted by that same template now. Two copies of these figures
+ * is how a page drifted into two looks; see
+ * WiSaw.cdk/tests/detail-template-copy-once.js for the pin on the source side.
  */
 
-export const DETAIL_MAX_SIDE = 700
-export const DETAIL_MOBILE_BREAKPOINT = 700
+import {
+  DETAIL_MAX_SIDE,
+  DETAIL_UNKNOWN_DIMENSION_CAP_PX,
+  DETAIL_MOBILE_BREAKPOINT,
+  BELOW_MEDIA_RESERVE_PX,
+  HEADER_DESKTOP_PX,
+  HEADER_MOBILE_PX,
+  MEDIA_RADIUS_PX
+} from './detailTemplate.generated'
+
+export {
+  DETAIL_MAX_SIDE,
+  DETAIL_UNKNOWN_DIMENSION_CAP_PX,
+  DETAIL_MOBILE_BREAKPOINT,
+  HEADER_DESKTOP_PX,
+  HEADER_MOBILE_PX,
+  MEDIA_RADIUS_PX
+}
+
+/** Kept under the app's own name so its cold-load placeholder reads as what it is. */
+export const COLD_BELOW_MEDIA_RESERVE = BELOW_MEDIA_RESERVE_PX
+
+/** Gutter the app's own detail container keeps at each side below the breakpoint. */
 export const DETAIL_MOBILE_GUTTER = 40
 
 /** Used when a record carries no usable width/height (also the pre-load default). */
-export const UNKNOWN_DIMENSIONS = { width: 300, height: 300 }
-
-/**
- * Vertical space held under the cold-load media placeholder. It is deliberately
- * unpainted: an empty transparent box contributes nothing to Cumulative Layout
- * Shift, while a mismatched guess does. Sized like the content that replaces it
- * (one comment panel + a labels row) so document height barely jumps.
- */
-export const COLD_BELOW_MEDIA_RESERVE = 220
+export const UNKNOWN_DIMENSIONS = {
+  width: DETAIL_UNKNOWN_DIMENSION_CAP_PX,
+  height: DETAIL_UNKNOWN_DIMENSION_CAP_PX
+}
 
 /** Placeholder pills mirroring renderRecognitionsH1's `labels.slice(0, 3)`. */
 export const PLACEHOLDER_LABEL_COUNT = 3
 
 const viewportWidth = () => (typeof window === 'undefined' ? DETAIL_MAX_SIDE : window.innerWidth)
 
-/**
- * Display box for the detail media, from the photo's natural dimensions.
- * Long side capped at DETAIL_MAX_SIDE on desktop; full width minus a gutter below
- * the mobile breakpoint.
- */
-export const computeDisplayDimensions = (photo, screenOverride) => {
-  if (!photo?.width || !photo?.height) {
-    return { ...UNKNOWN_DIMENSIONS }
-  }
-
-  const screenWidth = screenOverride ?? viewportWidth()
-
-  if (screenWidth < DETAIL_MOBILE_BREAKPOINT) {
-    const width = screenWidth - DETAIL_MOBILE_GUTTER
-    const height = (photo.height / photo.width) * width
-    return { width, height }
-  }
-
-  const naturalWidth = photo.width
-  const naturalHeight = photo.height
-
-  return {
-    width: naturalWidth > naturalHeight ? DETAIL_MAX_SIDE : DETAIL_MAX_SIDE * naturalWidth / naturalHeight,
-    height: naturalWidth < naturalHeight ? DETAIL_MAX_SIDE : DETAIL_MAX_SIDE * naturalHeight / naturalWidth
-  }
-}
+// There is no `computeDisplayDimensions` here any more. The display box for a record's media is
+// inline style built by the shared template (`mediaBoxStyle` in detailTemplate.generated.js), which
+// the edge and this app paint identically; an app-side second answer for the same question is what
+// let one photo be sized two different ways depending on how the visitor arrived.
 
 /** Media-box placeholder for the cold-load skeleton (aspect ratio unknown). */
 export const getPlaceholderDimensions = (screenOverride) => {

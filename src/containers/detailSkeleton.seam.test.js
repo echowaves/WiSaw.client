@@ -33,6 +33,7 @@ vi.mock('./Footer', () => ({ default: () => createElement('footer', null, 'site 
 
 const App = (await import('../App')).default
 const detailSkeleton = await import('../utils/detailSkeleton')
+const seoText = await import('../utils/detailSeoText')
 
 // A real UUID: detailSkeleton only adopts skeletons for strict /photos|videos/<uuid> routes.
 const PHOTO_ID = '29461ee8-34dd-4c2b-848f-c16d766713e8'
@@ -160,9 +161,14 @@ const bootWithVideoSkeleton = () => {
   return { mediaNode: document.querySelector('[data-wisaw-media]') }
 }
 
+// The wording sidecar is a real network read in the browser. Here it answers 404, which is the
+// state that matters for these tests: no published wording, so the frame falls back to the record.
+vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 404 })))
+
 describe('detail skeleton seam (portal adoption)', () => {
   beforeEach(() => {
     api.pages = null
+    seoText.__resetSeoTextForTests()
   })
 
   afterEach(() => {
@@ -302,10 +308,10 @@ describe('detail skeleton seam (portal adoption)', () => {
     expect(mediaNode.parentElement.contains(alert)).toBe(true)
   })
 
-  it('hands off to the full client page when the record kind disagrees with the edge node', async () => {
+  it('repaints the shared frame as a video when the record kind disagrees with the edge node', async () => {
     // A video id requested under /photos/: the edge serves an <img> for that URL, but the record
-    // claims video. Adopting would attach player state to an image, so the skeleton must be
-    // cleared and the page rendered fully client-side instead of stacked over the static frame.
+    // claims video. Adopting would attach player state to an image, so the app replaces the frame —
+    // with the same template it paints everywhere else, not with markup of its own.
     api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
     api.pages[PHOTO_ID].getPhotoAllCurr.photo.video = true
     api.pages[PHOTO_ID].getPhotoAllCurr.photo.videoUrl = `https://img.wisaw.com/${PHOTO_ID}.mp4`
@@ -318,9 +324,14 @@ describe('detail skeleton seam (portal adoption)', () => {
     render(<App />, { container: document.getElementById('wisaw-app') })
     await flush()
 
-    // The static frame is gone and the client page owns the media box (as a video, per the record).
-    expect(document.querySelector('#root [data-wisaw-media]')).toBeNull()
-    expect(document.querySelector('#wisaw-app .crop video.mainImage')).not.toBeNull()
+    // The edge's <img> is gone; the frame now holds a <video> built by the shared template.
+    const media = document.querySelector('#root [data-wisaw-media]')
+    expect(media.tagName).toBe('VIDEO')
+    expect(media.getAttribute('src')).toBe(`https://img.wisaw.com/${PHOTO_ID}.mp4`)
+    expect(media.getAttribute('poster')).toBe(thumbUrl)
+    // There is no second detail markup in the React container any more.
+    expect(document.querySelector('#wisaw-app .crop')).toBeNull()
+    expect(detailSkeleton.getActiveDetailFrame().source).toBe('client')
   })
 
   it('renders the full client page when no skeleton was captured', async () => {
@@ -641,9 +652,10 @@ describe('detail skeleton seam (portal adoption)', () => {
     ['a skeleton missing the below slot', (dom) => {
       dom.querySelector("[data-wisaw-slot='below']").remove()
     }]
-  ])('still renders the full client page when capture declines because of %s', async (_label, corrupt) => {
-    // A declined capture must stay reachable and idempotent: index.js clears #root and the app
-    // renders exactly as it did before adoption existed - no crash, nothing left half-adopted.
+  ])('paints the shared frame itself when capture declines because of %s', async (_label, corrupt) => {
+    // A declined capture must stay reachable and idempotent: index.js clears #root and the app paints
+    // the page - from the shared template, into the same mount point, with its enhancements portalled
+    // into the same slots. No crash, nothing half-adopted, no second markup.
     api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([{ id: 'c1', comment: 'client-rendered comment' }]) } }
 
     detailSkeleton.__resetDetailSkeletonForTests()
@@ -658,8 +670,16 @@ describe('detail skeleton seam (portal adoption)', () => {
     await flush()
 
     expect(await screen.findByText('client-rendered comment')).not.toBeNull()
-    expect(document.querySelector('#wisaw-app .PhotosComponent')).not.toBeNull()
-    expect(document.querySelector('#wisaw-app .App').classList.contains('App--adopted')).toBe(false)
+    const media = document.querySelector('#root [data-wisaw-media]')
+    expect(media, 'frame painted from the record').not.toBeNull()
+    expect(media.getAttribute('src')).toBe(mediaUrl)
+    expect(document.querySelector('#root .wsk h1')).not.toBeNull()
+    // The enhancement layer is in the frame's own slots, and the shell adopted it like an edge page.
+    expect(document.querySelector("#root [data-wisaw-slot='below'] .comments-section")).not.toBeNull()
+    expect(document.querySelector('#wisaw-app .App').classList.contains('App--adopted')).toBe(true)
+    // Nothing of the old client card survives anywhere.
+    expect(document.querySelector('.crop')).toBeNull()
+    expect(document.querySelector('.mainImage')).toBeNull()
   })
 })
 

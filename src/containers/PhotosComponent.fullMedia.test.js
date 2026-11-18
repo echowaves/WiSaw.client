@@ -30,12 +30,21 @@ vi.mock('react-ga4', () => ({ default: { initialize: vi.fn(), send: vi.fn() } })
 vi.mock('./Footer', () => ({ default: () => createElement('footer', null, 'site footer') }))
 
 const PhotosComponent = (await import('./PhotosComponent')).default
+const detailSkeleton = await import('../utils/detailSkeleton')
+const seoText = await import('../utils/detailSeoText')
 const { FULL_MEDIA_WARM_DELAY_MS } = await import('../utils/mediaUpgrade')
 const { DETAIL_MOBILE_BREAKPOINT } = await import('../utils/detailLayout')
 
-// This suite exercises the fully client-rendered page: no edge skeleton is captured here, so the
-// single-img media model and its two gates (warm after quiet, paint after first input) are what
-// get pinned. The adopted-skeleton path is covered by detailSkeleton.seam.test.js.
+// No published wording sidecar: these tests are about which bytes the media node asks for.
+vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ ok: false, status: 404 })))
+
+// This suite exercises the page the app paints itself (no edge skeleton captured), on the shared
+// template: the single-media-node model and its two gates (warm after quiet, paint after first
+// input) are what get pinned. The adopted-skeleton path is covered by detailSkeleton.seam.test.js.
+const ID_A = '7b8a9c1d-2e3f-4a5b-6c7d-8e9f0a1b2c3d'
+const ID_B = '4d2f6a18-9c3b-4e7a-8f52-1b6d0c9e3a71'
+const ID_C = '0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0'
+
 const record = (id, overrides = {}) => ({
   photo: {
     id,
@@ -54,25 +63,28 @@ const record = (id, overrides = {}) => ({
   recognitions: []
 })
 
-const FEED_PHOTO = record('777').photo
+const FEED_PHOTO = record(ID_A).photo
 const FULL_777 = FEED_PHOTO.imgUrl
 const THUMB_777 = FEED_PHOTO.thumbUrl
-const FULL_888 = `https://img.wisaw.com/888.webp`
+const FULL_888 = record(ID_B).photo.imgUrl
 
 const setViewport = (width) => {
   Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: width })
 }
 
-const renderDetail = (state = { feedPhoto: FEED_PHOTO }) => render(
-  <MemoryRouter initialEntries={[{ pathname: '/photos/777', state }]}>
-    <Routes>
-      <Route path='/photos/:photoId' element={<PhotosComponent />} />
-    </Routes>
-  </MemoryRouter>
-)
+const renderDetail = (state = { feedPhoto: FEED_PHOTO }, id = ID_A) => {
+  // The frame is painted into #root — the edge's mount point — and enhanced through portals.
+  document.body.innerHTML = "<div id='root'></div><div id='wisaw-app'></div>"
+  return render(
+    <MemoryRouter initialEntries={[{ pathname: `/photos/${id}`, state }]}>
+      <Routes>
+        <Route path='/photos/:photoId' element={<PhotosComponent />} />
+      </Routes>
+    </MemoryRouter>
+  )
+}
 
-const mainImage = () => document.querySelector('img.mainImage')
-const thumbLayer = () => document.querySelector('.thumbnailImage')
+const mediaNode = () => document.querySelector('#root [data-wisaw-media]')
 
 // The mocked GraphQL call settles on microtasks only, so a burst of awaits flushes hydration
 // without depending on timers (which are faked for the warm-delay cases).
@@ -92,6 +104,8 @@ describe('detail page full-resolution media budget', () => {
     window.scrollTo = vi.fn()
     api.pages = null
     api.hang = null
+    detailSkeleton.__resetDetailSkeletonForTests()
+    seoText.__resetSeoTextForTests()
 
     requested = []
     class TrackedImage {
@@ -105,29 +119,30 @@ describe('detail page full-resolution media budget', () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.restoreAllMocks()
+    document.body.innerHTML = ''
   })
 
   it('paints only the thumbnail on a cold mobile deep link, and asks for no original', async () => {
-    api.pages = { 777: { getPhotoAllCurr: record('777'), getPhotoAllNext: null, getPhotoAllPrev: null } }
+    api.pages = { [ID_A]: { getPhotoAllCurr: record(ID_A), getPhotoAllNext: null, getPhotoAllPrev: null } }
     setViewport(390)
     renderDetail(null)
 
     expect(document.querySelector('.loading-spinner')).not.toBeNull()
-    expect(mainImage()).toBeNull()
+    expect(mediaNode()).toBeNull()
 
     await flush()
 
     // One media node, at the thumb source - there is no second layer to swap in later.
-    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
-    expect(thumbLayer()).toBeNull()
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
+    expect(document.querySelectorAll('#root .wsk-box img')).toHaveLength(1)
     expect(requested).toContain(THUMB_777)
     expect(requested).not.toContain(FULL_777)
   })
 
   it('paints the current record as soon as its own query settles, without waiting on neighbours', async () => {
     // Only curr answers; next/prev hang open forever. The LCP paint must not wait for them.
-    api.pages = { 777: { getPhotoAllCurr: record('777') } }
-    api.hang = ['777:getPhotoAllNext', '777:getPhotoAllPrev']
+    api.pages = { [ID_A]: { getPhotoAllCurr: record(ID_A) } }
+    api.hang = [`${ID_A}:getPhotoAllNext`, `${ID_A}:getPhotoAllPrev`]
     setViewport(390)
     renderDetail(null)
 
@@ -135,21 +150,17 @@ describe('detail page full-resolution media budget', () => {
 
     await flush()
 
-    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
     expect(document.querySelector('.loading-spinner')).toBeNull()
   })
 
-  it('paints the decoded thumbnail immediately when the feed card passed its record', () => {
+  it('paints the thumbnail immediately when the feed card passed its record', () => {
     setViewport(390)
     renderDetail()
 
     // The feed card just displayed this thumbnail, so the first commit paints it - no spinner.
-    // Below the breakpoint the load effect still starts it transparent: the raster happens on the
-    // img's own load event, not inside React's commit frame.
     expect(document.querySelector('.loading-spinner')).toBeNull()
-    const media = mainImage()
-    expect(media?.getAttribute('src')).toBe(THUMB_777)
-    expect(media?.style.opacity).toBe('0')
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
     expect(requested).toContain(THUMB_777)
     expect(requested).not.toContain(FULL_777)
   })
@@ -169,7 +180,7 @@ describe('detail page full-resolution media budget', () => {
 
     expect(requested).toContain(FULL_777)
     // Warming is a background pull only - the painted source stays the thumb.
-    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
   })
 
   it('paints the warmed original on the first pointer press', () => {
@@ -181,9 +192,8 @@ describe('detail page full-resolution media budget', () => {
 
     fireEvent.pointerDown(window)
 
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
-    // The sharp image fades in instead of being rastered inside the input's own frame (INP).
-    expect(mainImage()?.style.opacity).toBe('0')
+    // The swap happens on the node already on screen, so nothing re-lays-out.
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
   })
 
   it('upgrades at once when the visitor interacts before the delay is due', () => {
@@ -192,7 +202,7 @@ describe('detail page full-resolution media budget', () => {
 
     fireEvent.keyDown(window, { key: 'Escape' })
 
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
     expect(requested).toContain(FULL_777)
   })
 
@@ -201,45 +211,45 @@ describe('detail page full-resolution media budget', () => {
     renderDetail()
 
     fireEvent.wheel(window)
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
 
     setViewport(DETAIL_MOBILE_BREAKPOINT - 200)
     fireEvent.resize(window)
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
   })
 
   it('paints the original at hydration at or above the breakpoint', () => {
     setViewport(DETAIL_MOBILE_BREAKPOINT + 324)
     renderDetail()
 
-    const media = mainImage()
+    const media = mediaNode()
     expect(media?.getAttribute('src')).toBe(FULL_777)
-    expect(media?.getAttribute('fetchpriority')).toBe('high')
-    expect(media?.getAttribute('decoding')).toBe('async')
+    // The frame's own markup: eager, with the shell's preload script warming the bytes.
+    expect(media?.getAttribute('loading')).toBe('eager')
   })
 
   it('opens the gate at or above the breakpoint after a rotation', () => {
     setViewport(390)
     renderDetail()
-    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
 
     setViewport(DETAIL_MOBILE_BREAKPOINT + 100)
     fireEvent.resize(window)
 
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
   })
 
   it('paints the next record in full once a tap on next navigates', async () => {
     api.pages = {
-      777: { getPhotoAllCurr: record('777'), getPhotoAllNext: record('888'), getPhotoAllPrev: null },
-      888: { getPhotoAllCurr: record('888'), getPhotoAllNext: null, getPhotoAllPrev: record('777') }
+      [ID_A]: { getPhotoAllCurr: record(ID_A), getPhotoAllNext: record(ID_B), getPhotoAllPrev: null },
+      [ID_B]: { getPhotoAllCurr: record(ID_B), getPhotoAllNext: null, getPhotoAllPrev: record(ID_A) }
     }
     setViewport(390)
     renderDetail()
     await flush()
 
     // Neighbours obey the same gate: the next record's original is not even fetched yet.
-    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
     expect(requested).not.toContain(FULL_888)
 
     const nextButton = screen.getByText(/next/)
@@ -248,7 +258,8 @@ describe('detail page full-resolution media budget', () => {
     fireEvent.click(nextButton)
     await flush()
 
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_888)
+    // The tap's own pointerdown opened the paint gate, so the next page is painted sharp at once.
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_888)
   })
 
   it('asks for the original once, not once per re-render', () => {
@@ -274,7 +285,7 @@ describe('detail page full-resolution media budget', () => {
     try {
       renderDetail()
 
-      expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+      expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
       expect(requested).toContain(FULL_777)
     } finally {
       Object.defineProperty(window.navigator, 'userActivation', { configurable: true, value: undefined })
@@ -283,17 +294,18 @@ describe('detail page full-resolution media budget', () => {
 
   it('never upgrades a video to an image source; the player keeps its poster', async () => {
     api.pages = {
-      777: { getPhotoAllCurr: record('777', { video: true, videoUrl: 'https://img.wisaw.com/777.mp4' }), getPhotoAllNext: null, getPhotoAllPrev: null }
+      [ID_A]: { getPhotoAllCurr: record(ID_A, { video: true, videoUrl: `https://img.wisaw.com/${ID_A}.mp4` }), getPhotoAllNext: null, getPhotoAllPrev: null }
     }
     setViewport(390)
     renderDetail(null)
     await flush()
 
-    const poster = thumbLayer()
-    expect(poster?.getAttribute('src')).toBe(THUMB_777)
-    expect(document.querySelector('video.mainImage source')?.getAttribute('src'))
-      .toBe('https://img.wisaw.com/777.mp4')
-    expect(mainImage()).toBeNull()
+    const media = mediaNode()
+    expect(media.tagName).toBe('VIDEO')
+    expect(media.getAttribute('poster')).toBe(THUMB_777)
+    expect(media.getAttribute('src')).toBe(`https://img.wisaw.com/${ID_A}.mp4`)
+    // One node, not a poster layer plus a player: the video wears its own thumbnail.
+    expect(document.querySelectorAll('#root .wsk-box img')).toHaveLength(0)
 
     // No warm, no input: a video page has no full-resolution image to pull at all.
     act(() => {
@@ -302,44 +314,45 @@ describe('detail page full-resolution media budget', () => {
     fireEvent.pointerDown(window)
 
     expect(requested).not.toContain(FULL_777)
-    expect(mainImage()).toBeNull()
+    expect(document.querySelector('#root [data-wisaw-media]').tagName).toBe('VIDEO')
   })
 
   it('falls back to the thumbnail when a painted image source fails, never leaving a broken icon', async () => {
-    // The single media node carries the original below-deck until the paint gate swaps it, so its
-    // error path must re-point that very node at the thumb and fade it in - otherwise a 404 shows
-    // the browser's broken-image placeholder at full opacity.
-    api.pages = { 777: { getPhotoAllCurr: record('777'), getPhotoAllNext: null, getPhotoAllPrev: null } }
+    // The media node carries the original below-deck until the paint gate swaps it, so its error
+    // path must re-point that very node at the thumb - otherwise a 404 shows the browser's
+    // broken-image placeholder.
+    api.pages = { [ID_A]: { getPhotoAllCurr: record(ID_A), getPhotoAllNext: null, getPhotoAllPrev: null } }
     setViewport(390)
     renderDetail(null)
     await flush()
 
     fireEvent.pointerDown(window)
-    expect(mainImage()?.getAttribute('src')).toBe(FULL_777)
+    expect(mediaNode()?.getAttribute('src')).toBe(FULL_777)
 
-    fireEvent.error(mainImage())
+    fireEvent.error(mediaNode())
 
-    expect(mainImage()?.getAttribute('src')).toBe(THUMB_777)
-    expect(mainImage()?.style.opacity).toBe('1')
+    expect(mediaNode()?.getAttribute('src')).toBe(THUMB_777)
   })
 
-  it('anchors prev/next to the content container on the client-rendered page', async () => {
-    // The other half of the handoff contract: adopted mode anchors navigation to an anchor inside the
-    // edge's column precisely because this is where they sit once React owns the page. Moving them
-    // here (or changing this element's box) re-opens the visible jump and must fail this test too.
+  it('anchors prev/next to the frame column, not to the picture', async () => {
+    // Navigation used to anchor to <main class="content-container"> on the client-rendered page and
+    // to an anchor inside the edge's column while adopted — two boxes, one visible jump at handoff.
+    // There is one render path now, so both halves of that contract are this test.
     api.pages = {
-      777: { getPhotoAllCurr: record('777'), getPhotoAllNext: record('888'), getPhotoAllPrev: record('666') }
+      [ID_A]: { getPhotoAllCurr: record(ID_A), getPhotoAllNext: record(ID_B), getPhotoAllPrev: record(ID_C) }
     }
     setViewport(1024)
     renderDetail()
     await flush()
 
-    const main = document.querySelector('main.content-container')
-    expect(main).not.toBeNull()
+    const column = document.querySelector('#root .wsk-main')
+    expect(column).not.toBeNull()
+    expect(column.style.position).toBe('relative')
     for (const label of [/prev/, /next/]) {
       const link = screen.getByText(label).closest('a')
-      expect(link.parentElement, `${label} is a direct child of <main>`).toBe(main)
-      expect(main.style.position).toBe('relative')
+      const anchor = link.parentElement
+      expect(anchor.hasAttribute('data-wisaw-nav'), `${label} sits in the nav anchor`).toBe(true)
+      expect(anchor.parentElement, `${label} anchor lives in the column`).toBe(column)
     }
   })
 })
