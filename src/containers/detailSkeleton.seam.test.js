@@ -212,6 +212,19 @@ describe('detail skeleton seam (portal adoption)', () => {
     expect(document.querySelector('#root h1')?.textContent).toBe('What I Saw')
   })
 
+  it('keeps the below slot empty on an adopted frame until the record settles', async () => {
+    // This is the page PageSpeed measures: the edge's own copy, whose wording is final from the start.
+    // That alone must not open the gate — the footer would then ride the growth when comments land,
+    // which is exactly the shift landscape records report. The media node stays untouched throughout.
+    const { belowSlot, mediaNode } = bootWithSkeleton()
+
+    await flush() // api.pages stays null: hydration keeps the seeded record, queries pending
+
+    expect(belowSlot.children).toHaveLength(0)
+    expect(document.querySelector('footer')).toBeNull()
+    expect(document.querySelector('[data-wisaw-media]')).toBe(mediaNode)
+  })
+
   it('issues zero <head> mutations on the detail route', async () => {
     api.pages = { [PHOTO_ID]: { getPhotoAllCurr: currRecord([]) } }
 

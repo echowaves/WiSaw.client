@@ -1,9 +1,9 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { createElement } from 'react'
 
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 // The GraphQL call must never settle by default: these tests pin the *pre-hydration*
@@ -111,10 +111,11 @@ describe('detail page pre-hydration layout (CLS guards)', () => {
     const media = box.querySelector('[data-wisaw-media]')
     expect(media.getAttribute('src')).toBe(FEED_PHOTO.imgUrl)
 
-    // The loaded page does render the footer, so its position is only ever set by
-    // content that already exists - never re-flowed under a painted footer.
-    expect(await screen.findByText('site footer')).toBeInTheDocument()
-    expect(document.querySelector("#root [data-wisaw-slot='below'] footer")).not.toBeNull()
+    // Nothing under the media paints while its comments and recognitions are still unknown. A footer
+    // painted now would ride their growth (the landscape-photo shift this gates out), so the slot
+    // stays empty and the frame's transparent reserve is all that occupies it.
+    expect(document.querySelector('footer')).toBeNull()
+    expect(document.querySelector("#root [data-wisaw-slot='below'] .comments-section")).toBeNull()
   })
 })
 
@@ -210,6 +211,149 @@ describe('detail page empty states (CLS guards)', () => {
   })
 })
 
+// The shift this suite gates out: comments and recognitions arrive after the media has painted, and
+// on a client-painted frame the published wording arrives after that and can grow the heading /
+// description / tag row. Anything already painted under them is pushed down — visible only when the
+// media is short, i.e. landscape records, which is what field CLS reported. Reserving heights cannot
+// win (comment count and label wrapping are unbounded), so the region mounts once, final.
+describe('below-media finality gate', () => {
+  const OTHER_ID = '1f1e1d1c-2b2a-3938-4746-555453525150'
+
+  const settleRecord = (extra) => {
+    api.response = {
+      data: {
+        getPhotoAllCurr: { photo: { ...FEED_PHOTO }, comments: [], recognitions: [], ...extra }
+      }
+    }
+  }
+
+  const renderWithNavLink = (state) => {
+    document.body.innerHTML = "<div id='root'></div><div id='wisaw-app'></div>"
+    return render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={[{ pathname: `/photos/${PHOTO_ID}`, state }]}>
+          <Link to={`/photos/${OTHER_ID}`}>leave</Link>
+          <Routes>
+            <Route path='/photos/:photoId' element={<PhotosComponent />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
+    )
+  }
+
+  const belowSlot = () => document.querySelector("#root [data-wisaw-slot='below']")
+
+  beforeEach(() => {
+    detailSkeleton.__resetDetailSkeletonForTests()
+    seoText.__resetSeoTextForTests()
+  })
+
+  afterEach(() => {
+    api.response = null
+    vi.mocked(fetch).mockResolvedValue({ ok: false, status: 404 })
+    document.body.innerHTML = ''
+  })
+
+  it('paints comments, labels and footer together, once the record has settled', async () => {
+    settleRecord({ comments: [{ id: 'c1', comment: 'great shot' }] })
+    renderAt({ feedPhoto: FEED_PHOTO })
+
+    // The unsettled half of this invariant is pinned by the two suites above (a record whose query
+    // never answers paints no footer and no slot content); here it is what lands, and in what order.
+    expect(await screen.findByText('great shot')).toBeInTheDocument()
+    await screen.findByText('site footer')
+
+    // Comments first, footer last: nothing painted can ever sit under a growing block.
+    expect(belowSlot().children).toHaveLength(2)
+    expect(belowSlot().lastElementChild.tagName).toBe('FOOTER')
+    expect(belowSlot().contains(screen.getByText('great shot'))).toBe(true)
+  })
+
+  it('holds the region while the published wording is still in flight, then opens', async () => {
+    // A sidecar that answers late re-words the frame above the slot (refreshFrameText), which would
+    // move whatever was already painted under it — so a slow-but-successful read keeps the gate shut
+    // until it lands. The alt text proves the record half settled in the meantime.
+    let releaseSidecar
+    vi.mocked(fetch).mockReturnValueOnce(new Promise((resolve) => {
+      releaseSidecar = () => resolve({ ok: false, status: 404 })
+    }))
+    settleRecord({ comments: [{ id: 'c1', comment: 'great shot' }] })
+    renderAt({ feedPhoto: FEED_PHOTO })
+
+    await mediaAltIs('great shot')
+    expect(belowSlot().children).toHaveLength(0)
+
+    releaseSidecar()
+    await screen.findByText('site footer')
+    expect(belowSlot().contains(screen.getByText('great shot'))).toBe(true)
+  })
+
+  it('settles the gate when the record cannot be read, so the site chrome survives', async () => {
+    // fetchCurrPhoto resolves null rather than rejecting. A record that will never grow its comments
+    // must not hold the footer hostage, or a failed read would cost the page its only site links.
+    api.response = { data: { getPhotoAllCurr: null } }
+    renderAt({ feedPhoto: FEED_PHOTO })
+
+    expect(await screen.findByText('site footer')).toBeInTheDocument()
+  })
+
+  it('still paints comments and footer when the wording request fails outright', async () => {
+    // A failed attempt is final too: gating on an *answer* would strand the site footer offline.
+    vi.mocked(fetch).mockRejectedValue(new Error('offline'))
+    settleRecord({ comments: [{ id: 'c1', comment: 'great shot' }] })
+    renderAt({ feedPhoto: FEED_PHOTO })
+
+    expect(await screen.findByText('great shot')).toBeInTheDocument()
+    expect(await screen.findByText('site footer')).toBeInTheDocument()
+  })
+
+  it('takes the region down as soon as the route leaves its record', async () => {
+    settleRecord({ comments: [{ id: 'c1', comment: 'great shot' }] })
+    renderWithNavLink({ feedPhoto: FEED_PHOTO })
+    await screen.findByText('site footer')
+
+    fireEvent.click(screen.getByText('leave'))
+
+    // A record that does not belong to this route renders nothing of React's own (PhotosComponent
+    // returns null once the id mismatches), so the enhancement layer is gone in that same commit —
+    // before any new frame can be painted under it. Removals cannot shift; a footer left in place
+    // under a media box about to change aspect ratio would.
+    expect(document.querySelector('footer')).toBeNull()
+    expect(document.querySelector('.comments-section')).toBeNull()
+    // And the page is still a page: the waiting placeholder, not a blank document.
+    expect(document.querySelector('.crop')).not.toBeNull()
+  })
+
+  it('shows no glass panel for a record with nothing to recognise', async () => {
+    // The gate makes "settled, no recognitions" permanent rather than transient, so the empty box
+    // must not wear chrome.
+    settleRecord()
+    renderAt({ feedPhoto: FEED_PHOTO })
+    await screen.findByText('site footer')
+
+    const tags = document.querySelector('.recognition-tags')
+    expect(tags.className).toContain('recognition-tags--slot')
+  })
+
+  it('keeps the panel chrome once there is something to recognise', async () => {
+    // Four labels, because this component's own tag block renders Labels.slice(3, 6) in its heading.
+    settleRecord({
+      recognitions: [{
+        id: 'r1',
+        metaData: JSON.stringify({
+          Labels: ['Heron', 'Wader', 'Wetland', 'Bird'].map((Name) => ({ Name, Confidence: 90 }))
+        })
+      }]
+    })
+    renderAt({ feedPhoto: FEED_PHOTO })
+    await screen.findByText('site footer')
+
+    const tags = document.querySelector('.recognition-tags')
+    expect(tags.className).not.toContain('--slot')
+    expect(tags.querySelector('a')).not.toBeNull()
+  })
+})
+
 describe('the published wording a painted frame may wear', () => {
   const photo = { id: PHOTO_ID, video: false }
   const wording = {
@@ -237,8 +381,16 @@ describe('the published wording a painted frame may wear', () => {
   })
 })
 
-// The frame is painted by an effect after commit, so the box shows up one tick later.
+// The frame is painted by an effect after commit, so the box shows up one tick later. It waits on
+// the frame itself: the region under it is gated (see the finality suite), so the footer is no longer
+// a signal that a page exists.
 async function waitForBox () {
-  await screen.findByText('site footer')
+  await waitFor(() => expect(document.querySelector('#root .wsk-box')).not.toBeNull())
   return document.querySelector('#root .wsk-box')
 }
+
+// The painted media's alt text comes from the record's first comment, so it proves the record landed
+// without going through the gated region under the media.
+const mediaAltIs = (alt) => waitFor(() => {
+  expect(document.querySelector('#root [data-wisaw-media]').getAttribute('alt')).toBe(alt)
+})
