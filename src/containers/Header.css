@@ -129,13 +129,12 @@
   justify-content: center;
 }
 
+/* Solid rather than gradient-clipped: a clipped wordmark has no colour an auditor can measure,
+   and the lightest stop of the old gradient was 1.4:1 against the header. */
 .logo-title {
   font-size: 1.5rem;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--mint) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--wordmark);
   line-height: 1.1;
 }
 
@@ -188,7 +187,7 @@
 }
 
 .nav-menu a.active {
-  color: var(--accent-light);
+  color: var(--link);
   border-color: rgba(124, 140, 248, 0.25);
 }
 

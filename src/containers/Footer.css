@@ -104,11 +104,11 @@
 
 .footer-section .link-group a:hover,
 .footer-links a:hover {
-  color: var(--accent-light);
+  color: var(--link-hover);
 }
 
 .footer-section .hashtag {
-  color: var(--accent-light);
+  color: var(--link);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -154,10 +154,7 @@
 
 .footer-bottom .brand-text {
   font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-light) 0%, var(--mint) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--wordmark);
   font-size: 1rem;
 }
 

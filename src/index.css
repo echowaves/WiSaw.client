@@ -10,6 +10,16 @@
   --mint: #5ee9b5;
   --mint-light: #8af0cc;
 
+  /* Text-safe semantic colours. The brand tokens above are for fills, borders and glows, where
+     contrast does not apply; anything that paints a string uses one of these instead, and
+     src/a11yContrast.contract.test.js measures every pair at WCAG AA in both themes. */
+  --link: #2f43c4;
+  --link-hover: #1e3a8a;
+  --btn-bg: #4f5fd0;
+  --btn-bg-hover: #3d4bb0;
+  --danger-text: #b91c1c;
+  --wordmark: #3f4bd8;
+
   /* Light neutrals */
   --bg: #f5f7fb;
   --bg-raised: #ffffff;
@@ -23,7 +33,7 @@
   /* Text */
   --text-primary: #111827;
   --text-secondary: #4b5563;
-  --text-muted: #6b7280;
+  --text-muted: #5b6472;
 
   /* Shadows */
   --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
@@ -55,7 +65,15 @@
     --header-bg: rgba(17, 17, 19, 0.88);
     --text-primary: #ececf0;
     --text-secondary: #9e9eab;
-    --text-muted: #6a6a76;
+    /* Dark keeps the brand's light link colour (10:1 on the page background) and only lifts the
+       muted step, which sat at 3.26:1 on a raised panel. */
+    --link: #b0b8ff;
+    --link-hover: var(--mint);
+    --btn-bg: #4f5fd0;
+    --btn-bg-hover: #3d4bb0;
+    --danger-text: #f87171;
+    --wordmark: #b0b8ff;
+    --text-muted: #91919e;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
@@ -75,7 +93,13 @@
   --header-bg: rgba(245, 247, 251, 0.88);
   --text-primary: #111827;
   --text-secondary: #4b5563;
-  --text-muted: #6b7280;
+  --link: #2f43c4;
+  --link-hover: #1e3a8a;
+  --btn-bg: #4f5fd0;
+  --btn-bg-hover: #3d4bb0;
+  --danger-text: #b91c1c;
+  --wordmark: #3f4bd8;
+  --text-muted: #5b6472;
   --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.12);
   --shadow-lg: 0 8px 30px rgba(15, 23, 42, 0.14);
@@ -94,7 +118,13 @@
   --header-bg: rgba(17, 17, 19, 0.88);
   --text-primary: #ececf0;
   --text-secondary: #9e9eab;
-  --text-muted: #6a6a76;
+  --link: #b0b8ff;
+  --link-hover: var(--mint);
+  --btn-bg: #4f5fd0;
+  --btn-bg-hover: #3d4bb0;
+  --danger-text: #f87171;
+  --wordmark: #b0b8ff;
+  --text-muted: #91919e;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.4);
@@ -131,14 +161,16 @@ code {
     Consolas, 'Courier New', monospace;
 }
 
+/* Every anchor that carries no colour of its own — the detail frame's tag chips and its home link
+   included — inherits this pair, so it is the one rule that clears the site-wide audit failure. */
 a {
-  color: var(--accent-light);
+  color: var(--link);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 a:hover {
-  color: var(--mint);
+  color: var(--link-hover);
 }
 
 img {
@@ -174,5 +206,5 @@ textarea {
 /* Selection colour */
 ::selection {
   background: rgba(124, 140, 248, 0.3);
-  color: #fff;
+  color: var(--text-primary);
 }

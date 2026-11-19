@@ -184,7 +184,7 @@ const renderLoadingFallback = () => (
     alignItems: 'center',
     minHeight: '100vh',
     fontSize: '1.2rem',
-    color: 'var(--accent-light)'
+    color: 'var(--link)'
   }}
   >
     Loading...

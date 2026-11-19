@@ -52,7 +52,7 @@ const About = () => {
 
         </p>
         <h2 style={{ textAlign: 'left' }}>Contact Us</h2>
-        <p style={{ textAlign: 'left' }}>Have questions, feedback, or just want to say hello? <a href='/contact' style={{ color: 'var(--accent-light)' }}>Reach out to us</a>. We&apos;d love to hear from you!</p>
+        <p style={{ textAlign: 'left' }}>Have questions, feedback, or just want to say hello? <a href='/contact' style={{ color: 'var(--link)' }}>Reach out to us</a>. We&apos;d love to hear from you!</p>
 
       </div>
       <Footer />

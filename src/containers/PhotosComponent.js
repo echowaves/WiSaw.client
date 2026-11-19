@@ -979,8 +979,9 @@ const PhotosComponent = function () {
       const moderationLabels = JSON.parse(recognition?.metaData)?.ModerationLabels
 
       // Helper function to get confidence-based styles
+      // Confidence reads from size and weight only: alpha on text is what the axe colour-contrast
+      // rule measures against the pill, so scaling it made every low-confidence label fail AA.
       const getConfidenceStyle = (confidence) => ({
-        opacity: Math.max(0.5, confidence / 100),
         fontSize: `${Math.max(0.7, confidence / 100)}em`,
         fontWeight: Math.max(400, 400 + (confidence / 100) * 300),
         transform: `scale(${Math.max(0.85, confidence / 100)})`,
@@ -1070,7 +1071,7 @@ const PhotosComponent = function () {
                   fontSize: '18px',
                   fontWeight: '700',
                   margin: '0',
-                  color: 'var(--accent-light)'
+                  color: 'var(--link)'
                 }}
                 >📝 Recognized Text
                 </h3>
@@ -1088,7 +1089,6 @@ const PhotosComponent = function () {
                     key={text.Id} style={{
                       fontSize: `${Math.max(Math.min(text.Confidence, 100), 60)}%`,
                       lineHeight: 1.6,
-                      opacity: Math.max(0.6, text.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (text.Confidence / 100) * 200),
                       padding: '6px 12px',
                       background: 'rgba(124, 140, 248, 0.08)',
@@ -1128,7 +1128,7 @@ const PhotosComponent = function () {
                   fontSize: '18px',
                   fontWeight: '700',
                   margin: '0',
-                  color: '#f87171'
+                  color: 'var(--danger-text)'
                 }}
                 >⚠️ Content Moderation
                 </h3>
@@ -1146,7 +1146,6 @@ const PhotosComponent = function () {
                     key={label.Name} style={{
                       fontSize: `${Math.max(Math.min(label.Confidence, 100), 60)}%`,
                       lineHeight: 1.6,
-                      opacity: Math.max(0.6, label.Confidence / 100),
                       fontWeight: Math.max(500, 500 + (label.Confidence / 100) * 200),
                       padding: '6px 12px',
                       background: 'rgba(248, 113, 113, 0.1)',
@@ -1155,7 +1154,7 @@ const PhotosComponent = function () {
                       display: 'inline-block',
                       transition: 'all 0.3s ease',
                       boxShadow: '0 2px 8px rgba(248, 113, 113, 0.1)',
-                      color: '#f87171'
+                      color: 'var(--danger-text)'
                     }}
                   >
                     {stringifyObject(label.Name).replace(/'/g, '')}

@@ -29,7 +29,7 @@
 /* ---- Buttons ---- */
 .button {
     border: none;
-    background: var(--accent);
+    background: var(--btn-bg);
     color: #fff;
     font-weight: 600;
     padding: 10px 24px;
@@ -44,7 +44,7 @@
 }
 
 .button:hover {
-    background: var(--accent-dark);
+    background: var(--btn-bg-hover);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md), var(--shadow-glow);
 }
@@ -99,7 +99,7 @@
 }
 
 .recognition-tags a {
-    color: var(--accent-light);
+    color: var(--link);
     text-decoration: none;
     padding: 5px 14px;
     border-radius: var(--radius-xl);
@@ -114,8 +114,8 @@
 }
 
 .recognition-tags a:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--btn-bg);
+    border-color: var(--btn-bg);
     color: #fff;
 }
 
@@ -176,12 +176,12 @@
 }
 
 .text-detection {
-    color: var(--accent-light);
+    color: var(--link);
     font-weight: 600;
 }
 
 .moderation-labels {
-    color: #f87171;
+    color: var(--danger-text);
     font-weight: 600;
 }
 
@@ -259,6 +259,15 @@
     transition: all 0.2s var(--ease-out) !important;
 }
 
+/* Bootstrap's own placeholder colour is scoped to [data-bs-theme=dark], which this app never sets,
+   so its dark-grey rgba(33,37,41,.75) lands on a near-black field in dark mode (1.09:1). The search
+   box is the only text input on the site, and its placeholder is the whole empty-state prompt. */
+.form-control::placeholder,
+.form-select::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
 .form-control:focus,
 .form-select:focus {
     border-color: var(--accent) !important;
@@ -267,8 +276,8 @@
 }
 
 .btn-primary {
-    background: var(--accent) !important;
-    border-color: var(--accent) !important;
+    background: var(--btn-bg) !important;
+    border-color: var(--btn-bg) !important;
     color: #fff !important;
     border-radius: var(--radius-lg) !important;
     padding: 8px 20px !important;
@@ -277,8 +286,8 @@
 }
 
 .btn-primary:hover {
-    background: var(--accent-dark) !important;
-    border-color: var(--accent-dark) !important;
+    background: var(--btn-bg-hover) !important;
+    border-color: var(--btn-bg-hover) !important;
     transform: translateY(-1px) !important;
     box-shadow: var(--shadow-md) !important;
 }
