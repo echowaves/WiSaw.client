@@ -45,11 +45,25 @@ Pinning: the handoff is guarded by a new case in `detailSkeleton.seam.test.js`, 
 
 ## Verification
 
-**Commands:**
-- `node <harness>/cls-probe.mjs http://127.0.0.1:8900/photos/7b839cf4-4676-4d12-9cd0-220f26515ad2 out.json` after `npm run build && python3 <harness>/mklocal.py build <outDir>` -- expected: CLS **< 0.02** (baseline 0.1941) with the ±64 px and ~880 px shifts gone
-- same probe on `/photos/2f3c38f7-9c2d-4c8b-9098-894070265dd7` -- expected: CLS ≤ 0.0186, no new shifts
-- `npx vitest run` -- expected: all suites green (baseline 198 tests / 17 files)
-- `npx eslint src/containers/PhotosComponent.js src/containers/PhotosComponent.cls.test.js src/containers/detailSlotStyles.contract.test.js` -- expected: clean
+**Commands** (`<harness>` = `/Users/dmitry/.copilot/session-state/9aa3f22d-2340-4af1-af46-84115a9106c7/files/cls-harness`, needs the detached Chrome on `:9333` — see `<harness>/README.md`):
+
+```bash
+npm run build && python3 <harness>/mklocal2.py build <harness>/site-check <harness>/prod-landscape.html
+python3 <harness>/serve.py <harness>/site-check 8904 &
+curl -sI http://127.0.0.1:8904/local/assets/<entry>.js   # must be text/javascript, else nothing booted
+node <harness>/cls-probe.mjs http://127.0.0.1:8904/photos/2f3c38f7-9c2d-4c8b-9098-894070265dd7?local=1
+node <harness>/cls-probe.mjs http://127.0.0.1:8904/photos/a8697b17-7b63-41ac-a65c-481793fbccb6?local=1
+```
+
+Expected: CLS **< 0.02** with one entry (the wording reflow) and `docHeight` above the viewport — a
+`CLS 0` reading with `docHeight == viewport height` means React never booted, not a clean page
+(`node <harness>/cdp-console.mjs <url>` says why). Baselines for comparison: portrait **0.1941**,
+landscape **0.0186** (`local-rev.json`, `local-land.json`). Do not use the deep link
+`/photos/7b839cf4-…` again — CloudFront answers 404 for it now, and most feed ids do too (separate
+production issue).
+
+- `npx vitest run` -- expected: all suites green (baseline at `2f5bbde` is 190 tests / 17 files; this change ships 195)
+- `npx eslint <changed files>` -- expected: clean (`src/setupTests.js` has pre-existing indent errors from `347e1fe`; untouched here)
 - `npm run build && npm run postbuild` -- expected: build + edge-injector contract test green
 
 **Manual checks:**
