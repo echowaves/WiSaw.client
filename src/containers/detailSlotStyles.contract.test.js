@@ -15,10 +15,15 @@ const block = (selector) => {
 
 describe('detail page slot stylesheet contract', () => {
   it('overrides card chrome with selectors specific enough to win the cascade', () => {
-    // `.comments-section { background: … }` is declared later in the file, so a
-    // single-class `.comments-section--slot` rule would lose and paint an empty panel.
+    // `.recognition-tags { background: … }` is declared later in the file, so a single-class
+    // `--slot` rule would lose and paint an empty panel. The comments slot is gone entirely — a
+    // photo without comments renders nothing there — so only this half must survive.
     expect(css).toMatch(/\.recognition-tags\.recognition-tags--slot/)
-    expect(css).toMatch(/\.comments-section\.comments-section--slot/)
+    // Comments stripped first: the prose above names the class it removed, and a bare
+    // `…--slot {` regex would miss the ways the rule could come back (grouped selector list,
+    // `:where()`, `html body` prefix). With no comment text left, any occurrence is a selector.
+    const code = css.replace(/\/\*[\s\S]*?\*\//g, '')
+    expect(code).not.toMatch(/comments-section--slot/)
   })
 
   it('reserves one label row that cannot wrap and floors it at a full-size pill', () => {

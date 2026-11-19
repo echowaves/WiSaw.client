@@ -151,27 +151,6 @@ const RecognitionLabelsSkeleton = () => (
 )
 
 /**
- * First-comment row reserved while comments are unknown, sized like the hydrated
- * `<p className='comment-text' style={{ fontSize: 24, fontWeight: 600 }}>`. It stays
- * mounted (transparent) once we know a photo has no comments, so the slot height is
- * the same in every state and cannot move what sits below it. Longer comments only
- * move content below the fold.
- */
-const CommentSlotSkeleton = () => (
-  <div className='comments-section comments-section--slot'>
-    <div>
-      <p
-        className='comment-text skeleton-comment'
-        style={{ fontSize: 24, fontWeight: 600 }}
-        aria-hidden='true'
-      >
-        &nbsp;
-      </p>
-    </div>
-  </div>
-)
-
-/**
  * The play button, loading spinner and error alert layered over a video. Rendered inside the
  * media box in both render paths - portaled into the edge-painted box in adopted mode, inline in
  * the fully client-rendered page - so the two can never drift apart.
@@ -252,8 +231,13 @@ const VideoOverlays = ({ showVideoPlayer, videoReady, videoError, onPlayRequest 
 )
 
 /**
- * Everything below the media box: comments (or the reserved slot), recognitions and a small
- * spacer. Shared by both render paths so adopted and client-rendered pages lay out identically.
+ * Everything below the media box: comments, recognitions and a small spacer. Shared by both render
+ * paths so adopted and client-rendered pages lay out identically.
+ *
+ * A photo without comments renders nothing here rather than an invisible placeholder row: the 91px
+ * reserve it replaced was transparent dead space measured on real photos. Nothing below this block
+ * is painted while it can still grow — `belowSlotIsFinal` holds the footer back until the record has
+ * settled — so a growing tags panel has nothing left to push, and no reserve is needed here.
  */
 const BelowMediaContent = ({ currPhoto, renderRecognitions }) => (
   <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -280,13 +264,18 @@ const BelowMediaContent = ({ currPhoto, renderRecognitions }) => (
           </div>
         ))}
       </div>
-    ) : <CommentSlotSkeleton />}
+    ) : null}
     <div className='recognition-tags'>
       {currPhoto.recognitions && renderRecognitions(currPhoto?.recognitions[0])}
     </div>
     <div style={{ margin: '6px', align: 'center' }} />
   </div>
 )
+
+// How long the footer waits for the block above it to reach its final height. Long enough for a
+// cold AppSync round trip on a throttled phone, short enough that a request that never answers
+// cannot keep the footer off the page.
+export const BELOW_SLOT_FINAL_WAIT_MS = 4000
 
 const PhotosComponent = function () {
   const { photoId } = useParams()
@@ -311,6 +300,26 @@ const PhotosComponent = function () {
     currReady: bootstrappedPhoto != null || skeletonSeeded != null,
     requestComplete: false
   }))
+
+  // The footer shares the frame's below slot with the comments/recognitions block, so it must not
+  // be painted while that block can still grow. Measured on a real photo: the tags panel went from
+  // 30px to 1356px after the footer was already on screen, pushing it 880px down (CLS 0.034).
+  // `requestComplete` is the page-level signal that nothing below the media can grow any more (the
+  // record and its neighbours have answered); it is reset whenever photoId changes. The timer marker
+  // is cleared on every navigation too — otherwise a revisit to a photo whose request hung would read
+  // its own old marker and paint the footer immediately, mid-fetch. If a request never answers, the
+  // bounded wait opens the gate anyway rather than strand the footer.
+  const [belowSlotWaitedFor, setBelowSlotWaitedFor] = useState(null)
+  const belowSlotIsFinal = internalState.requestComplete || belowSlotWaitedFor === photoId
+
+  useEffect(() => {
+    setBelowSlotWaitedFor(null)
+    if (internalState.requestComplete) {
+      return undefined
+    }
+    const timer = setTimeout(() => setBelowSlotWaitedFor(photoId), BELOW_SLOT_FINAL_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [photoId, internalState.requestComplete])
 
   // No display-size state: the media box is laid out by the shared detail template
   // (detailTemplate.generated.js `mediaBoxStyle`), which both the edge and this component paint from
@@ -854,8 +863,10 @@ const PhotosComponent = function () {
   const paintCurrentPhoto = useCallback((curr) => {
     if (curr == null) {
       // Failed fetch: keep any content already painted (bootstrapped or cached); only fall
-      // through to NoMatch when nothing valid is on screen.
-      setInternalState((prev) => ({ ...prev, currReady: true }))
+      // through to NoMatch when nothing valid is on screen. Nothing can grow below the media from
+      // here, so the below slot counts as settled — otherwise a failed record makes the footer sit
+      // out the whole bounded wait for data that will never come.
+      setInternalState((prev) => ({ ...prev, currReady: true, requestComplete: true }))
       return
     }
 
@@ -1259,7 +1270,7 @@ const PhotosComponent = function () {
           )}
         </Suspense>
         <Suspense fallback={null}>
-          {frame.belowSlot && createPortal(<Footer />, frame.belowSlot)}
+          {frame.belowSlot && belowSlotIsFinal && createPortal(<Footer />, frame.belowSlot)}
         </Suspense>
       </>
     )

@@ -57,6 +57,55 @@
       max-width: min(1100px, calc(100% - 40px));
       margin: 0 auto;
     }
+
+    /* Header geometry. On a photo page the edge reserves the header's height with
+       `.wsk-slot-header{min-height:72px}` (64px on mobile) and React takes over that slot by
+       setting it to `display:contents`, which deletes the reservation — from that moment the
+       header's own height is what holds the page up. If only the async sheet knows that height,
+       the frame first jumps up by the full header height and then back down when the sheet
+       lands: two shifts of the whole viewport, measured at 0.14 CLS alone. These rules mirror
+       `#header` and `.header-container` in src/containers/Header.css (values pinned against it,
+       and against HEADER_DESKTOP_PX/HEADER_MOBILE_PX, by src/lcpBootstrap.template.test.js). The
+       border colour is spelled out because `var(--border)` is defined in the async sheet; the
+       background and blur are deliberately left out — they change no box. */
+    #header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
+    /* Both --border values spelled out (src/index.css): the dark-mode header must not flash the
+       light rule while the async sheet is still in flight. */
+    @media (prefers-color-scheme: dark) {
+      #header { border-bottom-color: rgba(255, 255, 255, 0.06) }
+    }
+
+    .header-container {
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 72px;
+      padding: 0 24px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .header-container {
+        height: 64px;
+        padding: 0 16px;
+      }
+    }
+
+    /* Header.css narrows the padding once more at 480px. The heights above are what hold the page
+       up, but skipping this left the header's own content stepping sideways on small phones. */
+    @media screen and (max-width: 480px) {
+      .header-container {
+        padding: 0 12px;
+      }
+    }
   </style>
 
   <meta name="google-site-verification" content="RQGZzEN0xtT0w38pKeQ1L8u8P6dn7zxfu03jt0LGgF4" />

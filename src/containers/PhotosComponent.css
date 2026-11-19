@@ -142,12 +142,11 @@
     min-height: calc(1.4em + 20px);
 }
 
-/* A slot that turns out to stay empty keeps its height and loses its chrome, so it
-   neither moves what is below it nor shows an empty glass panel. Both selectors are
-   compound on purpose: `.comments-section` and `.recognition-tags` are declared later
-   in this file and would otherwise win the cascade. */
-.recognition-tags.recognition-tags--slot,
-.comments-section.comments-section--slot {
+/* A placeholder slot loses its chrome so it never shows an empty glass panel. The selector is
+   compound on purpose: `.recognition-tags` is declared later in this file and would otherwise win
+   the cascade. (`.comments-section--slot` used to belong here too; the comments block now renders
+   nothing at all when a photo has no comments, because it mounts with its final height anyway.) */
+.recognition-tags.recognition-tags--slot {
     background: transparent;
     border-color: transparent;
 }
@@ -158,10 +157,6 @@
 .recognition-tags .skeleton-pill-row {
     white-space: nowrap;
     overflow: hidden;
-}
-
-.comments-section .skeleton-comment {
-    visibility: hidden;
 }
 
 /* ---- Comments section ---- */

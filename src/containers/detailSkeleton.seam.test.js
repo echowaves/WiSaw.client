@@ -27,11 +27,22 @@ vi.mock('../consts', () => ({
 vi.mock('react-ga4', () => ({ default: { initialize: vi.fn(), send: vi.fn() } }))
 
 // The real Header carries the theme dropdown and its matchMedia listener - heavy for a DOM-seam
-// test. A stand-in with an identifiable marker is enough to prove where the portal lands.
-vi.mock('./Header', () => ({ default: () => createElement('header', { id: 'test-header' }, 'test header') }))
+// test. A stand-in with an identifiable marker is enough to prove where the portal lands. The gate
+// keeps it available for every test except the one that pins the lazy-chunk handoff, which closes it
+// to hold the module out of reach and opens it again mid-test.
+const headerGate = vi.hoisted(() => ({ open: true, promise: null, release: null }))
+vi.mock('./Header', () => ({
+  default: () => {
+    if (!headerGate.open) {
+      throw headerGate.promise ?? (headerGate.promise = new Promise((resolve) => { headerGate.release = resolve }))
+    }
+    return createElement('header', { id: 'test-header' }, 'test header')
+  }
+}))
 vi.mock('./Footer', () => ({ default: () => createElement('footer', null, 'site footer') }))
 
 const App = (await import('../App')).default
+const { HEADER_SLOT_FINAL_WAIT_MS } = await import('../App')
 const detailSkeleton = await import('../utils/detailSkeleton')
 const seoText = await import('../utils/detailSeoText')
 
@@ -744,5 +755,65 @@ describe('detail skeleton seed (URLs published by the edge)', () => {
     seedDom(` data-wisaw-src='${PHOTO_ID}.webp' data-wisaw-thumb='${thumbUrl}'`)
     expect(detailSkeleton.captureDetailSkeleton()).not.toBeNull()
     expect(detailSkeleton.skeletonSeededPhoto(PHOTO_ID, 'photos')).toBeNull()
+  })
+})
+
+describe('the header slot hands over only to a rendered Header', () => {
+  afterEach(() => {
+    // A closed gate must never outlive the test that closed it, and a settled thenable cannot be
+    // re-thrown: both would leak into whichever test runs next in this file.
+    headerGate.open = true
+    headerGate.promise = null
+    headerGate.release = null
+  })
+
+  it('holds the reserved height while the lazy Header chunk is in flight', async () => {
+    // The edge reserves the header's height on the slot; AppShell drops that reservation so a
+    // sticky Header can travel the page. Doing it while the chunk is still loading takes a whole
+    // header away from under every painted node, then puts it back when the chunk lands — measured
+    // at 0.14 CLS on a throttled phone, in both orientations.
+    headerGate.open = false
+    try {
+      const refs = bootWithSkeleton()
+      await flush()
+
+      expect(refs.headerSlot.querySelector('#test-header')).toBeNull()
+      expect(refs.headerSlot.style.display).not.toBe('contents')
+
+      headerGate.open = true
+      headerGate.release?.()
+      await flush()
+
+      expect(refs.headerSlot.querySelector('#test-header')).not.toBeNull()
+      // Only now may the slot lose its own box, so the sticky Header keeps travelling the page.
+      expect(refs.headerSlot.style.display).toBe('contents')
+    } finally {
+      headerGate.open = true
+    }
+  })
+
+  it('releases the reservation rather than strand it when no Header ever arrives', async () => {
+    // The gate is a wait, not a promise: if the lazy chunk never loads, holding the reservation
+    // forever would leave an empty 72px band and no sticky header for the rest of the visit.
+    headerGate.open = false
+    try {
+      vi.useFakeTimers()
+      const refs = bootWithSkeleton()
+      await flush()
+
+      expect(refs.headerSlot.style.display).not.toBe('contents')
+
+      await act(async () => {
+        vi.advanceTimersByTime(HEADER_SLOT_FINAL_WAIT_MS + 50)
+        for (let i = 0; i < 12; i++) {
+          await Promise.resolve()
+        }
+      })
+
+      expect(refs.headerSlot.style.display).toBe('contents')
+    } finally {
+      vi.useRealTimers()
+      headerGate.open = true
+    }
   })
 })

@@ -5,7 +5,7 @@ import { createContext, runInContext } from 'node:vm'
 import { JSDOM } from 'jsdom'
 import { describe, expect, it } from 'vitest'
 
-import { DETAIL_MOBILE_BREAKPOINT } from './utils/detailLayout'
+import { DETAIL_MOBILE_BREAKPOINT, HEADER_DESKTOP_PX, HEADER_MOBILE_PX } from './utils/detailLayout'
 
 // The two inline scripts in index.html are the whole pre-hydration LCP path: Lambda@Edge paints a
 // full-resolution image into <div id="root">, and these decide which bytes that element points at.
@@ -151,6 +151,58 @@ describe('index.html critical CSS and script placement', () => {
     expect(indexCss).toMatch(/img\s*\{[^}]*max-width:\s*100%/i)
     expect(styleBlock).toContain('#f5f7fb')
     expect(styleBlock).toContain('#111113')
+  })
+
+  it('inlines the header height that keeps the adopted slot from collapsing', () => {
+    // React gives the edge's header slot `display:contents`, which deletes its reserved min-height;
+    // from then on the header's own height holds the page up. If only the async sheet knows that
+    // height, the frame jumps up by a whole header and back down when the sheet lands — two shifts
+    // of the viewport, measured at 0.14 CLS. So the numbers must be here, and identical in three
+    // places: this block, the app stylesheet, and what the edge reserves.
+    const headerCss = readFileSync(resolve('src/containers/Header.css'), 'utf8')
+
+    expect(styleBlock).toMatch(/#header\s*\{[^}]*position:\s*sticky/)
+    // `var(--border)` cannot be used here (the variable lives in the async sheet), so both of its
+    // values are spelled out — and they must be the stylesheet's own, or dark mode flashes a light
+    // hairline under the header.
+    const indexCss = readFileSync(resolve('src/index.css'), 'utf8')
+    const borderValues = [...new Set([...indexCss.matchAll(/--border:\s*([^;]+);/g)].map((m) => m[1].trim()))]
+
+    expect(borderValues.length).toBeGreaterThan(1)
+    for (const value of borderValues) {
+      expect(styleBlock, `critical block is missing the "${value}" header border`).toContain(value)
+    }
+
+    const desktop = styleBlock.match(/\.header-container\s*\{[^}]*height:\s*(\d+)px/)
+    const mobile = styleBlock.match(/max-width:\s*768px\s*\)\s*\{\s*\.header-container\s*\{[^}]*height:\s*(\d+)px/)
+
+    expect(desktop?.[1]).toBe(String(HEADER_DESKTOP_PX))
+    expect(mobile?.[1]).toBe(String(HEADER_MOBILE_PX))
+    expect(headerCss).toMatch(new RegExp(`\\.header-container\\s*\\{[^}]*height:\\s*${HEADER_DESKTOP_PX}px`))
+    expect(headerCss).toMatch(new RegExp(`\\.header-container\\s*\\{[^}]*height:\\s*${HEADER_MOBILE_PX}px`))
+
+    // Heights are not the only numbers this block copies: a padding or max-width that drifts slides
+    // the logo and menu sideways under the already-painted header, which is the same shift class.
+    // So every declaration the app sheet makes at each breakpoint must be present here, identical.
+    const declarations = (source, rule) => Object.fromEntries(
+      (source.match(rule)?.[1] ?? '')
+        .split(';')
+        .map((part) => part.split(':').map((piece) => piece.trim()))
+        .filter(([prop, value]) => prop && value)
+    )
+    const mirrored = (label, rule) => {
+      const app = declarations(headerCss, rule)
+      const inline = declarations(styleBlock, rule)
+      expect(Object.keys(app).length, `no ${label} rule found in Header.css`).toBeGreaterThan(0)
+      for (const [prop, value] of Object.entries(app)) {
+        expect(inline[prop], `critical block is missing "${prop}: ${value}" from ${label}`)
+          .toBe(value)
+      }
+    }
+
+    mirrored('.header-container', /\.header-container\s*\{([^}]*)\}/)
+    mirrored('.header-container at 768px', /max-width:\s*768px\s*\)\s*\{\s*\.header-container\s*\{([^}]*)\}/)
+    mirrored('.header-container at 480px', /max-width:\s*480px\s*\)\s*\{\s*\.header-container\s*\{([^}]*)\}/)
   })
 
   it('runs the swap script after #root as a classic parser-inserted script', () => {

@@ -1,5 +1,5 @@
 /* eslint-disable react/react-in-jsx-scope */
-import { Suspense, useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react'
+import { Suspense, useCallback, useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
@@ -191,6 +191,20 @@ const renderLoadingFallback = () => (
   </div>
 )
 
+// How long the header slot may hold its reservation with no Header in sight. Only reached when the
+// lazy chunk never arrives (lazyWithRetry exhausted): keeping the gate shut forever would leave a
+// permanently empty 72px band and no sticky header at all, which is worse than one late jump.
+export const HEADER_SLOT_FINAL_WAIT_MS = 8000
+
+// Renders nothing; reports that its siblings rendered, i.e. that whatever Suspense boundary holds
+// them has resolved. Used to hand a reserved slot over only once it really has content.
+const SlotMountNotice = ({ onMount }) => {
+  useEffect(() => {
+    onMount()
+  }, [onMount])
+  return null
+}
+
 // Renders Header and routes. While a detail-page frame is live for this route - the one Lambda@Edge
 // painted, or the one React painted after prev/next - the Header is portaled into that frame's own
 // header slot so React never reconciles its media node; otherwise it renders normally.
@@ -219,14 +233,32 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
   // drops the slot's own box (its reserved height stays painted until the handoff clear) so the
   // header's containing block becomes the tall .wsk and it keeps its travel. Cleared with the
   // inline style on handoff; the edge never styles this slot's display, so nothing else competes.
+  //
+  // It must wait for the Header to be in there, though: the Header is a lazy chunk, and dropping the
+  // reservation while the slot is still empty takes the page's header height away with nothing to
+  // replace it - the frame jumps up by a whole header, then back down when the chunk lands. Measured
+  // on a throttled phone at 412x915: two shifts of the entire viewport, 0.14 CLS on its own.
+  const [headerInSlot, setHeaderInSlot] = useState(false)
+  const markHeaderInSlot = useCallback(() => setHeaderInSlot(true), [])
+
+  // The notice is the normal path; this timer is the only escape hatch. Keyed on the frame so every
+  // adopted page arms its own wait, and cleared as soon as the Header reports in.
   useEffect(() => {
-    if (!adopted || !frame) {
+    if (!adopted || !frame || headerInSlot) {
+      return undefined
+    }
+    const timer = setTimeout(() => setHeaderInSlot(true), HEADER_SLOT_FINAL_WAIT_MS)
+    return () => clearTimeout(timer)
+  }, [adopted, frame, headerInSlot])
+
+  useEffect(() => {
+    if (!adopted || !frame || !headerInSlot) {
       return undefined
     }
     const headerSlot = frame.headerSlot
     headerSlot.style.display = 'contents'
     return () => { headerSlot.style.display = '' }
-  }, [adopted, frame])
+  }, [adopted, frame, headerInSlot])
 
   // The .App wrapper lives here (not in App) because adopted mode must switch it to the
   // transparent modifier: #wisaw-app comes after #root in DOM order, and the default .App is an
@@ -237,7 +269,12 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
       <Suspense fallback={adopted ? null : renderLoadingFallback()}>
         {adopted
           ? createPortal(
-            <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />,
+            <>
+              <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />
+              {/* Shares the Suspense boundary with the Header, so it renders only once that chunk
+                  has - the signal AppShell uses before dropping the slot's reserved height. */}
+              <SlotMountNotice onMount={markHeaderInSlot} />
+            </>,
             frame.headerSlot
           )
           : <Header themeMode={themeMode} onThemeModeChange={onThemeModeChange} />}

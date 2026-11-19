@@ -1,7 +1,7 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { createElement } from 'react'
 
-import { render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { HelmetProvider } from '@dr.pogodin/react-helmet'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -23,7 +23,7 @@ const PhotosComponent = (await import('./PhotosComponent')).default
 const detailSkeleton = await import('../utils/detailSkeleton')
 const seoText = await import('../utils/detailSeoText')
 const { COLD_BELOW_MEDIA_RESERVE } = await import('../utils/detailLayout')
-const { detailFrameParts } = await import('./PhotosComponent')
+const { BELOW_SLOT_FINAL_WAIT_MS, detailFrameParts } = await import('./PhotosComponent')
 const { FALLBACK_DESCRIPTIONS } = await import('../utils/detailTemplate.generated')
 
 // No published wording sidecar: the frame falls back to the record, which is what these
@@ -102,6 +102,10 @@ describe('detail page pre-hydration layout (CLS guards)', () => {
   })
 
   it('paints the shared frame at the record aspect ratio when a feed record bootstraps the page', async () => {
+    // The footer waits for the record that fills the slot above it, so this covers the settled page.
+    api.response = {
+      data: { getPhotoAllCurr: { photo: { ...FEED_PHOTO }, comments: [], recognitions: [] } }
+    }
     renderAt({ feedPhoto: FEED_PHOTO })
 
     // The same template the edge serves, in the edge's mount point, sized from the record.
@@ -155,16 +159,16 @@ describe('detail page empty states (CLS guards)', () => {
     expect(box.parentElement.querySelector('h1')).not.toBeNull()
   })
 
-  it('keeps the comments slot mounted when a photo has no comments', async () => {
+  it('renders no reserve above the tags panel when a photo has no comments', async () => {
     hydrateWith()
     renderAt({ feedPhoto: FEED_PHOTO })
     await screen.findByText('site footer')
 
-    const slot = document.querySelector('.comments-section')
-    expect(slot.className).toContain('comments-section--slot')
-    expect(slot.querySelector('.skeleton-comment')).not.toBeNull()
-    // It lives in the frame's reserved below-fold slot, so nothing under the media can move.
-    expect(slot.closest("[data-wisaw-slot='below']")).not.toBeNull()
+    // An invisible placeholder row used to sit here. Comments and recognitions arrive in the same
+    // record, so this block mounts at its final height either way — the reserve was only a blank
+    // band over the AI tags list (91px measured on a real photo).
+    expect(document.querySelector('.comments-section')).toBeNull()
+    expect(document.querySelector("[data-wisaw-slot='below'] .recognition-tags")).not.toBeNull()
   })
 
   it('paints one media node, eagerly, with no thumbnail layer to swap', async () => {
@@ -181,13 +185,43 @@ describe('detail page empty states (CLS guards)', () => {
     expect(document.querySelectorAll('#root img')).toHaveLength(1)
   })
 
-  it('fills the comments slot in place when a comment arrives', async () => {
+  it('renders comments above the tags panel when a photo has them', async () => {
     hydrateWith({ comments: [{ id: 'c1', comment: 'great shot' }] })
     renderAt({ feedPhoto: FEED_PHOTO })
     await screen.findByText('great shot')
 
-    expect(document.querySelector('.comments-section').className).not.toContain('--slot')
-    expect(document.querySelector('.comments-section .skeleton-comment')).toBeNull()
+    const comments = document.querySelector('.comments-section')
+    expect(comments.closest("[data-wisaw-slot='below']")).not.toBeNull()
+    // Comments sit directly above the tags panel — which is exactly why the footer, painted after
+    // both, must wait for this block instead of being pushed down by it.
+    expect(comments.nextElementSibling).toHaveClass('recognition-tags')
+  })
+
+  it('withholds the footer while the record that fills the slot above it is in flight', async () => {
+    // api.response is null here: the GraphQL answer never settles, which is the pre-hydration state
+    // the measurement showed pushing an already-painted footer down by 880px. The waits below are
+    // what make this an assertion rather than a race: once the slot's own content is painted and a
+    // macrotask has run, the lazy Footer chunk is resolved — so its absence is the gate's doing.
+    renderAt({ feedPhoto: FEED_PHOTO })
+    await waitForBox()
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)) })
+
+    expect(document.querySelector('footer')).toBeNull()
+  })
+
+  it('shows the footer on a bounded wait if the record never answers', async () => {
+    vi.useFakeTimers()
+    try {
+      renderAt({ feedPhoto: FEED_PHOTO })
+      expect(document.querySelector('footer')).toBeNull()
+
+      await act(async () => { vi.advanceTimersByTime(BELOW_SLOT_FINAL_WAIT_MS + 50) })
+
+      // A hung request may delay the footer, never strand it.
+      expect(document.querySelector('footer')).not.toBeNull()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('alt-texts the media with the first comment, as the edge describes the same photo', async () => {
@@ -239,6 +273,8 @@ describe('the published wording a painted frame may wear', () => {
 
 // The frame is painted by an effect after commit, so the box shows up one tick later.
 async function waitForBox () {
-  await screen.findByText('site footer')
+  // The box itself, not the footer: the footer deliberately waits for the record that fills the
+  // slot above it, so on an in-flight page the frame is painted and the footer is not.
+  await waitFor(() => expect(document.querySelector('#root .wsk-box')).not.toBeNull())
   return document.querySelector('#root .wsk-box')
 }
