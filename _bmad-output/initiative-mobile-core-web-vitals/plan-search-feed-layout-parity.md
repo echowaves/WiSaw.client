@@ -8,9 +8,9 @@ baseline_revision: 'fbbe965345b43c07b67068897da5b152558486cf'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context: ['.github/copilot-instructions.md']
 ---
@@ -100,8 +100,32 @@ context: ['.github/copilot-instructions.md']
 
 **Deliberate deltas:** Home's empty-feed frame no longer shows the plain-text loader nor a premature end message; Home's unreachable `` Photo ${id} `` alt fallback is gone (that branch only rendered when `lastComment` was truthy).
 
+**Matrix audit (planning thread):** three rows of the frozen I/O matrix had no covering test — null `width`/`height` fallback, "both pages re-measure" (`/` was untested and only `resize` was exercised), and listener cleanup on unmount. Added to `src/feedLayoutParity.contract.test.js`: a `UNKNOWN_DIMS` record rendered on both routes (no attrs emitted, `style.width: 'auto'`, card at full column, no `NaN` in the DOM, ▶ still inside `.thumbnail-wrapper`), an `orientationchange` re-measure case for `/`, a `removeEventListener` spy asserting both listeners are dropped on unmount, and `/videos/{id}` + ▶ badge assertions per route in the alt-text case. Parity file now 15 cases; full suite **240 passed / 20 files**; lint of every touched file still matches baseline exactly.
+
 
 
 ## Plan Change Log
 
 ## Review Triage Log
+
+**Pass 1 (2026-11-20, lens `quick`, run as a context-free subagent against the plan + `.github/copilot-instructions.md`):** 0 high / 0 medium / 5 low / 1 false. No intent_gap, no bad_plan, so no loopback.
+
+| Finding | Verdict | Evidence / route |
+|---|---|---|
+| `FeedGrid.js:95-115` + `PhotosComponent.css:362-368` — card sets no inline `objectFit`, so `.masonry-grid-column img { object-fit: cover }` still applies; matrix "no cropping" not delivered, and the test only reads inline style | **false** | Checked at the cited lines: the card's inline `height: 'auto'` with an explicit px width makes the content box always match the image's intrinsic ratio, so `cover` has nothing to crop. The same rule already styled Home's feed images since `52d81d4` with no observed cropping, so nothing regressed here. Its sub-claim that `getFeedColumnWidth` returns an unrounded width (→ `width="293.86…"`, parsed as 293 against a rounded height) is real but pre-existing on `/` and shifts the pre-CSS aspect hint by under a pixel — recorded in deferred work rather than patched. |
+| `feedLayoutParity.contract.test.js:338-345` — failure case proves only one `<main>`; a regression dropping `setRequestComplete(true)` still passes, so the "renders its empty state" acceptance criterion is unasserted | **low** → patch | Confirmed: it asserted landmark count and absence of `.masonry-grid`, both of which hold on a permanently-spinning search page. Patched to assert each route's own empty state (`Nothing found` / the feed headings) and that the frame is not `initial-loading-container`. |
+| `feedLayoutParity.contract.test.js:265-278` — cleanup guard vacuous for `resize` because react-masonry-css removes its own window resize listener | **low** → patch | Confirmed at `node_modules/react-masonry-css/dist/react-masonry-css.module.js:59,69`. Patched to capture handler identity on `addEventListener` and require every registered `resize`/`orientationchange` handler to be removed with the same type. Negative control after the patch: deleting FeedGrid's `removeEventListener('resize', …)` line now fails this case ("the resize handler registered during mount was never removed"). |
+| `feedLayoutParity.contract.test.js:282` — comment says "one column" at a 700px viewport and the case pins no column count | **low** → patch | Confirmed: `FEED_BREAKPOINT_COLS` matches `700: 2` under `viewportWidth <= Number(key)`. Comment corrected to two ~451px columns and the case now asserts `columnCount() === FEED_BREAKPOINT_COLS[700]`. |
+| `imageUtils.js:6-7,13-14,26,43` — comments still credit Home with the breakpoints, the 90%/1120px wrapper and "a Home feed thumbnail" | **low** → patch | Confirmed: after this change only `FeedGrid.js` imports `FEED_BREAKPOINT_COLS` or renders the column. All three comment blocks reworded to name `containers/FeedGrid.js`, with a note that FeedGrid's wrapper must move with `getFeedColumnWidth`. |
+| `.github/copilot-instructions.md` — its Project Structure listing enumerates every container and has no `FeedGrid.js`; `CLAUDE.md` calls that file the source of truth | **low** → defer | Real drift, but the fix edits an agent-context file, which this workflow routes to deferred work rather than patching here. Recorded in `_bmad-output/initiative-mobile-core-web-vitals/deferred-work.md`. |
+
+## Verification
+
+**Commands:**
+- `npx vitest run` -- expected: all files pass (240 tests after the review patches; the suite must stay green including `src/a11yLandmarks.test.js`, which owns the one-`main`-per-route contract)
+- `npx vitest run src/feedLayoutParity.contract.test.js` -- expected: every parity case passes; deleting FeedGrid's `removeEventListener('resize')` line must fail "drops every viewport listener it registers when the feed unmounts"
+- `npm run lint` -- expected: no new problems versus baseline (the 11 errors live in `src/setupTests.js`; touched files show only the two pre-existing `react-hooks/exhaustive-deps` warnings)
+- `npm run build` -- expected: `vite build` succeeds and `postbuild` runs `src/seo.template.test.js` green; `FeedGrid` appears once as a shared chunk rather than duplicated per page
+
+**Manual checks:**
+- On `https://wisaw.com` after deploy: open `/` and `/search/<term>` at phone width and confirm identical card widths, gutters and column counts, that the ▶ badge sits on the image corner on both, and that rotating the device re-fits the cards without a reload.

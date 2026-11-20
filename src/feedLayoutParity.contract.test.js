@@ -82,6 +82,18 @@ const RECORDS = [
   }
 ]
 
+// `photo.width`/`height` are schema-nullable, and the card must degrade to the full column instead
+// of emitting a NaN box. Kept out of RECORDS so the parity comparison stays about known sizes.
+const UNKNOWN_ID = 'a1e5c0de-0000-4000-8000-000000000004'
+const UNKNOWN_DIMS = {
+  id: UNKNOWN_ID,
+  video: true,
+  width: null,
+  height: null,
+  thumbUrl: `https://img.wisaw.com/${UNKNOWN_ID}-thumb.webp`,
+  imgUrl: `https://img.wisaw.com/${UNKNOWN_ID}.webp`
+}
+
 const recordById = (id) => RECORDS.find((record) => record.id === id)
 
 // The search page's first frame already carries a <main>, so every round must run: stopping at the
@@ -185,23 +197,116 @@ describe('feed layout parity between / and /search/:term', () => {
   })
 
   it('keeps each route its own alt text while the card stays shared', async () => {
+    const badge = (id) => cardFor(id).querySelector('.thumbnail-wrapper .video-indicator')
+    const href = (id) => cardFor(id).querySelector('a').getAttribute('href')
+
     const unmountFeed = await mountRoute('/')
     expect(cardFor(PORTRAIT_ID).querySelector('img').getAttribute('alt')).toBe('Free stock video on WiSaw')
     expect(cardFor(LANDSCAPE_ID).querySelector('img').getAttribute('alt')).toBe('A lake at dusk')
+    // A video record routes to /videos and wears the badge — same on the feed...
+    expect(href(PORTRAIT_ID)).toBe(`/videos/${PORTRAIT_ID}`)
+    expect(badge(PORTRAIT_ID)).not.toBeNull()
+    expect(href(LANDSCAPE_ID)).toBe(`/photos/${LANDSCAPE_ID}`)
+    expect(badge(LANDSCAPE_ID)).toBeNull()
     unmountFeed()
 
     // Layout parity must not cost the search route its SEO copy.
     const unmountSearch = await mountRoute('/search/lake')
     expect(cardFor(PORTRAIT_ID).querySelector('img').getAttribute('alt')).toBe('lake - WiSaw')
     expect(cardFor(LANDSCAPE_ID).querySelector('img').getAttribute('alt')).toBe('A lake at dusk')
+    // ...and on search, where the card came from a different copy until now.
+    expect(href(PORTRAIT_ID)).toBe(`/videos/${PORTRAIT_ID}`)
+    expect(badge(PORTRAIT_ID)).not.toBeNull()
+    expect(badge(LANDSCAPE_ID)).toBeNull()
     unmountSearch()
   })
 
+  it.each(['/', '/search/lake'])('falls back to the full column on %s for a record with no dimensions', async (path) => {
+    // photo.width/height are schema-nullable. The card must degrade to full-column sizing rather
+    // than emit a NaN box, and the ▶ badge must still sit on the image (wrapper position:relative).
+    api.feed = { photos: [UNKNOWN_DIMS], batch: '0', noMoreData: true }
+    const unmount = await mountRoute(path)
+
+    const card = cardFor(UNKNOWN_ID)
+    expect(card, `${path} renders the dimension-less record`).not.toBeNull()
+    const img = card.querySelector('img')
+
+    expect(img.getAttribute('width')).toBeNull()
+    expect(img.getAttribute('height')).toBeNull()
+    expect(img.style.width).toBe('auto')
+    expect(img.style.maxWidth).toBe('100%')
+    // The card shrinks to the image only when its size is known; otherwise it fills the column.
+    expect(card.style.width).toBe('100%')
+    expect(card.outerHTML).not.toContain('NaN')
+    expect(card.querySelector('.thumbnail-wrapper .video-indicator')).not.toBeNull()
+    unmount()
+  })
+
+  it('re-measures the feed page too, on orientationchange', async () => {
+    // Search's re-measure is checked above; `/` owns the same listener through the shared layout,
+    // and a phone rotating is the case that actually moves the box.
+    const unmount = await mountRoute('/')
+    const img = cardFor(LANDSCAPE_ID).querySelector('img')
+    const beforeWidth = img.getAttribute('width')
+    expect(columnCount()).toBe(FEED_BREAKPOINT_COLS[1100])
+
+    setViewportWidth(500)
+    await act(async () => {
+      window.dispatchEvent(new Event('orientationchange'))
+      await new Promise((resolveTask) => { setTimeout(resolveTask, 20) })
+    })
+
+    expect(columnCount()).toBe(FEED_BREAKPOINT_COLS[500])
+    expect(img.getAttribute('width')).not.toBe(beforeWidth)
+    unmount()
+  })
+
+  it('drops every viewport listener it registers when the feed unmounts', async () => {
+    // Event types alone prove nothing: react-masonry-css registers a window `resize` handler of
+    // its own, so 'resize' would show up as removed even if FeedGrid dropped its own cleanup.
+    // Handler identity is the only thing that ties a removal back to this layout.
+    const added = []
+    const removed = []
+    const originalAdd = window.addEventListener.bind(window)
+    const originalRemove = window.removeEventListener.bind(window)
+    vi.spyOn(window, 'addEventListener').mockImplementation((type, handler, ...rest) => {
+      if (type === 'resize' || type === 'orientationchange') {
+        added.push({ type, handler })
+      }
+      return originalAdd(type, handler, ...rest)
+    })
+    vi.spyOn(window, 'removeEventListener').mockImplementation((type, handler, ...rest) => {
+      removed.push({ type, handler })
+      return originalRemove(type, handler, ...rest)
+    })
+
+    try {
+      const unmount = await mountRoute('/')
+      // The shared layout's orientationchange listener exists only in FeedGrid.
+      expect(added.filter((listener) => listener.type === 'orientationchange')).not.toHaveLength(0)
+
+      unmount()
+      await settle(2)
+
+      for (const listener of added) {
+        expect(
+          removed.some((gone) => gone.type === listener.type && gone.handler === listener.handler),
+          `the ${listener.type} handler registered during mount was never removed`
+        ).toBe(true)
+      }
+    } finally {
+      vi.restoreAllMocks()
+    }
+  })
+
   it('keeps search thumbs inside getFeedThumbSize so nothing upscales or crops', async () => {
-    // Narrow viewport: the column is wide (one column), so the portrait box must stay at its
-    // natural thumb width, and the object-fit cropping the old search card used must be gone.
+    // 700px hits the `700: 2` breakpoint, so two columns ~451px wide each. The portrait record's
+    // natural thumb width is 225px — narrower than its column — so the box must stop at 225 rather
+    // than fill the column, and the inline object-fit the old search card set must be gone.
     setViewportWidth(700)
     const unmount = await mountRoute('/search/lake')
+
+    expect(columnCount()).toBe(FEED_BREAKPOINT_COLS[700])
 
     for (const record of RECORDS) {
       const img = cardFor(record.id).querySelector('img')
@@ -254,12 +359,20 @@ describe('feed layout parity between / and /search/:term', () => {
     unmount()
   })
 
-  it.each(['/', '/search/lake'])('still renders %s with a single main when the query fails', async (path) => {
+  it.each([
+    ['/', 'Unaltered Photos and Videos'],
+    ['/search/lake', 'Nothing found']
+  ])('settles %s on its own empty state when the query fails', async (path, expected) => {
     api.fail = true
     const unmount = await mountRoute(path)
 
-    expect(document.querySelectorAll('main')).toHaveLength(1)
+    const mains = document.querySelectorAll('main')
+    expect(mains).toHaveLength(1)
     expect(document.querySelector('.masonry-grid')).toBeNull()
+    // A failure must land on the page's own empty state. Asserting only the landmark would also
+    // pass if the route stayed stuck on its loading frame forever.
+    expect(mains[0].textContent).toContain(expected)
+    expect(mains[0].className).not.toBe('initial-loading-container')
     unmount()
   })
 
