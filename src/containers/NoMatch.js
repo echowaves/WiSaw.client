@@ -18,12 +18,12 @@ const NoMatch = function () {
         <meta property='og:locale' content={LOCALE} />
         <link rel='canonical' href='https://wisaw.com' />
       </Helmet>
-      <div
+      <main
         style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-primary)' }}
       >
         <h2>No photo found <code style={{ color: 'var(--link)' }}>{location.pathname}</code></h2>
-        <Footer />
-      </div>
+      </main>
+      <Footer />
     </>
   )
 }

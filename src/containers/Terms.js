@@ -11,7 +11,7 @@ const Terms = () => {
 
   return (
     <>
-      <div className='container' style={{ padding: '20px', color: 'var(--text-primary)' }}>
+      <main className='container' style={{ padding: '20px', color: 'var(--text-primary)' }}>
         <RouteSeo pathname='/terms' />
 
         <h1 style={{ textAlign: 'left' }}>Terms and Conditions</h1>
@@ -93,7 +93,7 @@ const Terms = () => {
           If you have any questions or concerns about these Terms and Conditions, please <a href='https://www.echowaves.com/support' target='_blank' rel='noopener noreferrer'>submit a request</a>.
         </p>
 
-      </div>
+      </main>
       <Footer />
     </>
   )

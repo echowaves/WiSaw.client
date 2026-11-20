@@ -379,69 +379,70 @@ const SearchComponent = function () {
 
   if (requestComplete) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          width: '100%',
-          position: 'relative',
-          justifyContent: 'center'
-          // textAlign: 'center',
-          // backgroundColor: '#0666a3'
-        }}
-      >
-        <div
+      <>
+        <main
           style={{
-            // width: '100%',
-            maxWidth: '1120px',
-            width: '90%',
+            display: 'flex',
+            width: '100%',
             position: 'relative',
-            alignSelf: 'center',
             justifyContent: 'center'
+            // textAlign: 'center',
+            // backgroundColor: '#0666a3'
           }}
         >
-          {searchString && (
-            <h1 style={{
-              fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-              lineHeight: '1.2',
-              marginBottom: '1rem',
-              color: 'var(--text-primary)'
+          <div
+            style={{
+              // width: '100%',
+              maxWidth: '1120px',
+              width: '90%',
+              position: 'relative',
+              alignSelf: 'center',
+              justifyContent: 'center'
             }}
-            >Search results for: {searchString}
-            </h1>
-          )}
+          >
+            {searchString && (
+              <h1 style={{
+                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+                lineHeight: '1.2',
+                marginBottom: '1rem',
+                color: 'var(--text-primary)'
+              }}
+              >Search results for: {searchString}
+              </h1>
+            )}
 
-          {renderSearchComponent()}
+            {renderSearchComponent()}
 
-          {/* Show message when no search string provided */}
-          {!searchString && (
-            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-primary)' }}>
-              <h2>Search WiSaw</h2>
-              <p>Enter a search term to find photos and videos</p>
-            </div>
-          )}
+            {/* Show message when no search string provided */}
+            {!searchString && (
+              <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-primary)' }}>
+                <h2>Search WiSaw</h2>
+                <p>Enter a search term to find photos and videos</p>
+              </div>
+            )}
 
-          {/* Show "nothing found" only when we have a search string but no results */}
-          {searchString && photos?.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-secondary)' }}>
-              <h2>Nothing found</h2>
-              <p>Try adjusting your search terms</p>
-            </div>
-          )}
+            {/* Show "nothing found" only when we have a search string but no results */}
+            {searchString && photos?.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-secondary)' }}>
+                <h2>Nothing found</h2>
+                <p>Try adjusting your search terms</p>
+              </div>
+            )}
 
-          {photos?.length > 0 && renderInfiniteFeed()}
+            {photos?.length > 0 && renderInfiniteFeed()}
 
-          <RouteSeo pathname='/search' term={searchString ?? ''} />
-
-          <Footer />
-        </div>
-      </div>
+            <RouteSeo pathname='/search' term={searchString ?? ''} />
+          </div>
+        </main>
+        <Footer />
+      </>
     )
   }
 
   return (
-    <div className='initial-loading-container'>
+    <main className='initial-loading-container'>
       {renderLoadingIndicator('Loading content')}
-    </div>
+    </main>
   )
 }
 

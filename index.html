@@ -43,16 +43,19 @@
        are those pages' only first-frame layout; do not extend them to the skeleton either. Still
        deliberately never applied to #root itself: no stylesheet in this app styles #root, so a rule
        there would outlive hydration and cap the hydrated page's width (and pad its full-bleed
-       sticky header) on every route. */
-    #root > h1, #root > p, #root > nav {
+       sticky header) on every route. The "#root > main >" forms cover this file's own no-JS fallback,
+       which sits inside a landmark element; the edge's flat markup keeps matching the direct-child
+       forms, and neither form reaches the skeleton, whose column is .wsk-main. */
+    #root > h1, #root > p, #root > nav,
+    #root > main > h1, #root > main > h2, #root > main > p, #root > main > nav {
       max-width: 1100px;
       margin: 0 auto 1em;
       padding: 0 20px;
     }
 
-    #root > h1 { margin-top: 20px }
+    #root > h1, #root > main > h1 { margin-top: 20px }
 
-    #root > img {
+    #root > img, #root > main > img {
       display: block;
       max-width: min(1100px, calc(100% - 40px));
       margin: 0 auto;
@@ -255,10 +258,12 @@
     <p>Visit <a href="https://wisaw.com">wisaw.com</a> with JavaScript enabled to browse our collection.</p>
   </noscript>
   <div id="root">
-    <h1>Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
-    <h2>It's almost expected that the lighting won't be perfect and the composition might be off at times, because the
-      goal is to capture shots spontaneously, with minimal preparation—just point and shoot. As photographers, we often
-      worry too much about getting everything perfect, and in doing so, we miss great opportunities.</h2>
+    <main>
+      <h1>Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
+      <h2>It's almost expected that the lighting won't be perfect and the composition might be off at times, because the
+        goal is to capture shots spontaneously, with minimal preparation—just point and shoot. As photographers, we often
+        worry too much about getting everything perfect, and in doing so, we miss great opportunities.</h2>
+    </main>
   </div>
   <div id="wisaw-app"></div>
 

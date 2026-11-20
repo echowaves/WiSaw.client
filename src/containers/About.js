@@ -11,7 +11,7 @@ const About = () => {
 
   return (
     <>
-      <div className='container' style={{ padding: '20px', color: 'var(--text-primary)' }}>
+      <main className='container' style={{ padding: '20px', color: 'var(--text-primary)' }}>
         <RouteSeo pathname='/about' />
 
         <h1 style={{ textAlign: 'left' }}>About WiSaw</h1>
@@ -54,7 +54,7 @@ const About = () => {
         <h2 style={{ textAlign: 'left' }}>Contact Us</h2>
         <p style={{ textAlign: 'left' }}>Have questions, feedback, or just want to say hello? <a href='/contact' style={{ color: 'var(--link)' }}>Reach out to us</a>. We&apos;d love to hear from you!</p>
 
-      </div>
+      </main>
       <Footer />
     </>
   )

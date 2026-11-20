@@ -11,7 +11,7 @@ const Contact = () => {
 
   return (
     <>
-      <div className='container' style={{ padding: '20px', textAlign: 'left', color: 'var(--text-primary)' }}>
+      <main className='container' style={{ padding: '20px', textAlign: 'left', color: 'var(--text-primary)' }}>
         <RouteSeo pathname='/contact' />
 
         <h1>Contact Us</h1>
@@ -39,7 +39,7 @@ const Contact = () => {
           <h3>Support</h3>
           <p style={{ textAlign: 'left' }}>For technical support, please <a href='https://www.echowaves.com/support' target='_blank' rel='noopener noreferrer'>submit a request</a></p>
         </div>
-      </div>
+      </main>
       <Footer />
     </>
   )

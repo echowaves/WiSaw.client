@@ -323,7 +323,7 @@ const Home = function () {
   }
 
   return (
-    <div
+    <main
       style={{
         display: 'flex',
         width: '100%',
@@ -420,7 +420,7 @@ const Home = function () {
         {renderSearchComponent()}
         {renderInfiniteFeed()}
       </div>
-    </div>
+    </main>
   )
 }
 
