@@ -2,12 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Helmet } from '@dr.pogodin/react-helmet'
 
-import InfiniteScroll from 'react-infinite-scroll-component'
-import Masonry from 'react-masonry-css'
-import {
-  Link,
-  useNavigate
-} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
@@ -29,7 +24,7 @@ import './PhotosComponent.css'
 import { gql } from '@apollo/client'
 
 import * as CONST from '../consts'
-import { FEED_BREAKPOINT_COLS, getFeedThumbSize } from '../utils/imageUtils'
+import FeedGrid from './FeedGrid'
 import RouteSeo from './RouteSeo'
 
 const Home = function () {
@@ -37,26 +32,7 @@ const Home = function () {
   const [pageNumber, setPageNumber] = useState(0)
   const [noMoreData, setNoMoreData] = useState(true)
   const [searchText, setSearchText] = useState('')
-  // Re-measure feed card boxes when the viewport changes (rotate/resize),
-  // since their widths are computed from window dimensions at render time.
-  const [, forceRemeasure] = useState(0)
   const navigate = useNavigate()
-
-  useEffect(() => {
-    // Coalesce bursts of resize events into one render per frame, like react-masonry-css does
-    let frame = 0
-    const onViewportChange = () => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => forceRemeasure((tick) => tick + 1))
-    }
-    window.addEventListener('resize', onViewportChange)
-    window.addEventListener('orientationchange', onViewportChange)
-    return () => {
-      cancelAnimationFrame(frame)
-      window.removeEventListener('resize', onViewportChange)
-      window.removeEventListener('orientationchange', onViewportChange)
-    }
-  }, [])
 
   const init = async () => {
     ReactGA.send({
@@ -171,168 +147,12 @@ const Home = function () {
     )
   }
 
-  const renderInfiniteFeed = function () {
-    return (
-      <InfiniteScroll
-        style={{
-          position: 'relative',
-          overflow: 'unset'
-        }}
-        dataLength={photos.length} // This is important field to render the next data
-        next={retrievePhotos}
-        hasMore={!noMoreData}
-        loader={<div aria-label='Loading content' style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '16px' }}>Loading...</div>}
-        endMessage={
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-            <b>Yay! You have seen it all</b>
-          </p>
-        }
-      // below props only if you need pull down functionality
-      // refreshFunction={this.refresh}
-      // pullDownToRefresh
-      // pullDownToRefreshThreshold={50}
-      // pullDownToRefreshContent={
-      //   <h3 style={{ textAlign: 'center' }}>&#8595; Pull down to refresh</h3>
-      // }
-      // releaseToRefreshContent={
-      //   <h3 style={{ textAlign: 'center' }}>&#8593; Release to refresh</h3>
-      // }
-      >
-        <Masonry
-          breakpointCols={FEED_BREAKPOINT_COLS}
-          className='masonry-grid'
-          columnClassName='masonry-grid-column'
-        >
-          {photos.map((photo) => {
-            const thumb = getFeedThumbSize(photo)
-
-            return (
-              <div
-                className='home-thumb-card'
-                style={{
-                  overflow: 'hidden',
-                  // Shrink the card to the image so its border hugs the thumb with no side gaps;
-                  // fall back to full-column when the photo's aspect ratio is unknown
-                  width: thumb.width ?? '100%',
-                  maxWidth: '100%',
-                  marginInline: 'auto'
-                }}
-                key={photo.id}
-              >
-                <Link
-                  to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                  // Lets the detail page paint at the right size before GraphQL resolves
-                  state={{ feedPhoto: photo }}
-                  style={{ width: '100%', display: 'block' }}
-                >
-                  {photo?.lastComment && (
-                    <>
-                      <div
-                        className='thumbnail-wrapper'
-                        style={{
-                          borderRadius: 'var(--radius-lg)',
-                          overflow: 'hidden',
-                          display: 'block',
-                          lineHeight: 0,
-                          position: 'relative'
-                        }}
-                      >
-                        <img
-                          src={photo.thumbUrl}
-                          width={thumb.width}
-                          height={thumb.height}
-                          loading='lazy'
-                          style={{
-                            // Explicit px width keeps the width/height attrs effective for the
-                            // pre-load box (no CLS); it never exceeds the natural thumb width,
-                            // and maxWidth shrinks to fit if the column math is ever off
-                            width: thumb.width != null ? `${thumb.width}px` : 'auto',
-                            maxWidth: '100%',
-                            height: 'auto',
-                            display: 'block',
-                            margin: 0,
-                            padding: 0
-                          }}
-                          alt={photo?.lastComment || `Photo ${photo.id}`}
-                          onError={(e) => {
-                            e.target.onerror = null
-                            e.target.src = '/logo192.png' // Fallback image
-                            e.target.style.width = '100%' // Placeholder fills the card, no gutters
-                          }}
-                        />
-                        {photo?.video === true && (
-                          <div className='video-indicator' role='img' aria-label='Video content'>
-                            ▶
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ width: '100%', paddingBottom: 15, padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                        {/* Truncate the comment to prevent potential XSS */}
-                        {photo?.lastComment.substring(0, 150)}
-                      </div>
-                    </>
-                  )}
-                  {!photo?.lastComment && (
-                    <div
-                      className='thumbnail-wrapper'
-                      style={{
-                        borderRadius: 'var(--radius-lg)',
-                        overflow: 'hidden',
-                        display: 'block',
-                        lineHeight: 0,
-                        position: 'relative'
-                      }}
-                    >
-                      <img
-                        src={photo.thumbUrl}
-                        width={thumb.width}
-                        height={thumb.height}
-                        loading='lazy'
-                        style={{
-                          // Explicit px width keeps the width/height attrs effective for the
-                          // pre-load box (no CLS); it never exceeds the natural thumb width,
-                          // and maxWidth shrinks to fit if the column math is ever off
-                          width: thumb.width != null ? `${thumb.width}px` : 'auto',
-                          maxWidth: '100%',
-                          height: 'auto',
-                          display: 'block',
-                          margin: 0,
-                          padding: 0
-                        }}
-                        alt={photo?.video === true ? 'Free stock video on WiSaw' : 'Free stock photo on WiSaw'}
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = '/logo192.png' // Fallback image
-                          e.target.style.width = '100%' // Placeholder fills the card, no gutters
-                        }}
-                      />
-                      {photo?.video === true && (
-                        <div className='video-indicator' role='img' aria-label='Video content'>
-                          ▶
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Link>
-              </div>
-            )
-          })}
-        </Masonry>
-      </InfiniteScroll>
-    )
-  }
+  // Feed copy for the alt text; the card itself is the shared layout's (see FeedGrid)
+  const altFor = (photo) => photo?.lastComment ||
+    (photo?.video === true ? 'Free stock video on WiSaw' : 'Free stock photo on WiSaw')
 
   return (
-    <main
-      style={{
-        display: 'flex',
-        width: '100%',
-        position: 'relative',
-        justifyContent: 'center'
-        // textAlign: 'center',
-        // backgroundColor: '#0666a3'
-      }}
-    >
+    <FeedGrid photos={photos} next={retrievePhotos} hasMore={!noMoreData} altFor={altFor}>
       <RouteSeo pathname='/' />
 
       <Helmet>
@@ -386,41 +206,29 @@ const Home = function () {
         </script>
       </Helmet>
 
-      <div
-        style={{
-          // width: '100%',
-          maxWidth: '1120px',
-          width: '90%',
-          position: 'relative',
-          alignSelf: 'center',
-          justifyContent: 'center'
-        }}
-      >
-        <h1 style={{
-          fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-          lineHeight: '1.2',
-          marginBottom: '1rem',
-          color: 'var(--text-primary)'
-        }}
-        > Unaltered Photos and Videos, Taken with Phone Cameras.
-        </h1>
+      <h1 style={{
+        fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+        lineHeight: '1.2',
+        marginBottom: '1rem',
+        color: 'var(--text-primary)'
+      }}
+      > Unaltered Photos and Videos, Taken with Phone Cameras.
+      </h1>
 
-        <h2 style={{
-          fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)',
-          lineHeight: '1.4',
-          fontWeight: '400',
-          marginBottom: '2rem',
-          color: 'var(--text-secondary)'
-        }}
-        >It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times,
+      <h2 style={{
+        fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)',
+        lineHeight: '1.4',
+        fontWeight: '400',
+        marginBottom: '2rem',
+        color: 'var(--text-secondary)'
+      }}
+      >It&apos;s almost expected that the lighting won&apos;t be perfect and the composition might be off at times,
           because the goal is to capture shots spontaneously, with minimal preparation—just point and shoot.
           As photographers, we often worry too much about getting everything perfect,
           and in doing so, we miss great opportunities.
-        </h2>
-        {renderSearchComponent()}
-        {renderInfiniteFeed()}
-      </div>
-    </main>
+      </h2>
+      {renderSearchComponent()}
+    </FeedGrid>
   )
 }
 

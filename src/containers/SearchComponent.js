@@ -1,15 +1,6 @@
 /* eslint-disable react/react-in-jsx-scope */
 import { lazy, useEffect, useState } from 'react'
-import {
-  Link,
-  useNavigate, useParams
-} from 'react-router-dom'
-
-// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import { Bars } from 'react-loader-spinner'
-
-import InfiniteScroll from 'react-infinite-scroll-component'
-import Masonry from 'react-masonry-css'
+import { useNavigate, useParams } from 'react-router-dom'
 
 import Button from 'react-bootstrap/Button'
 import Col from 'react-bootstrap/Col'
@@ -24,7 +15,7 @@ import ReactGA from 'react-ga4'
 import { gql } from '@apollo/client'
 // import stringifyObject from 'stringify-object'
 import * as CONST from '../consts'
-import { getOptimizedThumbnailDimensions } from '../utils/imageUtils'
+import FeedGrid, { FeedLoader } from './FeedGrid'
 import RouteSeo from './RouteSeo'
 
 const Footer = lazy(() => import('./Footer'))
@@ -168,20 +159,6 @@ const SearchComponent = function () {
     )
   }
 
-  const renderLoadingIndicator = (label) => (
-    <div className='infinite-scroll-loader' aria-label={label}>
-      <Bars
-        height='40'
-        width='40'
-        color='#7c8cf8'
-        ariaLabel='spinner-loading-indicator'
-        wrapperStyle={{}}
-        wrapperClass=''
-        visible
-      />
-    </div>
-  )
-
   useEffect(() => {
     setSearchText(searchString || '')
 
@@ -241,199 +218,51 @@ const SearchComponent = function () {
     }
   }
 
-  const renderInfiniteFeed = function () {
-    return (
-      <InfiniteScroll
-        key={activeSearchTerm || 'search-feed'}
-        style={{
-          position: 'relative',
-          overflow: 'unset'
-        }}
-        dataLength={photos.length} // This is important field to render the next data
-        next={() => retrievePhotos()}
-        hasMore={!noMoreData}
-        loader={renderLoadingIndicator('Loading more content')}
-        endMessage={
-          <p style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-            <b>Yay! You have seen it all</b>
-          </p>
-        }
-      >
-        <Masonry
-          breakpointCols={{
-            default: 4,
-            1100: 3,
-            700: 2,
-            500: 1
-          }}
-          className='masonry-grid'
-          columnClassName='masonry-grid-column'
-        >
-          {photos.map((photo) => {
-            const thumbDimensions = getOptimizedThumbnailDimensions(photo)
-
-            return (
-              <div
-                className='home-thumb-card'
-                style={{
-                  overflow: 'hidden'
-                }}
-                key={photo.id}
-              >
-                <Link
-                  to={`/${photo?.video === true ? 'videos' : 'photos'}/${encodeURIComponent(photo.id)}`}
-                  // Lets the detail page paint at the right size before GraphQL resolves
-                  state={{ feedPhoto: photo }}
-                  style={{
-                    width: '100%',
-                    display: 'block'
-                  }}
-                >
-                  {photo?.lastComment && (
-                    <>
-                      <div
-                        className='thumbnail-wrapper'
-                        style={{
-                          borderRadius: 'var(--radius-lg)',
-                          overflow: 'hidden',
-                          display: 'block',
-                          width: '100%',
-                          lineHeight: 0,
-                          position: 'relative'
-                        }}
-                      >
-                        <img
-                          src={photo.thumbUrl}
-                          width={thumbDimensions.width}
-                          height={thumbDimensions.height}
-                          loading='lazy'
-                          style={{
-                            width: '100%',
-                            height: 'auto',
-                            display: 'block',
-                            objectFit: 'cover',
-                            margin: 0,
-                            padding: 0
-                          }}
-                          alt={photo?.lastComment || (searchString ? `${searchString} - WiSaw` : 'Free stock photo on WiSaw')}
-                          onError={(e) => {
-                            e.target.onerror = null
-                            e.target.src = '/logo192.png' // Fallback image
-                          }}
-                        />
-                        {photo?.video === true && (
-                          <div className='video-indicator' role='img' aria-label='Video content'>
-                            ▶
-                          </div>
-                        )}
-                      </div>
-                      <div style={{ width: '100%', paddingBottom: 15, padding: '10px 12px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                        {/* Truncate the comment to prevent potential XSS */}
-                        {photo?.lastComment.substring(0, 150)}
-                      </div>
-                    </>
-                  )}
-                  {!photo?.lastComment && (
-                    <div
-                      className='thumbnail-wrapper'
-                      style={{
-                        borderRadius: 'var(--radius-lg)',
-                        overflow: 'hidden',
-                        display: 'block',
-                        lineHeight: 0,
-                        position: 'relative'
-                      }}
-                    >
-                      <img
-                        src={photo.thumbUrl}
-                        width={thumbDimensions.width}
-                        height={thumbDimensions.height}
-                        loading='lazy'
-                        style={{
-                          width: '100%',
-                          display: 'block',
-                          margin: 0,
-                          padding: 0
-                        }}
-                        alt={searchString ? `${searchString} - WiSaw` : 'Free stock photo on WiSaw'}
-                        onError={(e) => {
-                          e.target.onerror = null
-                          e.target.src = '/logo192.png' // Fallback image
-                        }}
-                      />
-                      {photo?.video === true && (
-                        <div className='video-indicator' role='img' aria-label='Video content'>
-                          ▶
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </Link>
-              </div>
-            )
-          })}
-        </Masonry>
-      </InfiniteScroll>
-    )
-  }
+  // Search keeps the term in the alt text; the card itself is the shared layout's (see FeedGrid)
+  const altFor = (photo) => photo?.lastComment ||
+    (searchString ? `${searchString} - WiSaw` : 'Free stock photo on WiSaw')
 
   if (requestComplete) {
     return (
       <>
-        <main
-          style={{
-            display: 'flex',
-            width: '100%',
-            position: 'relative',
-            justifyContent: 'center'
-            // textAlign: 'center',
-            // backgroundColor: '#0666a3'
-          }}
+        <FeedGrid
+          photos={photos}
+          next={() => retrievePhotos()}
+          hasMore={!noMoreData}
+          scrollKey={activeSearchTerm}
+          altFor={altFor}
         >
-          <div
-            style={{
-              // width: '100%',
-              maxWidth: '1120px',
-              width: '90%',
-              position: 'relative',
-              alignSelf: 'center',
-              justifyContent: 'center'
+          {searchString && (
+            <h1 style={{
+              fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+              lineHeight: '1.2',
+              marginBottom: '1rem',
+              color: 'var(--text-primary)'
             }}
-          >
-            {searchString && (
-              <h1 style={{
-                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
-                lineHeight: '1.2',
-                marginBottom: '1rem',
-                color: 'var(--text-primary)'
-              }}
-              >Search results for: {searchString}
-              </h1>
-            )}
+            >Search results for: {searchString}
+            </h1>
+          )}
 
-            {renderSearchComponent()}
+          {renderSearchComponent()}
 
-            {/* Show message when no search string provided */}
-            {!searchString && (
-              <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-primary)' }}>
-                <h2>Search WiSaw</h2>
-                <p>Enter a search term to find photos and videos</p>
-              </div>
-            )}
+          {/* Show message when no search string provided */}
+          {!searchString && (
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-primary)' }}>
+              <h2>Search WiSaw</h2>
+              <p>Enter a search term to find photos and videos</p>
+            </div>
+          )}
 
-            {/* Show "nothing found" only when we have a search string but no results */}
-            {searchString && photos?.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-secondary)' }}>
-                <h2>Nothing found</h2>
-                <p>Try adjusting your search terms</p>
-              </div>
-            )}
+          {/* Show "nothing found" only when we have a search string but no results */}
+          {searchString && photos?.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--text-secondary)' }}>
+              <h2>Nothing found</h2>
+              <p>Try adjusting your search terms</p>
+            </div>
+          )}
 
-            {photos?.length > 0 && renderInfiniteFeed()}
-
-            <RouteSeo pathname='/search' term={searchString ?? ''} />
-          </div>
-        </main>
+          <RouteSeo pathname='/search' term={searchString ?? ''} />
+        </FeedGrid>
         <Footer />
       </>
     )
@@ -441,7 +270,7 @@ const SearchComponent = function () {
 
   return (
     <main className='initial-loading-container'>
-      {renderLoadingIndicator('Loading content')}
+      <FeedLoader label='Loading content' />
     </main>
   )
 }
