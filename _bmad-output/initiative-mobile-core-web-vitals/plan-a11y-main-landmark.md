@@ -128,3 +128,26 @@ The outer wrapper is a flex **row**, so `<Footer />` cannot stay inside it as a 
 
 **Manual checks:**
 - `npm start`, then `/`, `/search/cat`, `/about`, a bogus path: footer band renders as on `/about` (full-bleed, content centred) and no element moved versus the pre-change page; WAVE/axe reports zero `landmark-one-main` findings.
+
+---
+
+## Round 2 (same day): the column this plan could not reach
+
+The page-level check after deploy was unambiguous: `curl https://wisaw.com/ | grep -c '<main'` → 1, `curl https://wisaw.com/photos/da4e77cf-… | grep -c '<main'` → **0**. A settled detail page's column is the edge's (`renderSkeleton`), and React adopts those nodes precisely so it never re-renders them — so the remaining failure was cross-repo by construction, not an unfinished route here.
+
+**Solicited:** round 3 of [`backend-solicitation-brief.md`](./backend-solicitation-brief.md) §10 — **C6** (column becomes `<main class="wsk-main">`) and, added mid-run, **C6b** (a third `footer` slot outside the column). C6b exists because this repo portals the site Footer into `data-wisaw-slot="below"`, which is that column's last child: a `<footer>` under `<main>` is generic rather than contentinfo, so C6 alone would have traded "no main" for "every detail page loses its contentinfo". Built in `WiSaw.cdk@9eedbf6` (429 passing; 6 failures identical to a pristine `HEAD` copy; ts-standard message count identical to `HEAD`).
+
+**Built here:**
+- `src/utils/detailTemplate.generated.js` — republished from the backend template by its own script, not hand-edited.
+- `src/utils/detailSkeleton.js` — `collectFrameNodes` reads the optional slot as `footerSlot`; adoption still requires only header + below, so an older edge's frame stays adoptable.
+- `src/containers/PhotosComponent.js` — footer portals into `frame.footerSlot ?? frame.belowSlot`; and the deep-link placeholder branch now returns `null` while a frame the edge painted for this exact route is live (`edgeFrameLive`), so React never adds a second main under it. Keyed on the path, not the id alone: prev/next keeps its placeholder because the live frame still describes the page the visitor left.
+- Pins moved to the new reality: `src/index.boot.test.js`'s hand-written served frame (now `<main class="wsk-main">` plus a footer slot), and `src/containers/PhotosComponent.cls.test.js`, which asserted the footer lands in `below` and now asserts it lands in `footer` and *not* inside `main.wsk-main`.
+- `src/a11yLandmarks.test.js` grew from 14 to 16 cases, mounting real edge frames through `detailFrameHtml` + `captureDetailSkeleton`: one main for a frame that cannot seed a record (older edge: no published object URLs), and the settled adopted page taking its single landmark from the served column with the footer outside it.
+
+**Two harness facts worth keeping.** `flush()` stops as soon as any `<main>` exists, which is now trivially true of the served frame — these two cases use a `settle()` that always runs every round, or they can pass before React has committed anything (that is exactly how the first version of this test hid a missing guard). And the footer gate opens on settled neighbour queries, so the mock answers `getPhotoAllNext`/`Prev` behind an `api.neighbours` flag; leaving them in flight means waiting out the 4 s final timer.
+
+**Negative controls:** disabling `edgeFrameLive` fails only "paints no placeholder…"; forcing the footer back to `frame.belowSlot` fails only the settled-page case. Restored after each.
+
+**Verification (this repo):** `npx vitest run` → **225 passed / 19 files**; `npx eslint src --ext .js` → **17 problems**, identical to the recorded baseline; `npx vite build` clean and `postbuild` contract (`src/seo.template.test.js`) **12 passed**.
+
+**Ship order:** this repo's commit first (its guard is purely subtractive against today's edge), the Lambda@Edge deploy second.

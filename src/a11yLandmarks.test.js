@@ -14,7 +14,7 @@ import { createElement } from 'react'
 import { act, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const api = vi.hoisted(() => ({ feed: null, detail: undefined, fail: false, never: false }))
+const api = vi.hoisted(() => ({ feed: null, detail: undefined, fail: false, never: false, neighbours: false }))
 
 vi.mock('./consts', () => ({
   gqlClient: {
@@ -22,6 +22,10 @@ vi.mock('./consts', () => ({
       const operation = query?.definitions?.[0]?.name?.value
       if (operation === 'getPhotoAllCurr' && api.detail !== undefined) {
         return Promise.resolve(api.detail)
+      }
+      if ((operation === 'getPhotoAllNext' || operation === 'getPhotoAllPrev') && api.neighbours) {
+        // Settled neighbours are what open the footer gate; without them it opens on the 4 s timer.
+        return Promise.resolve({ data: { [operation]: { photo: null } } })
       }
       if (operation === 'feedRecent' || operation === 'feedForTextSearch') {
         if (api.never) {
@@ -50,6 +54,8 @@ vi.mock('./containers/Footer', () => ({
 }))
 
 const App = (await import('./App')).default
+const { detailFrameHtml } = await import('./utils/detailTemplate.generated')
+const { captureDetailSkeleton, __resetDetailSkeletonForTests } = await import('./utils/detailSkeleton')
 
 const PHOTO_ID = '29461ee8-34dd-4c2b-848f-c16d766713e8'
 const FEED_PHOTO = {
@@ -81,6 +87,16 @@ const flush = async () => {
   }
 }
 
+// Same, for pages whose first frame already contains a <main>: `flush` stops looking as soon as one
+// exists, which would let this return before React has committed anything at all. Every round runs.
+const settle = async (rounds = 40) => {
+  for (let round = 0; round < rounds; round++) {
+    await act(async () => {
+      await new Promise((resolveTask) => { setTimeout(resolveTask, 5) })
+    })
+  }
+}
+
 // Mounts the real shell the way src/index.js does: #root holds whatever the edge served, and the
 // app mounts into the sibling container. Header/Footer are stand-ins so a landmark found inside
 // main can only have come from a route component.
@@ -102,12 +118,58 @@ const expectSingleMain = () => {
   return found[0]
 }
 
+// The frame Lambda@Edge serves, built by the shared template rather than hand-written, so these
+// cases measure the same bytes the browser gets. withStyle: false because the real page carries that
+// sheet once and jsdom does not care either way.
+const paintEdgeFrame = (photoId, kind = 'photos', { seedable = true } = {}) => {
+  const root = document.getElementById('root')
+  root.innerHTML = detailFrameHtml({
+    entityLabel: kind === 'videos' ? 'video' : 'photo',
+    mediaId: photoId,
+    imageUrl: `https://img.wisaw.com/${photoId}.webp`,
+    previewUrl: `https://img.wisaw.com/${photoId}-thumb.webp`,
+    videoUrl: `https://img.wisaw.com/${photoId}.mp4`,
+    altText: 'edge-painted media',
+    title: 'Edge-painted page',
+    description: 'Served before a single byte of JavaScript ran.',
+    labels: ['lake'],
+    width: 1920,
+    height: 1080,
+    withStyle: false
+  })
+
+  if (!seedable) {
+    // An edge build from before C5 — or a CloudFront copy that predates it — publishes no object
+    // URLs. React then cannot seed a record from the frame and has to answer the route with no
+    // record at all, which is the state the placeholder guard exists for. Adoption is unaffected:
+    // a frame without URLs still earns the LCP win.
+    const media = root.querySelector('[data-wisaw-media]')
+    media.removeAttribute('data-wisaw-src')
+    media.removeAttribute('data-wisaw-thumb')
+  }
+
+  captureDetailSkeleton()
+}
+
+// A cold deep link on an edge-painted page: pathname first (the capture reads it), then the served
+// frame in #root, then the app mounts into its own container — the real boot order.
+const mountEdgePaintedRoute = async (path, photoId, kind = 'photos', options) => {
+  document.body.innerHTML = "<div id='root'></div><div id='wisaw-app'></div>"
+  window.history.pushState({}, '', path)
+  __resetDetailSkeletonForTests()
+  paintEdgeFrame(photoId, kind, options)
+  render(<App />, { container: document.getElementById('wisaw-app') })
+  await settle()
+}
+
 describe('route landmarks', () => {
   beforeEach(() => {
     api.feed = null
     api.detail = undefined
     api.fail = false
     api.never = false
+    api.neighbours = false
+    __resetDetailSkeletonForTests()
   })
 
   afterEach(() => {
@@ -115,6 +177,8 @@ describe('route landmarks', () => {
     api.detail = undefined
     api.fail = false
     api.never = false
+    api.neighbours = false
+    __resetDetailSkeletonForTests()
     document.body.innerHTML = ''
     window.history.pushState({}, '', '/')
   })
@@ -177,6 +241,44 @@ describe('route landmarks', () => {
     await mountRoute(`/photos/${PHOTO_ID}`)
 
     expectSingleMain()
+  })
+
+  it('paints no placeholder of its own under an edge-painted frame', async () => {
+    // A frame with no published object URLs — an older edge, or a CloudFront copy that predates
+    // them — cannot seed a record, so React faces this route with nothing to paint from. It used to
+    // answer that with a placeholder media box under the page already on screen, harmless only
+    // while that frame carried no landmark of its own. (A frame that can seed never reaches this:
+    // the seed fills currPhoto before the first commit, and the settled case is the test below.)
+    await mountEdgePaintedRoute(`/photos/${PHOTO_ID}`, PHOTO_ID, 'photos', { seedable: false })
+
+    // One landmark for the whole page, and it is the served column's. React's placeholder would
+    // make this two — one in #root, one in its own container.
+    const found = mains()
+    expect(found).toHaveLength(1)
+    expect(found[0].classList.contains('wsk-main')).toBe(true)
+    expect(document.getElementById('wisaw-app').querySelector('.crop')).toBeNull()
+    // The edge frame is still the page: nothing cleared or replaced it.
+    expect(document.querySelectorAll('#root [data-wisaw-media]')).toHaveLength(1)
+  })
+
+  it('takes its one main from the served column once an edge-painted page settles', async () => {
+    api.neighbours = true
+    api.detail = {
+      data: {
+        getPhotoAllCurr: { photo: { ...FEED_PHOTO, createdAt: '2026-01-01T00:00:00.000Z' }, comments: [], recognitions: [] }
+      }
+    }
+    await mountEdgePaintedRoute(`/photos/${PHOTO_ID}`, PHOTO_ID)
+
+    // Adoption means React never mounts the LCP subtree, so this landmark can only be the template's
+    // own column — which is why WiSaw.cdk serves it as <main class="wsk-main"> (brief §10, C6).
+    const main = expectSingleMain()
+    expect(main.classList.contains('wsk-main')).toBe(true)
+    expect(document.getElementById('wisaw-app').querySelector('main')).toBeNull()
+    // And the footer stays out of it: nested in <main> it would stop being a contentinfo landmark.
+    const footer = document.querySelector('footer')
+    expect(footer).not.toBeNull()
+    expect(main.contains(footer)).toBe(false)
   })
 
   it('still exposes one main when the feed query fails outright', async () => {

@@ -45,12 +45,13 @@ describe('index.js boot sequence', () => {
       <div id="root">
         <div class="wsk">
           <div data-wisaw-slot="header"></div>
-          <div class="wsk-main">
+          <main class="wsk-main">
             <div class="wsk-box" style="position:relative">
               <img data-wisaw-media data-wisaw-id="${PHOTO_ID}" src="${THUMB}" width="2250" height="3000" alt="" />
             </div>
             <div data-wisaw-slot="below"></div>
-          </div>
+          </main>
+          <div data-wisaw-slot="footer"></div>
         </div>
       </div>
       <div id="wisaw-app"></div>

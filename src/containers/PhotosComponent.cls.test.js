@@ -118,7 +118,10 @@ describe('detail page pre-hydration layout (CLS guards)', () => {
     // The loaded page does render the footer, so its position is only ever set by
     // content that already exists - never re-flowed under a painted footer.
     expect(await screen.findByText('site footer')).toBeInTheDocument()
-    expect(document.querySelector("#root [data-wisaw-slot='below'] footer")).not.toBeNull()
+    // Inside the painted frame, in the slot outside the page column: a <footer> nested inside the
+    // frame's <main> would stop being a contentinfo landmark (WiSaw.cdk brief §10, C6b).
+    expect(document.querySelector('#root main.wsk-main footer')).toBeNull()
+    expect(document.querySelector("#root [data-wisaw-slot='footer'] footer")).not.toBeNull()
   })
 })
 

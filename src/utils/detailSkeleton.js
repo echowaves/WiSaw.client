@@ -156,7 +156,14 @@ function collectFrameNodes (host, mediaNode) {
   navContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%'
   column.insertBefore(navContainer, column.firstChild)
 
-  return { mediaBox, navContainer, headerSlot, belowSlot }
+  // The footer slot sits outside the page column on purpose: the column is the frame's main landmark,
+  // and a <footer> nested inside <main> is not a contentinfo landmark at all (HTML-AAM makes it
+  // generic), so portalling the site footer into the column would take that landmark away from every
+  // detail page. Optional — an edge build that predates it still adopts, and the caller falls back to
+  // the below slot rather than dropping the footer.
+  const footerSlot = host.querySelector('[data-wisaw-slot="footer"]')
+
+  return { mediaBox, navContainer, headerSlot, belowSlot, footerSlot }
 }
 
 /** The frame the browser is showing for a detail route, from either producer. */

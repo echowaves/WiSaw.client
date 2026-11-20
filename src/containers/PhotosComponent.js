@@ -474,6 +474,16 @@ const PhotosComponent = function () {
     (frame.kind === 'videos') === (internalState.currPhoto?.photo?.video === true)
   )
 
+  // A frame the edge painted for this exact route is on screen in #root from the first byte, whether
+  // or not the record has landed - `adopted` needs the record, this does not. It is what tells the
+  // placeholder branch below that there is nothing to reserve: a page already shows its media box, so
+  // React painting one more would add height under the visible page and a second main landmark beside
+  // the edge frame's column. Keyed on the path rather than the id alone so prev/next - where the live
+  // frame still shows the photo the visitor left - keeps its placeholder as before.
+  const edgeFrameLive = Boolean(
+    frame?.source === 'edge' && skeletonMatchesPath(frame, location.pathname)
+  )
+
   useEffect(() => {
     if (!adopted || !frame || internalState.currPhoto?.photo?.video !== true) {
       return undefined
@@ -1269,7 +1279,10 @@ const PhotosComponent = function () {
           )}
         </Suspense>
         <Suspense fallback={null}>
-          {frame.belowSlot && belowSlotIsFinal && createPortal(<Footer />, frame.belowSlot)}
+          {/* The footer lands outside the frame's main landmark when the served frame has a slot for
+              it: nested inside <main>, a <footer> stops being a contentinfo landmark. Older frames —
+              and any edge build that predates that slot — keep landing below the comments. */}
+          {frame.belowSlot && belowSlotIsFinal && createPortal(<Footer />, frame.footerSlot ?? frame.belowSlot)}
         </Suspense>
       </>
     )
@@ -1292,6 +1305,12 @@ const PhotosComponent = function () {
         </div>
       </div>
     )
+  }
+
+  // The edge already painted this route's frame into #root and the record simply has not arrived:
+  // render nothing rather than reserving boxes for a frame that is already there.
+  if (edgeFrameLive) {
+    return null
   }
 
   // Nothing to paint yet (deep link with no cache/router state, or a prev/next whose record is still
