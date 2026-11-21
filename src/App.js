@@ -10,6 +10,7 @@ import './App.css'
 import AppErrorBoundary from './containers/AppErrorBoundary'
 import { lazyWithRetry } from './utils/lazyWithRetry'
 import { clearDetailSkeleton, getActiveDetailFrame, isDetailPath, subscribeDetailSkeleton } from './utils/detailSkeleton'
+import { STATIC_FRAME_ATTRIBUTE, getStaticFrameHost, releaseStaticFrame } from './utils/staticFrame'
 const Home = lazyWithRetry(() => import('./containers/Home'))
 const PhotosComponent = lazyWithRetry(() => import('./containers/PhotosComponent'))
 const SearchComponent = lazyWithRetry(() => import('./containers/SearchComponent'))
@@ -191,6 +192,28 @@ const renderLoadingFallback = () => (
   </div>
 )
 
+// Marks the mount point as still holding index.html's own first frame, which src/index.js stamps
+// when no detail frame was captured and this shell clears once it has something better to show.
+// Re-exported from utils/staticFrame.js, where AppErrorBoundary can reach it too.
+export { STATIC_FRAME_ATTRIBUTE }
+
+/**
+ * Like SlotMountNotice, but it fires before the browser paints. The static first frame and React's
+ * version of the same chrome cannot both be on screen for even one frame — two headers, two h1s —
+ * so the handoff has to land in the commit that put the route content there, not after it.
+ */
+const StaticFrameHandoff = ({ onMount }) => {
+  useLayoutEffect(() => {
+    onMount()
+    // Releasing twice costs nothing, and unmounting is the one case where this boundary will never
+    // get to show its content: a lazy chunk that fails after boot swaps the tree for
+    // AppErrorBoundary, and a frame left marked there would stay on screen above the error panel —
+    // with no Header, no real copy, and nothing able to clear it.
+    return onMount
+  }, [onMount])
+  return null
+}
+
 // How long the header slot may hold its reservation with no Header in sight. Only reached when the
 // lazy chunk never arrives (lazyWithRetry exhausted): keeping the gate shut forever would leave a
 // permanently empty 72px band and no sticky header at all, which is worse than one late jump.
@@ -217,6 +240,19 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
   // click when the frame still shows the previous photo: #root holds a page either way, so the
   // opaque .App sheet must stay out of its way and the Header belongs inside that page.
   const adopted = Boolean(frame && isDetailPath(location.pathname))
+
+  // index.html's own first frame, on routes where React has not committed anything yet. Read once
+  // from the DOM at mount — it cannot appear later, and the handoff below is the only thing that
+  // removes it — so a route change never has to re-read it.
+  const [staticFrame, setStaticFrame] = useState(getStaticFrameHost)
+
+  // One step: the frame goes away in the same layout phase that put Header and route content on
+  // screen, so no paint ever carries both. Dropping the state ends transparent-shell mode with it.
+  const handBackFrame = useCallback(() => {
+    if (releaseStaticFrame()) {
+      setStaticFrame(null)
+    }
+  }, [])
 
   // Handing #root back to React: only a route that is not a detail page at all can do it. Moving
   // between two detail pages must not - `paintClientDetailFrame` replaces the frame in one step, so
@@ -263,10 +299,13 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
   // The .App wrapper lives here (not in App) because adopted mode must switch it to the
   // transparent modifier: #wisaw-app comes after #root in DOM order, and the default .App is an
   // opaque min-height:100vh sheet that would paint over the edge-painted page. Same reason the
-  // Suspense fallback is null while adopted - "Loading..." must never cover visible content.
+  // Suspense fallback is null while adopted - "Loading..." must never cover visible content, and
+  // the same applies to index.html's first frame while it is still the page (transparentShell).
+  const transparentShell = adopted || staticFrame != null
+
   return (
-    <div className={adopted ? 'App App--adopted' : 'App'}>
-      <Suspense fallback={adopted ? null : renderLoadingFallback()}>
+    <div className={transparentShell ? 'App App--adopted' : 'App'}>
+      <Suspense fallback={transparentShell ? null : renderLoadingFallback()}>
         {adopted
           ? createPortal(
             <>
@@ -307,6 +346,7 @@ const AppShell = function ({ themeMode, onThemeModeChange }) {
           {/* default redirect to home page */}
           <Route path='*' element={<Navigate to='/' />} />
         </Routes>
+        {staticFrame && <StaticFrameHandoff onMount={handBackFrame} />}
       </Suspense>
     </div>
   )

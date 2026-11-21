@@ -1,5 +1,6 @@
 import React from 'react'
 import { hardReload } from '../utils/bootstrapGuard'
+import { releaseStaticFrame } from '../utils/staticFrame'
 
 /**
  * Last line of defence so a failed render never leaves the static fallback markup in
@@ -17,6 +18,11 @@ class AppErrorBoundary extends React.Component {
 
   componentDidCatch (error, errorInfo) {
     console.error('Unhandled render error:', error?.message, errorInfo?.componentStack)
+    // This panel is the last thing that can still reach the page: no route content is coming, so
+    // nothing else will ever hand back index.html's first frame. Left alone it would sit on top of
+    // this message — stale chrome with no way to clear it. Only touches #root while that frame is
+    // marked, so edge-painted detail markup (which React never owned) survives a late crash.
+    releaseStaticFrame()
   }
 
   handleReload = () => {

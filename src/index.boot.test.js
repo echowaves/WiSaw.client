@@ -4,10 +4,13 @@
  * The seam tests replicate the boot steps by hand; nothing used to execute the real entry module,
  * so deleting captureDetailSkeleton() or mounting back into #root would ship green. This file
  * imports index.js under jsdom with ReactDOM stubbed (App never renders — the fake root records
- * the container and drops the element) and pins the three branches that matter:
+ * the container and drops the element) and pins the branches that matter:
  *   1. skeleton on a detail route -> captured, #root left byte-intact, app mounts into #wisaw-app;
- *   2. no skeleton -> #root's static fallback cleared (it would duplicate the React page);
- *   3. no mount point at all -> boot survives and still finds/creates the app container.
+ *   2. no skeleton but a first frame in #root -> the frame is marked for handoff, not cleared: it is
+ *      what the visitor is looking at, and AppShell removes it once the route has committed (the
+ *      removal itself is pinned against the real shell in src/a11yLandmarks.test.js);
+ *   3. an empty mount point -> left unmarked, so the Suspense fallback still owns that case;
+ *   4. no mount point at all -> boot survives and still finds/creates the app container.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -17,6 +20,9 @@ const createRootSpy = vi.hoisted(() => vi.fn(() => ({ render: renderSpy })))
 vi.mock('react-dom/client', () => ({ default: { createRoot: createRootSpy }, createRoot: createRootSpy }))
 vi.mock('./consts', () => ({ gqlClient: { query: vi.fn() } }))
 vi.mock('react-ga4', () => ({ default: { initialize: vi.fn(), send: vi.fn() } }))
+
+// The attribute index.js stamps and AppShell clears are one contract; pin it from the same export.
+const { STATIC_FRAME_ATTRIBUTE } = await import('./App')
 
 const PHOTO_ID = '29461ee8-34dd-4c2b-848f-c16d766713e8'
 const THUMB = `https://img.wisaw.com/${PHOTO_ID}-thumb.webp`
@@ -77,9 +83,33 @@ describe('index.js boot sequence', () => {
     expect(renderSpy).toHaveBeenCalled()
   })
 
-  it('clears the static fallback and boots client-side when no skeleton is served', async () => {
+  it('hands the static first frame back to App when no skeleton is served', async () => {
     document.body.innerHTML = `
-      <div id="root"><h1>Unaltered Photos and Videos, Taken with Phone Cameras.</h1></div>
+      <div id="root">
+        <header id="header"><span class="header-container">WiSaw</span></header>
+        <main class="ff-page"><h1>Unaltered Photos and Videos, Taken with Phone Cameras.</h1></main>
+      </div>
+      <div id="wisaw-app"></div>
+    `
+    window.history.pushState({}, '', '/')
+
+    const detailSkeleton = await boot()
+
+    expect(detailSkeleton.getDetailSkeleton()).toBeNull()
+    const root = document.getElementById('root')
+    // The frame is stamped rather than emptied: it already looks like the app, and clearing it here
+    // is exactly the blank / "Loading..." interlude this replaces. AppShell removes it in the commit
+    // where Header and route content land.
+    expect(root.hasAttribute(STATIC_FRAME_ATTRIBUTE)).toBe(true)
+    expect(root.querySelector('.ff-page h1')).not.toBeNull()
+    expect(createRootSpy).toHaveBeenCalledWith(document.getElementById('wisaw-app'))
+  })
+
+  it('hands the frame back on a detail route the edge did not paint', async () => {
+    // Old edge cache: #root holds the template's own frame instead of an adoptable skeleton, so
+    // nothing can be captured. The frame still has to go - once React has something better to show.
+    document.body.innerHTML = `
+      <div id="root"><main class="ff-page"><h1>Unaltered Photos and Videos, Taken with Phone Cameras.</h1></main></div>
       <div id="wisaw-app"></div>
     `
     window.history.pushState({}, '', `/photos/${PHOTO_ID}`)
@@ -87,7 +117,19 @@ describe('index.js boot sequence', () => {
     const detailSkeleton = await boot()
 
     expect(detailSkeleton.getDetailSkeleton()).toBeNull()
-    expect(document.getElementById('root')).toBeEmptyDOMElement()
+    expect(document.getElementById('root').hasAttribute(STATIC_FRAME_ATTRIBUTE)).toBe(true)
+    expect(createRootSpy).toHaveBeenCalledWith(document.getElementById('wisaw-app'))
+  })
+
+  it('leaves an empty mount point unmarked so the loading fallback keeps that case', async () => {
+    // Nothing to hand back: adopting here would leave a transparent shell over an empty page.
+    document.body.innerHTML = '<div id="root"></div><div id="wisaw-app"></div>'
+    window.history.pushState({}, '', '/')
+
+    const detailSkeleton = await boot()
+
+    expect(detailSkeleton.getDetailSkeleton()).toBeNull()
+    expect(document.getElementById('root').hasAttribute(STATIC_FRAME_ATTRIBUTE)).toBe(false)
     expect(createRootSpy).toHaveBeenCalledWith(document.getElementById('wisaw-app'))
   })
 

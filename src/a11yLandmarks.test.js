@@ -6,6 +6,11 @@
  * Every route must expose exactly one main landmark once React has settled, and the site's own
  * banner and contentinfo must sit beside it rather than inside it. The detail route is included
  * because its column used to be the only main in the app: nothing here may add a second one.
+ *
+ * The same file owns the static first frame index.html ships: it must hold exactly one landmark,
+ * carry no nested div for the edge injector to stop at, and be gone in the commit where React's own
+ * chrome appears — two headers or two h1s on screen together is both a landmark violation and the
+ * flicker the frame exists to remove.
  */
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
@@ -53,7 +58,33 @@ vi.mock('./containers/Footer', () => ({
   default: () => createElement('footer', null, 'site footer')
 }))
 
+// Home can be made to suspend on a never-settling promise, which is the only way to observe the
+// shell's first-frame state while a route chunk is still in flight — the moment that used to be a
+// full-viewport "Loading..." over an emptied #root. Import failures are what lazyWithRetry retries;
+// a suspending render passes straight through to the Suspense boundary (utils/lazyWithRetry.js).
+const homeSuspense = vi.hoisted(() => ({ stall: null, crash: false }))
+
+vi.mock('./containers/Home', async (importOriginal) => {
+  const actual = await importOriginal()
+  const RealHome = actual.default
+  return {
+    default: function HomeGate (props) {
+      if (homeSuspense.crash) {
+        // Stands in for a chunk that cannot run. lazyWithRetry only retries import failures, so a
+        // render-time throw reaches AppErrorBoundary — the one outcome where no route content is
+        // ever coming to replace the static frame.
+        throw new Error('chunk failed to load')
+      }
+      if (homeSuspense.stall) {
+        throw homeSuspense.stall
+      }
+      return createElement(RealHome, props)
+    }
+  }
+})
+
 const App = (await import('./App')).default
+const { STATIC_FRAME_ATTRIBUTE } = await import('./App')
 const { detailFrameHtml } = await import('./utils/detailTemplate.generated')
 const { captureDetailSkeleton, __resetDetailSkeletonForTests } = await import('./utils/detailSkeleton')
 
@@ -291,33 +322,173 @@ describe('route landmarks', () => {
   })
 })
 
-describe('the no-JS fallback inside the mount point', () => {
+describe('the first frame inside the mount point', () => {
   const html = readFileSync(resolve('index.html'), 'utf8')
   const opened = html.indexOf('<div id="root">')
   const closed = html.indexOf('</div>', opened) + '</div>'.length
   const fallback = html.slice(opened, closed)
 
-  it('wraps the static body in a landmark', () => {
-    expect(fallback).toMatch(/^<div id="root">\s*<main>\s*<h1>/)
-    expect(fallback).toMatch(/<\/main><\/div>$|<\/main>\s*<\/div>$/)
+  it('opens with the app chrome and holds exactly one landmark', () => {
+    // The first frame is a page, not prose: header chrome first, then the feed column. One <main>
+    // only - axe landmark-one-main judges this document as served to a crawler or a no-JS visitor.
+    expect(fallback).toMatch(/^<div id="root">\s*<header id="header">/)
+    expect(fallback).toMatch(/<\/main>\s*<\/div>$/)
+    expect(fallback.match(/<main\b/g)).toHaveLength(1)
+    expect(fallback.match(/<header\b/g)).toHaveLength(1)
+    expect(fallback).toMatch(/<nav\b/)
   })
 
-  it('keeps the critical sheet styling that fallback text', () => {
-    // The guards are direct-child selectors; without the "#root > main >" forms the fallback text
-    // inside the new landmark would lose its column for the frame before the app stylesheet lands.
-    const critical = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((found) => found[1]).join('\n')
-    expect(critical).toMatch(/#root > main > h1, #root > main > h2, #root > main > p, #root > main > nav/)
-    expect(critical).toMatch(/#root > h1, #root > main > h1 \{ margin-top: 20px \}/)
-    expect(critical).toMatch(/#root > img, #root > main > img/)
+  it('keeps the crawlable copy Home.js renders', () => {
+    // This is /'s only JavaScript-free content, so the wording has to be the app's own.
+    expect(fallback).toContain('Unaltered Photos and Videos, Taken with Phone Cameras.')
+    expect(fallback).toContain('point and shoot')
   })
 
-  it('leaves the injector the same span to replace', () => {
-    // The edge replaces from the mount point to the first closing div. A landmark adds no closing
-    // div, so that span must still be exactly the mount point itself.
+  it('gives the injector no nested div to stop at', () => {
+    // The edge replaces from the mount point to the first closing div. Everything inside that span is
+    // header / nav / a / main / section / h1 / h2 / span / img, so the replaceable span stays exactly
+    // the mount point and every detail-route document the injector touches survives.
+    expect(fallback.match(/<\/div>/g)).toHaveLength(1)
+    expect(fallback.slice('<div id="root">'.length)).not.toMatch(/<div\b/)
+
     const injected = `${html.slice(0, opened)}<div id="root"><h1>Injected by the edge</h1></div>${html.slice(closed)}`
 
     expect(injected.match(/<div id="root">/g)).toHaveLength(1)
     expect(injected).not.toContain('Unaltered Photos and Videos')
     expect(injected).toMatch(/<script type="module"[^>]*\bsrc=/)
+  })
+
+  it('reserves the feed area without inventing any content', () => {
+    // Placeholder cards only: hidden from assistive tech, and no photo or media URL of any kind — a
+    // fake thumbnail would be indexed, cached and blamed on us. The header actions, hamburger and
+    // search row are reserved as empty boxes for the same reason: they hold space, they claim to be
+    // nothing.
+    expect(fallback).toMatch(/<section class="ff-feed" aria-hidden="true">/)
+    expect(fallback.match(/class="ff-card/g)?.length).toBeGreaterThan(0)
+    expect(fallback).not.toMatch(/img\.wisaw\.com/)
+    expect(fallback.match(/<img\b/g)).toHaveLength(1) // the logo, which the app requests anyway
+    for (const box of ['ff-actions', 'ff-hamburger', 'ff-search']) {
+      expect(fallback, `missing ${box} reservation`).toContain(`class="${box}" aria-hidden="true"`)
+    }
+    // The third and fourth header children exist so space-between puts the nav where Header.js will,
+    // in Header.js's own order: logo, nav, actions, hamburger.
+    expect(fallback).toMatch(/class="ff-logo-link"[\s\S]*?class="ff-nav"[\s\S]*?class="ff-actions"[\s\S]*?class="ff-hamburger"/)
+  })
+
+  it('keeps the critical sheet styling that fallback text', () => {
+    // The guards are direct-child selectors; without the "#root > main >" forms an older cached
+    // template's fallback would lose its column for the frame before the app stylesheet lands. This
+    // file's own frame is styled by class instead, so it matches FeedGrid's column rather than a
+    // 1100px prose measure.
+    const critical = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((found) => found[1]).join('\n')
+    expect(critical).toMatch(/#root > main > h1, #root > main > h2, #root > main > p, #root > main > nav/)
+    expect(critical).toMatch(/#root > h1, #root > main > h1 \{ margin-top: 20px \}/)
+    expect(critical).toMatch(/#root > img, #root > main > img/)
+    const selectors = ['.ff-bar', '.ff-logo-link', '.ff-logo-icon', '.ff-nav-link', '.ff-actions',
+      '.ff-hamburger', '.ff-search', '.ff-page', '.ff-column', '.ff-title', '.ff-lede', '.ff-feed', '.ff-card']
+    for (const selector of selectors) {
+      expect(critical, `critical block is missing ${selector}`).toContain(selector)
+    }
+    // Frame chrome is frame-scoped: a rule on a class Header.css also owns would outlive hydration
+    // and restyle the app's own header if the two sheets ever disagree.
+    for (const owned of ['.logo-link', '.logo-icon', '.logo-title', '.logo-subtitle']) {
+      expect(critical, `critical block must not style the app-owned ${owned}`).not.toContain(owned)
+    }
+  })
+})
+
+// The other half of the first frame: src/index.js leaves the mark on #root and this shell is the only
+// thing that ever removes it. Header/Footer are stand-ins here, so a second header or main can only
+// come from the static frame surviving the handoff.
+describe('handing the first frame back to React', () => {
+  const mountOverStaticFrame = async (path) => {
+    document.body.innerHTML = `
+      <div id="root" ${STATIC_FRAME_ATTRIBUTE}>
+        <header id="header"><section class="ff-bar header-container">WiSaw</section></header>
+        <main class="ff-page"><section class="ff-column">
+          <h1 class="ff-title">Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
+        </section></main>
+      </div>
+      <div id="wisaw-app"></div>
+    `
+    window.history.pushState({}, '', path)
+    render(<App />, { container: document.getElementById('wisaw-app') })
+  }
+
+  afterEach(() => {
+    homeSuspense.stall = null
+    homeSuspense.crash = false
+    delete window.__wisawBooted
+    api.fail = false
+    api.never = false
+    __resetDetailSkeletonForTests()
+  })
+
+  it('keeps the frame and paints no Loading screen while the route chunk is in flight', async () => {
+    homeSuspense.stall = new Promise(() => {})
+    await mountOverStaticFrame('/')
+    // settle(), not flush(): the static frame already carries a <main>, so flush would stop waiting
+    // before React had committed anything at all.
+    await settle(8)
+
+    expect(document.querySelector('#root .ff-page')).not.toBeNull()
+    expect(document.body.textContent).not.toContain('Loading...')
+    // Transparent-shell mode for as long as the frame is the page: the default .App is an opaque
+    // min-height:100vh sheet that would cover it.
+    expect(document.querySelector('#wisaw-app > .App').className).toBe('App App--adopted')
+  })
+
+  it('removes the frame in the same commit that renders the route', async () => {
+    api.feed = { photos: [FEED_PHOTO], batch: '0', noMoreData: true }
+    await mountOverStaticFrame('/')
+    await settle()
+
+    const root = document.getElementById('root')
+    expect(root.childElementCount).toBe(0)
+    expect(root.hasAttribute(STATIC_FRAME_ATTRIBUTE)).toBe(false)
+
+    // One chrome, one landmark: the app's, never the frame's beside it.
+    const main = expectSingleMain()
+    expect(main.textContent).toContain('Unaltered Photos and Videos')
+    expect(document.querySelectorAll('header')).toHaveLength(1)
+    // And the shell stops being transparent now that #root is empty again.
+    expect(document.querySelector('#wisaw-app > .App').className).toBe('App')
+  })
+
+  it('hands back a stale frame on a route the edge never painted', async () => {
+    // Detail route, no adoptable skeleton: the frame would otherwise sit under the photo page
+    // forever, giving the page two headers and two h1s.
+    api.detail = { data: { getPhotoAllCurr: { photo: null, comments: [], recognitions: [] } } }
+    await mountOverStaticFrame(`/photos/${PHOTO_ID}`)
+    await settle()
+
+    expect(document.getElementById('root')).toBeEmptyDOMElement()
+    expect(document.querySelectorAll('header')).toHaveLength(1)
+  })
+
+  it('hands the frame back on a route that is neither the feed nor a detail page', async () => {
+    // The shell owns the handoff, so every non-detail route gets it — /search proves it is not a
+    // Home-specific path. A frame left here would put a second header and h1 under the results.
+    await mountOverStaticFrame('/search/lake')
+    await settle()
+
+    expect(document.getElementById('root')).toBeEmptyDOMElement()
+    expect(document.querySelectorAll('header')).toHaveLength(1)
+    expectSingleMain()
+  })
+
+  it('hands the frame back when the route never arrives', async () => {
+    // A chunk that fails after boot (lazyWithRetry exhausted, past the reload cooldown) swaps the
+    // tree for AppErrorBoundary. Nothing can reach #root after that, so a frame left marked there
+    // would stay on screen above the error panel — stale chrome, no way to clear it.
+    window.__wisawBooted = true // the realistic case: boot finished, so the panel offers a reload
+    homeSuspense.crash = true
+    await mountOverStaticFrame('/')
+    await settle()
+
+    const root = document.getElementById('root')
+    expect(root).toBeEmptyDOMElement()
+    expect(root.hasAttribute(STATIC_FRAME_ATTRIBUTE)).toBe(false)
+    expect(document.body.textContent).toContain('Something went wrong')
   })
 })

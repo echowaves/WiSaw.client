@@ -12,10 +12,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!--
-    Critical block: everything needed to paint the first frame in the right colours, so the
-    ~32 KB gz application stylesheet (loaded async by src/build/vite-plugin-async-css.js) is not
-    render-blocking. Mirrors only these rules from src/index.css and must stay tiny;
-    src/lcpBootstrap.template.test.js guards its presence and content.
+    Critical block: everything needed to paint the first frame — in the right colours, and with the
+    static body of the mount point laid out like the app it is about to become — so the ~32 KB gz
+    application stylesheet (loaded async by src/build/vite-plugin-async-css.js) is not
+    render-blocking. It mirrors rules from src/index.css, src/containers/Header.css,
+    src/containers/PhotosComponent.css and the inline styles of Home.js / FeedGrid.js; every value it
+    copies is pinned against them by src/lcpBootstrap.template.test.js, which also keeps this block
+    small enough to be worth inlining.
   -->
   <style>
     html { scrollbar-gutter: stable }
@@ -43,9 +46,10 @@
        are those pages' only first-frame layout; do not extend them to the skeleton either. Still
        deliberately never applied to #root itself: no stylesheet in this app styles #root, so a rule
        there would outlive hydration and cap the hydrated page's width (and pad its full-bleed
-       sticky header) on every route. The "#root > main >" forms cover this file's own no-JS fallback,
-       which sits inside a landmark element; the edge's flat markup keeps matching the direct-child
-       forms, and neither form reaches the skeleton, whose column is .wsk-main. */
+       sticky header) on every route. The "#root > main >" forms are for an older cached template,
+       whose fallback sat inside a landmark as direct children of it; this file's own first frame is
+       laid out by the class rules further down instead, and neither form reaches the skeleton, whose
+       column is .wsk-main. */
     #root > h1, #root > p, #root > nav,
     #root > main > h1, #root > main > h2, #root > main > p, #root > main > nav {
       max-width: 1100px;
@@ -109,7 +113,398 @@
         padding: 0 12px;
       }
     }
+
+    /* ---- The first frame ----
+       Styles the static body of the mount point so it reads as the app instead of unstyled prose.
+       `var()` is undefined until the async sheet lands, so tokens are spelled out literally here and
+       in src/index.css; src/lcpBootstrap.template.test.js fails if the two stop agreeing. Class-based
+       selectors only - a rule on #root would outlive hydration. */
+
+    /* src/index.css sets `* { box-sizing: border-box }`, but that sheet is async; without it here, a
+       bordered or padded frame box paints 2px wider than the same box once boot has finished. */
+    .ff-bar,
+    .ff-logo-link,
+    .ff-logo-icon,
+    .ff-logo-text,
+    .ff-nav,
+    .ff-nav-link,
+    .ff-actions,
+    .ff-hamburger,
+    .ff-search,
+    .ff-search-field,
+    .ff-search-button,
+    .ff-page,
+    .ff-column,
+    .ff-feed,
+    .ff-track,
+    .ff-card {
+      box-sizing: border-box;
+    }
+
+    /* Header bar — the frame's own copy of `.header-container` (Header.css). The wrapper carries
+       that class too so the async sheet styles it identically, while every value below is spelled
+       out here for the frame's first paint. `nav` and `section` rather than a div: the mount point
+       may hold no closing div at all, and a span cannot contain a nav. */
+    .ff-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 72px;
+      padding: 0 24px;
+    }
+
+    /* Logo chrome — mirrors the .logo-* rules of src/containers/Header.css under frame-scoped names,
+       so nothing here can outlive hydration and style the app's own header. The anchor needs its own
+       colour because src/index.css colours bare anchors with --link, which this block may not do. */
+    .ff-logo-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #2f43c4;
+      text-decoration: none;
+    }
+
+    .ff-logo-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
+    .ff-logo-icon img {
+      border-radius: 8px;
+    }
+
+    .ff-logo-text {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .ff-logo-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #3f4bd8;
+      line-height: 1.1;
+    }
+
+    .ff-logo-subtitle {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #5b6472;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 1px;
+    }
+
+    /* Nav chrome — mirrors `.nav-menu ul` and `.nav-menu a` (Header.css), including the transparent
+       border those links carry: without it every link box is 2px narrower and shorter than the app's,
+       and the group steps at handoff. */
+    .ff-nav {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ff-nav-link {
+      display: inline-flex;
+      align-items: center;
+      color: #4b5563;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      text-decoration: none;
+    }
+
+    /* Third flex child — the app's `.header-actions` (theme icon + select, `margin-left: 12px`).
+       The bar distributes with space-between, so without a box of this size here the frame's nav
+       would sit flush right and slide left when React paints its three children. The icon, gap and
+       margin are Header.css values; the control's own width is content-driven, so it is approximated
+       from the select's 12/34px padding around its shortest label. */
+    .ff-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 12px;
+    }
+
+    .ff-actions-icon,
+    .ff-actions-control,
+    .ff-search-field {
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
+    .ff-actions-icon {
+      width: 30px;
+      height: 30px;
+    }
+
+    .ff-actions-control {
+      width: 68px;
+      height: 30px;
+    }
+
+    /* Fourth flex child — the hamburger Header.css shows at or below 768px (26×18 with 4px padding
+       and three 2px bars in --accent, spaced by the remaining 6px). Painted as a gradient so the
+       reservation costs no extra nodes. */
+    .ff-hamburger {
+      display: none;
+      width: 26px;
+      height: 18px;
+      padding: 4px;
+      border-radius: 6px;
+      background-image: repeating-linear-gradient(to bottom, #7c8cf8 0 2px, transparent 2px 8px);
+    }
+
+    /* The search row Home.js paints between the lede and the grid: a right-aligned flex row whose
+       Bootstrap control is 38px tall (1.5em + .75rem line box plus 2px border) over 10px of bottom
+       padding. Reserved so the grid does not step down ~48px at handoff; widths are approximations,
+       the height is what holds the page up. */
+    .ff-search {
+      display: flex;
+      justify-content: right;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 10px;
+    }
+
+    .ff-search-field {
+      display: block;
+      width: 190px;
+      height: 38px;
+    }
+
+    .ff-search-button {
+      display: block;
+      width: 84px;
+      height: 38px;
+      border-radius: 10px;
+      background: #eef2f8;
+    }
+
+    /* Feed column — mirrors the <main> + wrapper of containers/FeedGrid.js, which every feed route
+       renders: a centred flex row holding one 90 % / 1120 px column. .App centres its text, so the
+       headings are centred here too or they jump sideways at handoff. */
+    .ff-page {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .ff-column {
+      width: 90%;
+      max-width: 1120px;
+      text-align: center;
+    }
+
+    /* Intro headings — the type scale Home.js sets inline, plus Bootstrap's reboot weight (Home
+       never overrides it, so 500 is what the hydrated page actually paints). */
+    .ff-title {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      line-height: 1.2;
+      font-weight: 500;
+      margin: 0 0 1rem;
+      color: #111827;
+    }
+
+    .ff-lede {
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      line-height: 1.4;
+      font-weight: 400;
+      margin: 0 0 2rem;
+      color: #4b5563;
+    }
+
+    /* Reserved feed area — the masonry geometry of PhotosComponent.css and FEED_BREAKPOINT_COLS in
+       src/utils/imageUtils.js (4 columns, then 3 / 2 / 1 at 1100 / 700 / 500 px), including the
+       -20px grid margin and 20px column gutter. The cards are placeholders: no image, no link. */
+    .ff-feed {
+      display: flex;
+      margin-left: -20px;
+    }
+
+    .ff-track {
+      flex: 1 0 0%;
+      padding-left: 20px;
+    }
+
+    .ff-card {
+      display: block;
+      height: 240px;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      background: #eef2f8;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .ff-card-tall {
+      height: 320px;
+    }
+
+    .ff-card-short {
+      height: 160px;
+    }
+
+    /* Dark counterparts of the colours above (src/index.css). --accent (#7c8cf8) is not redefined in
+       dark mode, so the hamburger bars need no counterpart. */
+    @media (prefers-color-scheme: dark) {
+      .ff-logo-link {
+        color: #b0b8ff;
+      }
+
+      .ff-logo-icon {
+        background: #1a1a1c;
+        border-color: rgba(255, 255, 255, 0.06);
+      }
+
+      .ff-logo-title {
+        color: #b0b8ff;
+      }
+
+      .ff-logo-subtitle {
+        color: #91919e;
+      }
+
+      .ff-nav-link {
+        color: #9e9eab;
+      }
+
+      .ff-actions-icon,
+      .ff-actions-control,
+      .ff-search-field {
+        background: #1a1a1c;
+        border-color: rgba(255, 255, 255, 0.06);
+      }
+
+      .ff-search-button {
+        background: #202022;
+      }
+
+      .ff-title {
+        color: #ececf0;
+      }
+
+      .ff-lede {
+        color: #9e9eab;
+      }
+
+      .ff-card {
+        background: #202022;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2), 0 0 3px rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    /* A feed reservation only belongs to the routes that paint a grid — `/` and `/search`. The
+       data-wisaw-feed script in the head marks every other path; without it /about, /contact and
+       /terms show a wall of placeholder cards over their real copy. */
+    html[data-wisaw-feed='off'] .ff-feed {
+      display: none;
+    }
+
+    /* Column counts follow FEED_BREAKPOINT_COLS; the logo rules mirror Header.css's own steps. */
+    @media screen and (max-width: 1100px) {
+      .ff-track:nth-child(4) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .ff-bar {
+        padding: 0 16px;
+        height: 64px;
+      }
+
+      .ff-logo-title {
+        font-size: 1.35rem;
+      }
+
+      /* Header.css collapses the menu into a hamburger at this breakpoint; the static copy has no
+         button to open, so it shows the shape of what the app shows instead. */
+      .ff-nav {
+        display: none;
+      }
+
+      .ff-hamburger {
+        display: block;
+      }
+
+      .ff-actions-icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      .ff-actions-control {
+        width: 62px;
+        height: 28px;
+      }
+    }
+
+    @media screen and (max-width: 700px) {
+      .ff-track:nth-child(3) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 500px) {
+      .ff-track:nth-child(2) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .ff-logo-link {
+        gap: 8px;
+      }
+
+      .ff-logo-icon {
+        width: 38px;
+        height: 38px;
+      }
+
+      .ff-logo-icon img {
+        width: 34px;
+        height: 34px;
+      }
+
+      .ff-logo-title {
+        font-size: 1.15rem;
+      }
+
+      .ff-logo-subtitle {
+        font-size: 0.6rem;
+      }
+    }
   </style>
+
+  <!--
+    Which routes get a feed reservation in the static frame. Only `/` and `/search` paint a masonry
+    grid, so every other path is marked before the body is parsed and the critical block hides the
+    placeholder cards. Parser-inserted on purpose: a deferred or module script would let them paint
+    first and then vanish, which is the flicker this whole change exists to remove.
+  -->
+  <script data-wisaw-feed>
+    (function () {
+      try {
+        var path = window.location.pathname.replace(/\/+$/, '') || '/'
+        var hasFeed = path === '/' || path === '/search' || /^\/search\//i.test(path)
+        if (!hasFeed) {
+          document.documentElement.setAttribute('data-wisaw-feed', 'off')
+        }
+      } catch (err) {
+        /* Fail open: an unreadable pathname leaves the reservation in, which is how it looked before. */
+      }
+    })()
+  </script>
 
   <meta name="google-site-verification" content="RQGZzEN0xtT0w38pKeQ1L8u8P6dn7zxfu03jt0LGgF4" />
 
@@ -257,12 +652,56 @@
       photos and videos taken with phone cameras - free to use for personal and commercial purposes.</p>
     <p>Visit <a href="https://wisaw.com">wisaw.com</a> with JavaScript enabled to browse our collection.</p>
   </noscript>
+  <!--
+    The first frame. This is what a visitor sees before a single byte of JavaScript has run: the
+    app's own chrome (logo and nav), its intro headings at the type scale Home.js uses, and a
+    reserved feed area — so the cold-visit sequence is one page being filled in rather than four
+    different pages flickering past. Nothing here pretends to be content: the cards are neutral
+    placeholders, aria-hidden, with no photo or media URLs of any kind.
+
+    Every node below is header / nav / a / main / section / h1 / h2 / span / img and each is styled
+    by class through the critical block above — never by a nested div. The injector replaces from
+    here to the FIRST closing div, so a second one would corrupt every detail-route document it
+    touches (src/seo.template.test.js, src/a11yLandmarks.test.js). Header children are in Header.js's
+    order (logo, nav, actions, hamburger) because space-between distributes by child count: with two
+    children the nav sits flush right and steps left when React paints four.
+
+    The h1 and h2 copy is byte-identical to what Home.js renders: with scripting disabled this is
+    the only content on the page, and a crawler reads it from the served HTML.
+  -->
   <div id="root">
-    <main>
-      <h1>Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
-      <h2>It's almost expected that the lighting won't be perfect and the composition might be off at times, because the
-        goal is to capture shots spontaneously, with minimal preparation—just point and shoot. As photographers, we often
-        worry too much about getting everything perfect, and in doing so, we miss great opportunities.</h2>
+    <header id="header">
+      <section class="ff-bar header-container">
+        <a class="ff-logo-link" href="/">
+          <span class="ff-logo-icon"><img width="48" height="48" src="/android-chrome-192x192.webp" alt="WiSaw logo" /></span>
+          <span class="ff-logo-text">
+            <span class="ff-logo-title">WiSaw</span>
+            <span class="ff-logo-subtitle">What I Saw</span>
+          </span>
+        </a>
+        <nav class="ff-nav">
+          <a class="ff-nav-link" href="/about">About</a>
+          <a class="ff-nav-link" href="/contact">Contact</a>
+          <a class="ff-nav-link" href="/terms">Terms</a>
+        </nav>
+        <span class="ff-actions" aria-hidden="true"><span class="ff-actions-icon"></span><span class="ff-actions-control"></span></span>
+        <span class="ff-hamburger" aria-hidden="true"></span>
+      </section>
+    </header>
+    <main class="ff-page">
+      <section class="ff-column">
+        <h1 class="ff-title">Unaltered Photos and Videos, Taken with Phone Cameras.</h1>
+        <h2 class="ff-lede">It's almost expected that the lighting won't be perfect and the composition might be off at times, because the
+          goal is to capture shots spontaneously, with minimal preparation—just point and shoot. As photographers, we often
+          worry too much about getting everything perfect, and in doing so, we miss great opportunities.</h2>
+        <section class="ff-search" aria-hidden="true"><span class="ff-search-field"></span><span class="ff-search-button"></span></section>
+        <section class="ff-feed" aria-hidden="true">
+          <span class="ff-track"><span class="ff-card ff-card-tall"></span><span class="ff-card"></span></span>
+          <span class="ff-track"><span class="ff-card"></span><span class="ff-card ff-card-short"></span></span>
+          <span class="ff-track"><span class="ff-card ff-card-short"></span><span class="ff-card ff-card-tall"></span></span>
+          <span class="ff-track"><span class="ff-card ff-card-tall"></span><span class="ff-card"></span></span>
+        </section>
+      </section>
     </main>
   </div>
   <div id="wisaw-app"></div>
